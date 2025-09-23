@@ -1,0 +1,104 @@
+/* src/pages/LobbyPage.css */
+.lobby-container {
+  max-width: 900px;
+  margin: 20px auto;
+  padding: 20px;
+}
+
+.lobby-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  border-bottom: 1px solid #374151;
+  padding-bottom: 20px;
+}
+
+.lobby-header h1 {
+  margin: 0;
+  font-size: 2.5rem;
+}
+
+.create-game-btn {
+  background-color: var(--primary-green);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  font-size: 1rem;
+  font-weight: bold;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.create-game-btn:hover {
+  background-color: #059669;
+}
+
+.lobby-section {
+  margin-bottom: 40px;
+}
+
+.lobby-section h2 {
+  font-size: 1.5rem;
+  color: #9ca3af;
+  margin-bottom: 20px;
+}
+
+.game-list {
+  display: grid;
+  gap: 20px;
+}
+
+.game-card {
+  background-color: #1f2937;
+  padding: 20px;
+  border-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-left: 5px solid #4b5563; /* Default border color */
+}
+
+.game-card.active {
+  border-left-color: var(--primary-green); /* Active game highlight */
+}
+
+.game-details p {
+  margin: 0 0 8px 0;
+  color: #9ca3af;
+}
+
+.game-details p:last-child {
+  margin-bottom: 0;
+}
+
+.game-details strong {
+  color: var(--text-light);
+}
+
+.join-btn {
+  background-color: #374151;
+  color: var(--text-light);
+  border: 1px solid #4b5563;
+  padding: 10px 20px;
+  font-size: 0.9rem;
+  font-weight: bold;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.join-btn:hover {
+  background-color: #4b5563;
+  border-color: #6b7280;
+}
+
+.no-games-message {
+    color: #6b7280;
+    text-align: center;
+    padding: 20px;
+    background-color: #1f2937;
+    border-radius: 8px;
+    border: 2px dashed #374151;
+}

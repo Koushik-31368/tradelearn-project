@@ -1,0 +1,15 @@
+// src/main/java/com/tradelearn/server/ServerApplication.java
+
+package com.tradelearn.server;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class ServerApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(ServerApplication.class, args);
+    }
+
+}
