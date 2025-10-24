@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/auth")`n@CrossOrigin(origins = {"http://localhost:3000", "https://tradelearn-project.vercel.app"}, allowCredentials = "true")
+@RequestMapping("/api/auth")
 
 public class AuthController {
     private final UserRepository userRepository;

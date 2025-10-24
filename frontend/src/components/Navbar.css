@@ -1,20 +1,18 @@
 /* src/components/Navbar.css */
-/* This file is clean and ensures no unclosed comments break the build */
-
 .navbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 40px;
-  background-color: var(--primary-dark);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  background-color: var(--dark-bg);
+  padding: 1rem 2rem;
+  color: var(--text-light);
 }
 
 .navbar-logo a {
-  font-size: 1.5rem;
-  font-weight: bold;
-  color: var(--primary-green);
+  color: var(--text-light);
   text-decoration: none;
+  font-weight: bold;
+  font-size: 1.5rem;
 }
 
 .navbar-links {
@@ -32,7 +30,6 @@
   color: var(--text-light);
   text-decoration: none;
   font-size: 1rem;
-  padding: 5px 0;
   transition: color 0.3s ease;
 }
 
@@ -40,32 +37,16 @@
   color: var(--primary-green);
 }
 
-.navbar-links a.active {
-  color: var(--primary-green);
-  border-bottom: 2px solid var(--primary-green);
-}
-
-.navbar-login .login-button,
-.navbar-login .logout-button {
+.login-button {
   background-color: var(--primary-green);
-  color: var(--primary-dark);
-  border: none;
-  padding: 8px 16px;
-  border-radius: 4px;
-  font-weight: bold;
+  color: var(--text-light);
+  padding: 10px 20px;
+  border-radius: 5px;
   text-decoration: none;
-  cursor: pointer;
+  font-weight: bold;
   transition: background-color 0.3s ease;
 }
 
-.navbar-login .logout-button {
-    background-color: #EF4444; 
-    color: white;
-}
-
-.navbar-login .login-button:hover {
-  background-color: #059669;
-}
-.navbar-login .logout-button:hover {
-  background-color: #dc2626;
+.login-button:hover {
+  background-color: #0e9e6e;
 }
