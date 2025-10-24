@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import axios from 'axios';
 import './AuthForm.css';
 
 const LoginPage = () => {
@@ -18,33 +19,26 @@ const LoginPage = () => {
     setIsError(false);
 
     try {
-      // Step 1: Call the login endpoint (this remains the same)
-      const response = await fetch('http://localhost:8080/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+      // --- FIX IS HERE: Using the live Railway HTTPS URL ---
+      const response = await axios.post('https://tradelearn-project-production.up.railway.app/api/auth/login', {
+        email,
+        password
       });
-
-      // The login endpoint now returns the full User object on success
-      const userData = await response.json(); 
-
-      if (!response.ok) {
-        // If response is not ok, userData is the error message
-        throw new Error(userData.message || 'Login failed');
-      }
       
-      // Step 2: Save the full user object (id, username, email) to our context
-      login(userData); 
+      login(response.data); 
       
       setMessage('Login Successful! Welcome back.');
-
       setTimeout(() => {
         navigate('/multiplayer');
       }, 1500);
 
     } catch (error) {
-      setMessage(error.message);
       setIsError(true);
+      if (error.response && error.response.data) {
+        setMessage(error.response.data.message || 'Login failed');
+      } else {
+        setMessage('Failed to connect to the live server.');
+      }
     }
   };
 
@@ -52,7 +46,6 @@ const LoginPage = () => {
     <div className="auth-container">
       <form className="auth-form" onSubmit={handleSubmit}>
         <h2>Sign In</h2>
-        {/* ... (rest of the form remains the same) ... */}
         <div className="form-group">
           <label htmlFor="email">Email</label>
           <input type="email" id="email" value={email} onChange={(e) => setEmail(e.target.value)} required />

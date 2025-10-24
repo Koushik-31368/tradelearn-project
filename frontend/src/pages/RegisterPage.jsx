@@ -1,6 +1,7 @@
+// src/pages/RegisterPage.jsx
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import axios from 'axios'; // Import axios
 import './AuthForm.css';
 
 const RegisterPage = () => {
@@ -17,21 +18,25 @@ const RegisterPage = () => {
     setIsError(false);
 
     try {
-      const user = { username, email, password };
-      const response = await axios.post('http://localhost:8080/api/auth/register', user);
-      setMessage(response.data);
+      const userDetails = { username, email, password };
+      
+      // --- FIX IS HERE: Using the live Railway HTTPS URL ---
+      const response = await axios.post('https://tradelearn-project-production.up.railway.app/api/auth/register', userDetails);
+
+      setMessage(response.data); 
       
       setTimeout(() => {
         navigate('/login');
       }, 2000);
 
     } catch (error) {
-      if (error.response) {
-        setMessage(error.response.data);
-      } else {
-        setMessage(error.message);
-      }
       setIsError(true);
+      if (error.response && error.response.data) {
+        // Handle database constraint errors, etc.
+        setMessage(error.response.data.message || 'Registration failed');
+      } else {
+        setMessage('Failed to connect to the live server.');
+      }
     }
   };
 
