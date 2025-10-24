@@ -18,19 +18,24 @@ const LoginPage = () => {
     setIsError(false);
 
     try {
+      // Step 1: Call the login endpoint (this remains the same)
       const response = await fetch('http://localhost:8080/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
 
-      const responseText = await response.text();
+      // The login endpoint now returns the full User object on success
+      const userData = await response.json(); 
 
       if (!response.ok) {
-        throw new Error(responseText);
+        // If response is not ok, userData is the error message
+        throw new Error(userData.message || 'Login failed');
       }
-
-      login(email);
+      
+      // Step 2: Save the full user object (id, username, email) to our context
+      login(userData); 
+      
       setMessage('Login Successful! Welcome back.');
 
       setTimeout(() => {
@@ -47,7 +52,7 @@ const LoginPage = () => {
     <div className="auth-container">
       <form className="auth-form" onSubmit={handleSubmit}>
         <h2>Sign In</h2>
-        <p className="form-description">Welcome back! Please enter your details.</p>
+        {/* ... (rest of the form remains the same) ... */}
         <div className="form-group">
           <label htmlFor="email">Email</label>
           <input type="email" id="email" value={email} onChange={(e) => setEmail(e.target.value)} required />

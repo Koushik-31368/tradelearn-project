@@ -16,7 +16,7 @@ public class WebConfig {
             public void addCorsMappings(CorsRegistry registry) {
                 // This allows all requests from our React app (localhost:3000)
                 registry.addMapping("/api/**") // Apply to all API routes
-                        .allowedOrigins("http://localhost:3000")
+                        .allowedOrigins("http://172.26.128.1:3000")
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "HEAD");
             }
         };

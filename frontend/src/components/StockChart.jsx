@@ -3,13 +3,16 @@ import React, { useEffect, useRef } from 'react';
 import { createChart } from 'lightweight-charts';
 
 const StockChart = ({ data }) => {
-  const chartContainerRef = useRef();
-  const chartRef = useRef();
-  const seriesRef = useRef();
-
-  // This effect creates the chart and series ONCE when the component mounts
+  // Create a ref for the chart container div element
+  const chartContainerRef = useRef(null);
+  
+  // This useEffect hook handles the creation and destruction of the chart
   useEffect(() => {
-    chartRef.current = createChart(chartContainerRef.current, {
+    // Exit if the container isn't mounted yet
+    if (!chartContainerRef.current) return;
+
+    // Create the chart instance
+    const chart = createChart(chartContainerRef.current, {
       layout: {
         background: { color: '#1f2937' },
         textColor: '#d1d5db',
@@ -22,7 +25,8 @@ const StockChart = ({ data }) => {
       height: 400,
     });
 
-    seriesRef.current = chartRef.current.addCandlestickSeries({
+    // Add a candlestick series to the chart
+    const candlestickSeries = chart.addCandlestickSeries({
       upColor: '#10B981',
       downColor: '#EF4444',
       borderDownColor: '#EF4444',
@@ -31,26 +35,26 @@ const StockChart = ({ data }) => {
       wickUpColor: '#10B981',
     });
 
+    // Set the data for the series
+    candlestickSeries.setData(data);
+
+    // Adjust the visible range to fit the data
+    chart.timeScale().fitContent();
+
+    // Resize chart on window resize
     const handleResize = () => {
-      chartRef.current.applyOptions({ width: chartContainerRef.current.clientWidth });
+      chart.applyOptions({ width: chartContainerRef.current.clientWidth });
     };
     window.addEventListener('resize', handleResize);
 
-    // Cleanup function to remove the chart and event listener
+    // This is the cleanup function that runs when the component is unmounted
     return () => {
       window.removeEventListener('resize', handleResize);
-      chartRef.current.remove();
+      chart.remove();
     };
-  }, []); // The empty array [] ensures this runs only once
+  }, [data]); // Re-run this effect if the data prop changes
 
-  // This effect UPDATES the data on the series whenever the 'data' prop changes
-  useEffect(() => {
-    if (seriesRef.current) {
-      seriesRef.current.setData(data);
-    }
-  }, [data]);
-
-  return <div ref={chartContainerRef} style={{ position: 'relative' }} />;
+  return <div ref={chartContainerRef} style={{ position: 'relative', width: '100%', height: '400px' }} />;
 };
 
 export default StockChart;

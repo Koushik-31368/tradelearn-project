@@ -1,6 +1,6 @@
-// src/pages/RegisterPage.jsx
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import './AuthForm.css';
 
 const RegisterPage = () => {
@@ -17,25 +17,20 @@ const RegisterPage = () => {
     setIsError(false);
 
     try {
-      const response = await fetch('http://localhost:8080/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, email, password }),
-      });
-
-      const responseText = await response.text();
-
-      if (!response.ok) {
-        throw new Error(responseText || 'Registration failed');
-      }
-
-      setMessage(responseText);
+      const user = { username, email, password };
+      const response = await axios.post('http://localhost:8080/api/auth/register', user);
+      setMessage(response.data);
+      
       setTimeout(() => {
         navigate('/login');
       }, 2000);
 
     } catch (error) {
-      setMessage(error.message);
+      if (error.response) {
+        setMessage(error.response.data);
+      } else {
+        setMessage(error.message);
+      }
       setIsError(true);
     }
   };

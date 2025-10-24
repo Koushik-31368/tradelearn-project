@@ -1,38 +1,39 @@
 // src/components/CreateGameForm.jsx
 import React, { useState } from 'react';
 import './CreateGameForm.css';
+import { useAuth } from '../context/AuthContext'; // 1. Import useAuth
 
 const CreateGameForm = ({ onCreate, onCancel }) => {
   const [stockSymbol, setStockSymbol] = useState('');
   const [duration, setDuration] = useState(2);
   const [error, setError] = useState('');
+  const { user } = useAuth(); // 2. Get the logged-in user's data
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
-    try {
-      // For now, we'll assume the user creating the game has an ID of 1.
-      // Later, we'll get this from our authentication context.
-      const creatorId = 1; 
+    // 3. Check if user is logged in
+    if (!user) {
+      setError("You must be logged in to create a game.");
+      return;
+    }
 
+    try {
       const response = await fetch('http://localhost:8080/api/games', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           stockSymbol: stockSymbol,
           durationMinutes: duration,
-          creatorId: creatorId
+          creatorId: user.id // 4. Use the real user ID from context
         })
       });
 
       if (!response.ok) {
         throw new Error('Failed to create game. Please try again.');
       }
-
-      // If successful, call the onCreate function passed from the lobby
       onCreate();
-      
     } catch (err) {
       setError(err.message);
     }
@@ -41,6 +42,7 @@ const CreateGameForm = ({ onCreate, onCancel }) => {
   return (
     <form className="create-game-form" onSubmit={handleSubmit}>
       <h2>Create New Game</h2>
+      {/* ... (rest of the form remains the same) ... */}
       <div className="form-group">
         <label htmlFor="stock-symbol">Stock Symbol</label>
         <input
@@ -65,7 +67,7 @@ const CreateGameForm = ({ onCreate, onCancel }) => {
           <option value="30">30 Minutes</option>
         </select>
       </div>
-      {error && <p className="form-error">{error}</p>}
+      {error && <p className="form-error" style={{color: 'red', textAlign: 'center'}}>{error}</p>}
       <div className="form-actions">
         <button type="button" className="btn-cancel" onClick={onCancel}>Cancel</button>
         <button type="submit" className="btn-create">Create Game</button>
