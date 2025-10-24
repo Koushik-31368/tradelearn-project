@@ -1,17 +1,20 @@
 // src/pages/LobbyPage.jsx
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom'; // 1. Import useNavigate
+import { useNavigate } from 'react-router-dom';
 import './LobbyPage.css';
 import Modal from '../components/Modal';
 import CreateGameForm from '../components/CreateGameForm';
+import { useAuth } from '../context/AuthContext'; // 1. Import useAuth
 
 const LobbyPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [openGames, setOpenGames] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const navigate = useNavigate(); // 2. Initialize the navigate function
+  const navigate = useNavigate();
+  const { user } = useAuth(); // 2. Get the logged-in user's data
 
   const fetchOpenGames = async () => {
+    // ... (this function remains the same) ...
     setIsLoading(true);
     try {
       const response = await fetch('http://localhost:8080/api/games/open');
@@ -30,29 +33,27 @@ const LobbyPage = () => {
     fetchOpenGames();
   }, []);
 
-  // 3. This function is now updated to call the backend
   const handleJoinGame = async (gameId) => {
-    try {
-      // For now, we'll assume the user joining has an ID of 2.
-      // Later, this will come from our AuthContext.
-      const opponentId = 2; 
+    // 3. Check if user is logged in
+    if (!user) {
+      alert("Please log in to join a game.");
+      return;
+    }
 
+    try {
       const response = await fetch(`http://localhost:8080/api/games/${gameId}/join`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ opponentId: opponentId })
+        body: JSON.stringify({ opponentId: user.id }) // 4. Use the real user ID
       });
 
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(errorText || 'Failed to join game.');
       }
-
-      // If successful, navigate to the game screen
       navigate(`/game/${gameId}`);
-
     } catch (error) {
-      alert(error.message); // Show an alert if joining fails
+      alert(error.message);
       console.error(error);
     }
   };
@@ -65,10 +66,10 @@ const LobbyPage = () => {
           + Create New Game
         </button>
       </div>
-
       <div className="lobby-section">
         <h2>Open Games (Waiting for Opponent)</h2>
         <div className="game-list">
+          {/* ... (rest of the render logic remains the same) ... */}
           {isLoading ? (
             <p>Loading games...</p>
           ) : openGames.length > 0 ? (
@@ -79,7 +80,12 @@ const LobbyPage = () => {
                   <p><strong>Created by:</strong> {game.creator.username}</p>
                   <p><strong>Duration:</strong> {game.durationMinutes} minutes</p>
                 </div>
-                <button className="join-btn" onClick={() => handleJoinGame(game.id)}>Join Game</button>
+                {/* 5. Prevent user from joining their own game */}
+                {user && user.id === game.creator.id ? (
+                  <button className="join-btn" disabled>Your Game</button>
+                ) : (
+                  <button className="join-btn" onClick={() => handleJoinGame(game.id)}>Join Game</button>
+                )}
               </div>
             ))
           ) : (
@@ -87,9 +93,6 @@ const LobbyPage = () => {
           )}
         </div>
       </div>
-      
-      {/* ... (Your Active Games section) ... */}
-
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
         <CreateGameForm 
           onCancel={() => setIsModalOpen(false)}

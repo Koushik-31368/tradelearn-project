@@ -92,3 +92,14 @@
 .trade-btn.buy { background-color: var(--primary-green); }
 .trade-btn.sell { background-color: #EF4444; }
 .trade-btn.ready { background-color: #374151; }
+/* Add this to GamePage.css */
+.ws-status {
+  font-size: 0.9rem;
+  color: #6b7280; /* Gray color */
+  text-align: center;
+}
+/* Add this to GamePage.css */
+.trade-btn.ready.waiting {
+  background-color: #4b5563; /* Darker gray when waiting */
+  cursor: not-allowed;
+}
