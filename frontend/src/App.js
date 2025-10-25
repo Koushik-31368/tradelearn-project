@@ -12,6 +12,7 @@ import GamePage from './pages/GamePage';
 import StrategiesPage from './pages/StrategiesPage';
 import SimulatorPage from './pages/SimulatorPage'; // 1. Import
 import LearnPage from './pages/LearnPage';
+import StrategiesPage from './pages/StrategiesPage';
 function App() {
   return (
     <AuthProvider>
@@ -27,6 +28,7 @@ function App() {
             <Route path="/game/:gameId" element={<GamePage />} />
             <Route path="/strategies" element={<StrategiesPage />} />
             <Route path="/learn" element={<LearnPage />} />
+            <Route path="/strategies" element={<StrategiesPage />} />
             <Route path="/simulator" element={<SimulatorPage />} /> {/* 2. Add route */}
           </Routes>
           <StockTicker />
