@@ -16,6 +16,8 @@ const Navbar = () => {
         <li><NavLink to="/simulator">Simulator</NavLink></li>
         <li><NavLink to="/multiplayer">Multiplayer</NavLink></li>
         <li><NavLink to="/strategies">Strategies</NavLink></li>
+        <li><NavLink to="/learn">Learn</NavLink></li>
+
       </ul>
       <div className="navbar-login">
         {isAuthenticated ? (

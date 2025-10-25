@@ -1,0 +1,250 @@
+/* LearnPage.css */
+.learn-page {
+  background-color: var(--text-dark);
+  min-height: 100vh;
+  padding: 40px 0;
+}
+
+.learn-page .container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.learn-page section {
+  margin-bottom: 60px;
+}
+
+.learn-page h1 {
+  color: var(--primary-green);
+  font-size: 2.5rem;
+  margin-bottom: 30px;
+  text-align: center;
+}
+
+.learn-page h2 {
+  color: var(--text-light);
+  font-size: 2rem;
+  margin-bottom: 20px;
+}
+
+/* Education Cards */
+.education-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+.edu-card {
+  background: var(--dark-bg);
+  padding: 25px;
+  border-radius: 10px;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  transition: transform 0.3s ease;
+}
+
+.edu-card:hover {
+  transform: translateY(-5px);
+  border-color: var(--primary-green);
+}
+
+.edu-card h3 {
+  color: var(--primary-green);
+  font-size: 1.3rem;
+  margin-bottom: 15px;
+}
+
+.edu-card p {
+  color: var(--text-light);
+  line-height: 1.6;
+}
+
+/* Stock Search */
+.search-section {
+  background: var(--dark-bg);
+  padding: 30px;
+  border-radius: 10px;
+}
+
+.search-bar {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 30px;
+}
+
+.search-bar input {
+  flex: 1;
+  padding: 12px 20px;
+  background: var(--text-dark);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: 8px;
+  color: var(--text-light);
+  font-size: 1rem;
+}
+
+.search-bar input:focus {
+  outline: none;
+  border-color: var(--primary-green);
+}
+
+.search-bar button {
+  padding: 12px 30px;
+  background: var(--primary-green);
+  color: var(--dark-bg);
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.search-bar button:hover {
+  background: #0e9e6e;
+}
+
+.search-bar button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Stock Card */
+.stock-card {
+  background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+  padding: 30px;
+  border-radius: 10px;
+  border: 2px solid var(--primary-green);
+}
+
+.stock-card h3 {
+  color: var(--primary-green);
+  font-size: 1.8rem;
+  margin-bottom: 20px;
+}
+
+.stock-details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+}
+
+.detail-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px;
+  background: rgba(16, 185, 129, 0.1);
+  border-radius: 5px;
+}
+
+.detail-item .label {
+  color: #9ca3af;
+  font-weight: 500;
+}
+
+.detail-item .value {
+  color: var(--text-light);
+  font-weight: bold;
+}
+
+.detail-item .value.positive {
+  color: var(--primary-green);
+}
+
+.detail-item .value.negative {
+  color: #ef4444;
+}
+
+/* News Grid */
+.news-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 25px;
+}
+
+.news-card {
+  background: var(--dark-bg);
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  transition: transform 0.3s ease, border-color 0.3s ease;
+}
+
+.news-card:hover {
+  transform: translateY(-5px);
+  border-color: var(--primary-green);
+}
+
+.news-card img {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+}
+
+.news-content {
+  padding: 20px;
+}
+
+.news-content h3 {
+  color: var(--text-light);
+  font-size: 1.1rem;
+  margin-bottom: 12px;
+  line-height: 1.4;
+}
+
+.news-content p {
+  color: #9ca3af;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  margin-bottom: 15px;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.news-meta {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 15px;
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+.news-card a {
+  color: var(--primary-green);
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.3s ease;
+}
+
+.news-card a:hover {
+  color: #0e9e6e;
+}
+
+.no-news {
+  color: #9ca3af;
+  text-align: center;
+  padding: 40px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .learn-page h1 {
+    font-size: 2rem;
+  }
+
+  .education-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .search-bar {
+    flex-direction: column;
+  }
+
+  .stock-details {
+    grid-template-columns: 1fr;
+  }
+
+  .news-grid {
+    grid-template-columns: 1fr;
+  }
+}
