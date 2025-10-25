@@ -9,10 +9,9 @@ import RegisterPage from './pages/RegisterPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import LobbyPage from './pages/LobbyPage';
 import GamePage from './pages/GamePage';
-// ... other imports
 import StrategiesPage from './pages/StrategiesPage';
 import SimulatorPage from './pages/SimulatorPage'; // 1. Import
-
+import LearnPage from './pages/LearnPage';
 function App() {
   return (
     <AuthProvider>
@@ -27,6 +26,7 @@ function App() {
             <Route path="/multiplayer" element={<LobbyPage />} />
             <Route path="/game/:gameId" element={<GamePage />} />
             <Route path="/strategies" element={<StrategiesPage />} />
+            <Route path="/learn" element={<LearnPage />} />
             <Route path="/simulator" element={<SimulatorPage />} /> {/* 2. Add route */}
           </Routes>
           <StockTicker />
