@@ -1,4 +1,3 @@
-// src/components/Navbar.jsx
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -12,14 +11,6 @@ const Navbar = () => {
       <div className="navbar-logo">
         <NavLink to="/">TradeLearn</NavLink>
       </div>
-      // ... other code
-      <ul className="navbar-links">
-        <li><NavLink to="/">Home</NavLink></li>
-        <li><NavLink to="/simulator">Simulator</NavLink></li> {/* <-- Add this line */}
-        <li><NavLink to="/multiplayer">Multiplayer</NavLink></li>
-        <li><NavLink to="/strategies">Strategies</NavLink></li>
-      </ul>
-// ... rest of the code
       <ul className="navbar-links">
         <li><NavLink to="/">Home</NavLink></li>
         <li><NavLink to="/simulator">Simulator</NavLink></li>
