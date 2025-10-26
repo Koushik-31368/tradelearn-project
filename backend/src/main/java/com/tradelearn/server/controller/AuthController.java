@@ -5,7 +5,12 @@ import com.tradelearn.server.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.HashMap;
 import java.util.Optional;
+import java.util.HashMap;
+import java.util.Map;
+
 
 @RestController
 @RequestMapping("/api/auth")
@@ -23,17 +28,26 @@ public class AuthController {
         userRepository.save(user);
         return ResponseEntity.ok("User registered successfully!");
     }
-
-    @PostMapping("/login")
-    public ResponseEntity<?> loginUser(@RequestBody User loginDetails) {
-        Optional<User> optionalUser = userRepository.findByEmail(loginDetails.getEmail());
-        if (optionalUser.isEmpty()) {
-            return ResponseEntity.status(401).body("Error: User not found");
-        }
-        User user = optionalUser.get();
-        if (!user.getPassword().equals(loginDetails.getPassword())) {
-            return ResponseEntity.status(401).body("Error: Invalid credentials");
-        }
-        return ResponseEntity.ok("Login successful!");
+@PostMapping("/login")
+public ResponseEntity<?> loginUser(@RequestBody User loginDetails) {
+    Optional<User> optionalUser = userRepository.findByEmail(loginDetails.getEmail());
+    if (optionalUser.isEmpty()) {
+        return ResponseEntity.status(401).body(Map.of("message", "Error: User not found"));
     }
+
+    User user = optionalUser.get();
+    if (!user.getPassword().equals(loginDetails.getPassword())) {
+        return ResponseEntity.status(401).body(Map.of("message", "Error: Invalid credentials"));
+    }
+
+    // ✅ Return full user info as JSON (id, username, email)
+    Map<String, Object> response = new HashMap<>();
+    response.put("id", user.getId());
+    response.put("username", user.getUsername());
+    response.put("email", user.getEmail());
+
+    return ResponseEntity.ok(response);
+}
+
+
 }
