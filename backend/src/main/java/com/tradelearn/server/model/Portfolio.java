@@ -1,6 +1,9 @@
 package com.tradelearn.server.model;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "portfolios")
@@ -10,8 +13,6 @@ public class Portfolio {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // This links the portfolio to a specific user.
-    // One user can have one portfolio.
     @OneToOne
     @JoinColumn(name = "user_id", referencedColumnName = "id")
     private User user;
@@ -19,10 +20,12 @@ public class Portfolio {
     @Column(name = "virtual_cash", nullable = false)
     private Double virtualCash;
 
-    // Default constructor
+    @OneToMany(mappedBy = "portfolio", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @JsonManagedReference
+    private List<Holding> holdings = new ArrayList<>();
+
     public Portfolio() {}
 
-    // Constructor to create a new portfolio for a user
     public Portfolio(User user, Double startingCash) {
         this.user = user;
         this.virtualCash = startingCash;
@@ -46,5 +49,11 @@ public class Portfolio {
     }
     public void setVirtualCash(Double virtualCash) {
         this.virtualCash = virtualCash;
+    }
+    public List<Holding> getHoldings() {
+        return holdings;
+    }
+    public void setHoldings(List<Holding> holdings) {
+        this.holdings = holdings;
     }
 }

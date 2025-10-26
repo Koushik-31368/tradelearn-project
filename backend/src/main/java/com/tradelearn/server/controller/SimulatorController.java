@@ -1,18 +1,15 @@
 package com.tradelearn.server.controller;
 
 import com.tradelearn.server.dto.TradeRequest;
-import com.tradelearn.server.model.Holding;
 import com.tradelearn.server.model.Portfolio;
-import com.tradelearn.server.repository.HoldingRepository;
-import com.tradelearn.server.repository.PortfolioRepository; // Import PortfolioRepository
+import com.tradelearn.server.repository.PortfolioRepository;
 import com.tradelearn.server.service.SimulatorService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.Map;
-import java.util.Optional; // Import Optional
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/simulator")
@@ -22,10 +19,7 @@ public class SimulatorController {
     private SimulatorService simulatorService;
 
     @Autowired
-    private HoldingRepository holdingRepository;
-
-    @Autowired
-    private PortfolioRepository portfolioRepository; // Add PortfolioRepository
+    private PortfolioRepository portfolioRepository;
 
     @PostMapping("/trade")
     public ResponseEntity<?> executeTrade(@RequestBody TradeRequest tradeRequest) {
@@ -37,21 +31,12 @@ public class SimulatorController {
         }
     }
 
-    // --- ADD THIS NEW METHOD ---
-    @GetMapping("/holdings")
-    public ResponseEntity<?> getHoldings(@RequestParam Long userId) {
-        // 1. Find the user's portfolio
+    @GetMapping("/portfolio")
+    public ResponseEntity<?> getPortfolio(@RequestParam Long userId) {
         Optional<Portfolio> portfolioOpt = portfolioRepository.findByUserId(userId);
         if (portfolioOpt.isEmpty()) {
             return ResponseEntity.status(404).body(Map.of("message", "Portfolio not found"));
         }
-
-        // 2. Get the portfolio ID
-        Long portfolioId = portfolioOpt.get().getId();
-
-        // 3. Find all holdings for that portfolio
-        List<Holding> holdings = holdingRepository.findByPortfolioId(portfolioId);
-
-        return ResponseEntity.ok(holdings);
+        return ResponseEntity.ok(portfolioOpt.get());
     }
 }

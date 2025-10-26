@@ -3,12 +3,13 @@ package com.tradelearn.server.service;
 import com.tradelearn.server.dto.TradeRequest;
 import com.tradelearn.server.model.Holding;
 import com.tradelearn.server.model.Portfolio;
-import com.tradelearn.server.repository.HoldingRepository;
+import com.tradelearn.server.model.Trade;
 import com.tradelearn.server.repository.PortfolioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Service
@@ -18,7 +19,7 @@ public class SimulatorService {
     private PortfolioRepository portfolioRepository;
 
     @Autowired
-    private HoldingRepository holdingRepository;
+    private TradeService tradeService;
 
     @Transactional
     public Portfolio executeTrade(TradeRequest tradeRequest) throws Exception {
@@ -28,7 +29,9 @@ public class SimulatorService {
         double tradeValue = tradeRequest.getPrice() * tradeRequest.getQuantity();
         String stockSymbol = tradeRequest.getStockSymbol();
         int quantity = tradeRequest.getQuantity();
-        Optional<Holding> existingHoldingOpt = holdingRepository.findByPortfolioIdAndStockSymbol(portfolio.getId(), stockSymbol);
+        Optional<Holding> existingHoldingOpt = portfolio.getHoldings().stream()
+                .filter(h -> h.getStockSymbol().equals(stockSymbol))
+                .findFirst();
         String tradeType = tradeRequest.getTradeType().toUpperCase();
 
         if ("BUY".equals(tradeType)) {
@@ -41,18 +44,16 @@ public class SimulatorService {
             double newAveragePrice = (existingValue + tradeValue) / newQuantity;
             holding.setQuantity(newQuantity);
             holding.setAveragePurchasePrice(newAveragePrice);
-            holdingRepository.save(holding);
+            if (!existingHoldingOpt.isPresent()) portfolio.getHoldings().add(holding);
 
         } else if ("SELL".equals(tradeType)) {
             Holding holding = existingHoldingOpt.orElseThrow(() -> new Exception("No long position found for symbol: " + stockSymbol));
             if (holding.getQuantity() < quantity) throw new Exception("Insufficient shares to sell. You only own " + holding.getQuantity());
             portfolio.setVirtualCash(portfolio.getVirtualCash() + tradeValue);
             int newQuantity = holding.getQuantity() - quantity;
-            if (newQuantity == 0) holdingRepository.delete(holding);
-            else {
-                holding.setQuantity(newQuantity);
-                holdingRepository.save(holding);
-            }
+            if (newQuantity == 0) portfolio.getHoldings().remove(holding);
+            else holding.setQuantity(newQuantity);
+
         } else if ("SHORT".equals(tradeType)) {
             portfolio.setVirtualCash(portfolio.getVirtualCash() + tradeValue);
             Holding holding = existingHoldingOpt.orElse(new Holding(portfolio, stockSymbol, 0, 0.0));
@@ -62,7 +63,7 @@ public class SimulatorService {
             double newAveragePrice = (existingValue + tradeValue) / Math.abs(newShortQuantity);
             holding.setQuantity(newShortQuantity);
             holding.setAveragePurchasePrice(newAveragePrice);
-            holdingRepository.save(holding);
+            if (!existingHoldingOpt.isPresent()) portfolio.getHoldings().add(holding);
 
         } else if ("COVER".equals(tradeType)) {
             Holding holding = existingHoldingOpt.orElseThrow(() -> new Exception("No short position found for symbol: " + stockSymbol));
@@ -71,14 +72,22 @@ public class SimulatorService {
             if (Math.abs(holding.getQuantity()) < quantity) throw new Exception("You are only short " + Math.abs(holding.getQuantity()) + " shares.");
             portfolio.setVirtualCash(portfolio.getVirtualCash() - tradeValue);
             int newQuantity = holding.getQuantity() + quantity;
-            if (newQuantity == 0) holdingRepository.delete(holding);
-            else {
-                holding.setQuantity(newQuantity);
-                holdingRepository.save(holding);
-            }
+            if (newQuantity == 0) portfolio.getHoldings().remove(holding);
+            else holding.setQuantity(newQuantity);
+
         } else {
             throw new Exception("Invalid trade type.");
         }
+
+        Trade trade = new Trade();
+        trade.setUserId(tradeRequest.getUserId());
+        trade.setSymbol(stockSymbol);
+        trade.setName(tradeRequest.getName());
+        trade.setType(tradeType);
+        trade.setQuantity(quantity);
+        trade.setPrice(tradeRequest.getPrice());
+        trade.setTimestamp(LocalDateTime.now());
+        tradeService.createTrade(trade);
 
         return portfolioRepository.save(portfolio);
     }

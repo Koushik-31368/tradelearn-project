@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { indianStocks, getStockBySymbol } from '../data/indianStocks';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
@@ -18,62 +18,50 @@ const SimulatorPage = () => {
   const [tradeType, setTradeType] = useState('buy');
   const [message, setMessage] = useState({ text: '', type: '' });
 
-  // Load user data on mount
-  useEffect(() => {
-    if (user) {
-      loadUserPortfolio();
-    }
-  }, [user]);
-
-  const loadUserPortfolio = async () => {
+  const loadUserPortfolio = useCallback(async () => {
     try {
-      const response = await axios.get(`${API_URL}/api/trades/user/${user.id}`);
-      calculatePortfolio(response.data);
+      const response = await axios.get(`${API_URL}/api/simulator/portfolio?userId=${user.id}`);
+      setPortfolioData(response.data);
     } catch (error) {
       console.error('Error loading portfolio:', error);
     }
-  };
+  }, [user]);
 
-  const calculatePortfolio = (trades) => {
-    let currentBalance = INITIAL_BALANCE;
-    const stockHoldings = {};
+  const loadTradeHistory = useCallback(async () => {
+    try {
+      const response = await axios.get(`${API_URL}/api/trades/user/${user.id}`);
+      setTradeHistory(response.data.reverse());
+    } catch (error) {
+      console.error('Error loading trade history:', error);
+    }
+  }, [user]);
 
-    trades.forEach(trade => {
-      if (trade.type === 'BUY') {
-        currentBalance -= trade.quantity * trade.price;
-        stockHoldings[trade.symbol] = stockHoldings[trade.symbol] || { quantity: 0, totalCost: 0 };
-        stockHoldings[trade.symbol].quantity += trade.quantity;
-        stockHoldings[trade.symbol].totalCost += trade.quantity * trade.price;
-      } else {
-        currentBalance += trade.quantity * trade.price;
-        stockHoldings[trade.symbol].quantity -= trade.quantity;
-      }
+  useEffect(() => {
+    if (user) {
+      loadUserPortfolio();
+      loadTradeHistory();
+    }
+  }, [user, loadUserPortfolio, loadTradeHistory]);
+
+  const setPortfolioData = (portfolio) => {
+    setBalance(portfolio.virtualCash);
+    const holdingsArray = portfolio.holdings.map(holding => {
+      const stock = getStockBySymbol(holding.stockSymbol);
+      const currentValue = holding.quantity * stock.price;
+      const profitLoss = currentValue - (holding.quantity * holding.averagePurchasePrice);
+      const profitLossPercent = (profitLoss / (holding.quantity * holding.averagePurchasePrice)) * 100;
+      return {
+        symbol: holding.stockSymbol,
+        name: stock.name,
+        quantity: holding.quantity,
+        avgPrice: holding.averagePurchasePrice.toFixed(2),
+        currentPrice: stock.price,
+        currentValue: currentValue.toFixed(2),
+        profitLoss: profitLoss.toFixed(2),
+        profitLossPercent: profitLossPercent.toFixed(2)
+      };
     });
-
-    const holdingsArray = Object.entries(stockHoldings)
-      .filter(([_, holding]) => holding.quantity > 0)
-      .map(([symbol, holding]) => {
-        const stock = getStockBySymbol(symbol);
-        const avgPrice = holding.totalCost / holding.quantity;
-        const currentValue = holding.quantity * stock.price;
-        const profitLoss = currentValue - holding.totalCost;
-        const profitLossPercent = (profitLoss / holding.totalCost) * 100;
-
-        return {
-          symbol,
-          name: stock.name,
-          quantity: holding.quantity,
-          avgPrice: avgPrice.toFixed(2),
-          currentPrice: stock.price,
-          currentValue: currentValue.toFixed(2),
-          profitLoss: profitLoss.toFixed(2),
-          profitLossPercent: profitLossPercent.toFixed(2)
-        };
-      });
-
-    setBalance(currentBalance);
     setHoldings(holdingsArray);
-    setTradeHistory(trades.reverse());
   };
 
   const handleSearch = (query) => {
@@ -120,14 +108,13 @@ const SimulatorPage = () => {
         price: selectedStock.price
       };
 
-      await axios.post(`${API_URL}/api/trades`, tradeData);
+      await axios.post(`${API_URL}/api/simulator/trade`, tradeData);
       
       setMessage({ text: `${tradeType === 'buy' ? 'Bought' : 'Sold'} ${quantity} shares of ${selectedStock.symbol} successfully!`, type: 'success' });
       
-      // Reload portfolio
       loadUserPortfolio();
+      loadTradeHistory();
       
-      // Reset form
       setQuantity(1);
       setSearchQuery('');
       setSelectedStock(null);
@@ -160,13 +147,11 @@ const SimulatorPage = () => {
     <div className="simulator-page">
       <div className="container">
         
-        {/* Header */}
         <div className="simulator-header">
           <h1>🎮 Trading Simulator</h1>
           <p>Practice trading with virtual money - Starting balance: ₹{INITIAL_BALANCE.toLocaleString()}</p>
         </div>
 
-        {/* Portfolio Summary */}
         <div className="portfolio-summary">
           <div className="summary-card">
             <h3>💰 Available Balance</h3>
@@ -189,7 +174,6 @@ const SimulatorPage = () => {
           </div>
         </div>
 
-        {/* Trading Interface */}
         <div className="trading-section">
           <h2>🔍 Search & Trade</h2>
           
@@ -286,7 +270,6 @@ const SimulatorPage = () => {
           )}
         </div>
 
-        {/* Holdings */}
         <div className="holdings-section">
           <h2>📊 Your Holdings</h2>
           {holdings.length > 0 ? (
@@ -337,7 +320,6 @@ const SimulatorPage = () => {
           )}
         </div>
 
-        {/* Trade History */}
         <div className="history-section">
           <h2>📜 Trade History</h2>
           {tradeHistory.length > 0 ? (
