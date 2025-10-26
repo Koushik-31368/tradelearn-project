@@ -6,7 +6,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 import java.util.Optional;
 
@@ -20,7 +19,6 @@ import java.util.Optional;
     },
     allowCredentials = "true"
 )
-
 public class TradeController {
 
     @Autowired
@@ -28,12 +26,18 @@ public class TradeController {
 
     // Create new trade
     @PostMapping
-    public ResponseEntity<Trade> createTrade(@RequestBody Trade trade) {
+    public ResponseEntity<?> createTrade(@RequestBody Trade trade) {
         try {
+            if (trade.getUserId() == null) {
+                return ResponseEntity.badRequest().body("Invalid userId: must not be null.");
+            }
             Trade createdTrade = tradeService.createTrade(trade);
             return new ResponseEntity<>(createdTrade, HttpStatus.CREATED);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body("Trade failed: " + e.getMessage());
         } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Trade failed: " + e.getMessage());
         }
     }
 
