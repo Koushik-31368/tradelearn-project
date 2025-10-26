@@ -119,7 +119,8 @@ const SimulatorPage = () => {
       setSearchQuery('');
       setSelectedStock(null);
     } catch (error) {
-      setMessage({ text: 'Trade failed. Please try again.', type: 'error' });
+      const errorMessage = error.response?.data?.message || 'Trade failed. Please try again.';
+      setMessage({ text: errorMessage, type: 'error' });
       console.error('Trade error:', error);
     }
   };
