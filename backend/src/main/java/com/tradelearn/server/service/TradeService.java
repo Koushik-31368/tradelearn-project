@@ -15,9 +15,22 @@ public class TradeService {
     @Autowired
     private TradeRepository tradeRepository;
 
-    // Create new trade
+    // Create new trade with basic validation and error handling
     @Transactional
-    public Trade createTrade(Trade trade) {
+    public Trade createTrade(Trade trade) throws IllegalArgumentException {
+        // Basic checks for minimal required fields
+        if (trade.getUserId() == null) {
+            throw new IllegalArgumentException("User ID is required");
+        }
+        if (trade.getSymbol() == null || trade.getSymbol().isEmpty()) {
+            throw new IllegalArgumentException("Stock symbol is required");
+        }
+        if (trade.getQuantity() == null || trade.getQuantity() <= 0) {
+            throw new IllegalArgumentException("Quantity must be positive");
+        }
+        // Add more business logic checks here if needed (for 'type', 'price', etc.)
+
+        // Save to DB
         return tradeRepository.save(trade);
     }
 
