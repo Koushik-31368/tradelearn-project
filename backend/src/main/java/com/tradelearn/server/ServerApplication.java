@@ -1,5 +1,3 @@
-// src/main/java/com/tradelearn/server/ServerApplication.java
-
 package com.tradelearn.server;
 
 import org.springframework.boot.SpringApplication;
@@ -11,5 +9,4 @@ public class ServerApplication {
     public static void main(String[] args) {
         SpringApplication.run(ServerApplication.class, args);
     }
-
 }

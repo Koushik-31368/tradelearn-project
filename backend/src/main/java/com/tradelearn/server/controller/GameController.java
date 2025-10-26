@@ -1,4 +1,3 @@
-// src/main/java/com/tradelearn/server/controller/GameController.java
 package com.tradelearn.server.controller;
 
 import com.tradelearn.server.dto.CreateGameRequest;
@@ -16,7 +15,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/games")
-// This single line fixes the error by giving permission to your React app
+@CrossOrigin(origins = {"http://localhost:3000", "https://tradelearn-project.vercel.app", "https://tradelearn-project-kethans-projects-3fb29448.vercel.app"}, allowCredentials = "true")
 public class GameController {
 
     private final GameRepository gameRepository;
@@ -34,13 +33,11 @@ public class GameController {
         if (creatorOptional.isEmpty()) {
             return ResponseEntity.badRequest().body("Creator user not found");
         }
-
         Game newGame = new Game();
         newGame.setCreator(creatorOptional.get());
         newGame.setStockSymbol(request.getStockSymbol());
         newGame.setDurationMinutes(request.getDurationMinutes());
         newGame.setStatus("WAITING");
-
         Game savedGame = gameRepository.save(newGame);
         return ResponseEntity.ok(savedGame);
     }
@@ -58,7 +55,6 @@ public class GameController {
             return ResponseEntity.badRequest().body("Game not found");
         }
         Game game = gameOptional.get();
-
         Optional<User> opponentOptional = userRepository.findById(request.getOpponentId());
         if (opponentOptional.isEmpty()) {
             return ResponseEntity.badRequest().body("Opponent user not found");
@@ -71,11 +67,9 @@ public class GameController {
         if (game.getCreator().getId().equals(opponent.getId())) {
             return ResponseEntity.badRequest().body("Cannot join your own game");
         }
-
         game.setOpponent(opponent);
         game.setStatus("ACTIVE");
         Game updatedGame = gameRepository.save(game);
-
         return ResponseEntity.ok(updatedGame);
     }
 }
