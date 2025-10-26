@@ -24,12 +24,11 @@ public class TradeController {
     @Autowired
     private TradeService tradeService;
 
-    // Create new trade
     @PostMapping
     public ResponseEntity<?> createTrade(@RequestBody Trade trade) {
         try {
             if (trade.getUserId() == null) {
-                return ResponseEntity.badRequest().body("Invalid userId: must not be null.");
+                return ResponseEntity.badRequest().body("Invalid userId (got null or undefined)");
             }
             Trade createdTrade = tradeService.createTrade(trade);
             return new ResponseEntity<>(createdTrade, HttpStatus.CREATED);
@@ -37,11 +36,10 @@ public class TradeController {
             return ResponseEntity.badRequest().body("Trade failed: " + e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Trade failed: " + e.getMessage());
+                .body("Trade failed: " + e.getMessage());
         }
     }
 
-    // Get all trades for a user
     @GetMapping("/user/{userId}")
     public ResponseEntity<List<Trade>> getUserTrades(@PathVariable Long userId) {
         try {
@@ -55,19 +53,17 @@ public class TradeController {
         }
     }
 
-    // Get single trade by ID
     @GetMapping("/{id}")
     public ResponseEntity<Trade> getTradeById(@PathVariable Long id) {
         Optional<Trade> trade = tradeService.getTradeById(id);
         return trade.map(value -> new ResponseEntity<>(value, HttpStatus.OK))
-                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+                    .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
-    // Get trades by symbol for a user
     @GetMapping("/user/{userId}/symbol/{symbol}")
     public ResponseEntity<List<Trade>> getUserTradesBySymbol(
-            @PathVariable Long userId,
-            @PathVariable String symbol) {
+        @PathVariable Long userId,
+        @PathVariable String symbol) {
         try {
             List<Trade> trades = tradeService.getUserTradesBySymbol(userId, symbol);
             return new ResponseEntity<>(trades, HttpStatus.OK);
@@ -76,7 +72,6 @@ public class TradeController {
         }
     }
 
-    // Delete trade
     @DeleteMapping("/{id}")
     public ResponseEntity<HttpStatus> deleteTrade(@PathVariable Long id) {
         try {
@@ -87,7 +82,6 @@ public class TradeController {
         }
     }
 
-    // Get trade count for user
     @GetMapping("/user/{userId}/count")
     public ResponseEntity<Long> getUserTradeCount(@PathVariable Long userId) {
         try {
@@ -98,7 +92,6 @@ public class TradeController {
         }
     }
 
-    // Get all trades (admin only)
     @GetMapping
     public ResponseEntity<List<Trade>> getAllTrades() {
         try {
