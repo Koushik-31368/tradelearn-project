@@ -1,4 +1,3 @@
-// src/main/java/com/tradelearn/server/config/WebConfig.java
 package com.tradelearn.server.config;
 
 import org.springframework.context.annotation.Bean;
@@ -14,10 +13,16 @@ public class WebConfig {
         return new WebMvcConfigurer() {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
-                // This allows all requests from our React app (localhost:3000)
-                registry.addMapping("/api/**") // Apply to all API routes
-                        .allowedOrigins("http://172.26.128.1:3000")
-                        .allowedMethods("GET", "POST", "PUT", "DELETE", "HEAD");
+                registry.addMapping("/**")
+                        .allowedOrigins(
+                                "http://localhost:3000",
+                                "http://172.26.128.1:3000",
+                                "https://tradelearn-project.vercel.app",
+                                "https://tradelearn-project-kethans-projects-3fb29448.vercel.app"
+                        )
+                        .allowedMethods("GET", "POST", "PUT", "DELETE", "HEAD", "OPTIONS")
+                        .allowedHeaders("*")
+                        .allowCredentials(true);
             }
         };
     }
