@@ -12,7 +12,15 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/trades")
-@CrossOrigin(origins = "*") // Allow all origins for development
+@CrossOrigin(
+    origins = {
+        "http://localhost:3000",
+        "https://tradelearn-project.vercel.app",
+        "https://tradelearn-project-kethans-projects-3fb29448.vercel.app"
+    },
+    allowCredentials = "true"
+)
+
 public class TradeController {
 
     @Autowired
