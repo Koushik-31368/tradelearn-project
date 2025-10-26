@@ -23,7 +23,7 @@ public class SimulatorService {
 
     @Transactional
     public Portfolio executeTrade(TradeRequest tradeRequest) throws Exception {
-        Portfolio portfolio = portfolioRepository.findByUserId(tradeRequest.getUserId())
+        Portfolio portfolio = portfolioRepository.findByUser_Id(tradeRequest.getUserId())
                 .orElseThrow(() -> new Exception("Portfolio not found for user"));
 
         double tradeValue = tradeRequest.getPrice() * tradeRequest.getQuantity();

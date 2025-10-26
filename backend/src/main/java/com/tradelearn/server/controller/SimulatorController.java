@@ -33,7 +33,7 @@ public class SimulatorController {
 
     @GetMapping("/portfolio")
     public ResponseEntity<?> getPortfolio(@RequestParam Long userId) {
-        Optional<Portfolio> portfolioOpt = portfolioRepository.findByUserId(userId);
+        Optional<Portfolio> portfolioOpt = portfolioRepository.findByUser_Id(userId);
         if (portfolioOpt.isEmpty()) {
             return ResponseEntity.status(404).body(Map.of("message", "Portfolio not found"));
         }
