@@ -26,13 +26,17 @@ public class SimulatorService {
         Portfolio portfolio = portfolioRepository.findByUser_Id(tradeRequest.getUserId())
                 .orElseThrow(() -> new Exception("Portfolio not found for user"));
 
+        if (tradeRequest.getTradeType() == null || tradeRequest.getTradeType().isBlank()) {
+            throw new Exception("Trade type (e.g., 'BUY' or 'SELL') is missing.");
+        }
+        String tradeType = tradeRequest.getTradeType().toUpperCase();
+
         double tradeValue = tradeRequest.getPrice() * tradeRequest.getQuantity();
         String stockSymbol = tradeRequest.getStockSymbol();
         int quantity = tradeRequest.getQuantity();
         Optional<Holding> existingHoldingOpt = portfolio.getHoldings().stream()
                 .filter(h -> h.getStockSymbol().equals(stockSymbol))
                 .findFirst();
-        String tradeType = tradeRequest.getTradeType().toUpperCase();
 
         if ("BUY".equals(tradeType)) {
             if (portfolio.getVirtualCash() < tradeValue) throw new Exception("Insufficient funds.");
