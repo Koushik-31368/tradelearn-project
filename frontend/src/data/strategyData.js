@@ -95,7 +95,7 @@ export const strategies = [
     id: 8,
     category: 'Technical Analysis',
     name: 'MACD Strategy',
-    icon: '📉',
+    icon: '',
     risk: 'MEDIUM',
     timeHorizon: '2-7 Days',
     description: 'Moving Average Convergence Divergence - buy on bullish crossover, sell on bearish.',
@@ -130,9 +130,9 @@ export const quizQuestions = [
     id: 3,
     question: "What's your primary investment goal?",
     options: [
-      { text: '💰 Steady income - Regular returns', value: 'income', score: { dividend: 3, buyHold: 2, dayTrading: 0 } },
-      { text: '📈 Capital growth - Build wealth over time', value: 'growth', score: { dividend: 1, buyHold: 3, dayTrading: 1 } },
-      { text: '🚀 Maximum returns - Aggressive wealth building', value: 'maxReturns', score: { dividend: 0, buyHold: 1, dayTrading: 3 } }
+      { text: 'Steady income - Regular returns', value: 'income', score: { dividend: 3, buyHold: 2, dayTrading: 0 } },
+      { text: 'Capital growth - Build wealth over time', value: 'growth', score: { dividend: 1, buyHold: 3, dayTrading: 1 } },
+      { text: 'Maximum returns - Aggressive wealth building', value: 'maxReturns', score: { dividend: 0, buyHold: 1, dayTrading: 3 } }
     ]
   },
   {
@@ -148,9 +148,10 @@ export const quizQuestions = [
     id: 5,
     question: "What's your trading experience level?",
     options: [
-      { text: '👶 Beginner - Just starting out', value: 'beginner', score: { beginner: 3, intermediate: 0, advanced: 0 } },
-      { text: '📚 Intermediate - Some market knowledge', value: 'intermediate', score: { beginner: 1, intermediate: 3, advanced: 1 } },
-      { text: '🎓 Advanced - Experienced trader', value: 'advanced', score: { beginner: 0, intermediate: 1, advanced: 3 } }
+      { text: 'Beginner - Just starting out', value: 'beginner', score: { beginner: 3, intermediate: 0, advanced: 0 } },
+      { text: 'Intermediate - Some market knowledge', value: 'intermediate', score: { beginner: 1, intermediate: 3, advanced: 1 } },
+      { text: 'Advanced - Experienced trader', value: 'advanced', score: { beginner: 0, intermediate: 1, advanced: 3 } }
     ]
   }
 ];
+

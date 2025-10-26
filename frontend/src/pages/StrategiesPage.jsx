@@ -105,7 +105,7 @@ const StrategiesPage = () => {
             className={`tab-btn ${activeTab === 'simulator' ? 'active' : ''}`}
             onClick={() => setActiveTab('simulator')}
           >
-            🎮 Try Simulator
+            Try Simulator
           </button>
           <button 
             className={`tab-btn ${activeTab === 'quiz' ? 'active' : ''}`}
@@ -311,4 +311,4 @@ const StrategiesPage = () => {
   );
 };
 
-export default StrategiesPage;
+export default StrategiesPage;;
