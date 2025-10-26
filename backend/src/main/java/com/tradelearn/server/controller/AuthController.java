@@ -46,6 +46,12 @@ public class AuthController {
             return ResponseEntity.status(401).body(Map.of("message", "Error: Invalid credentials"));
         }
 
+        // Ensure portfolio exists for the user, creating one if it doesn't.
+        portfolioRepository.findByUserId(user.getId()).orElseGet(() -> {
+            Portfolio newPortfolio = new Portfolio(user, 100000.0);
+            return portfolioRepository.save(newPortfolio);
+        });
+
         // ✅ Return full user info as JSON (id, username, email)
         Map<String, Object> response = new HashMap<>();
         response.put("id", user.getId());
