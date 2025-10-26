@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - name: Build and test (backend)
+        working-directory: backend
+        run: mvn -B -U clean verify
+
+      - name: Build frontend (optional)
+        working-directory: frontend
+        run: |
+          if [ -f package.json ]; then
+            npm ci && npm run build || true
+          fi
