@@ -67,7 +67,7 @@ const LearnPage = () => {
               <p>NSE (National Stock Exchange) and BSE (Bombay Stock Exchange) are India's two main stock exchanges where stocks are traded.</p>
             </div>
             <div className="edu-card">
-              <h3>📊 Market Indices</h3>
+              <h3>Market Indices</h3>
               <p>Nifty 50 and Sensex are indices that track the performance of top Indian companies.</p>
             </div>
             <div className="edu-card">

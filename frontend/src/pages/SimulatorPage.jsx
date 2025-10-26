@@ -149,7 +149,7 @@ const SimulatorPage = () => {
       <div className="container">
         
         <div className="simulator-header">
-          <h1>🎮 Trading Simulator</h1>
+          <h1>Trading Simulator</h1>
           <p>Practice trading with virtual money - Starting balance: ₹{INITIAL_BALANCE.toLocaleString()}</p>
         </div>
 
