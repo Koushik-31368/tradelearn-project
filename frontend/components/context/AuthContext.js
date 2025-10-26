@@ -8,11 +8,15 @@ const AuthContext = createContext(null);
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null); // Will hold user data after login
 
-  // Mock login function
+  // Mock login function - now ALWAYS provides a numeric id!
   const login = (email) => {
-    // In a real app, you'd get user details from the backend.
-    // For now, we'll create a dummy user.
-    const dummyUser = { email, name: 'Koushik' };
+    // In a real app, you'd get user details from the backend
+    // For now, create a dummy user with a guaranteed id
+    const dummyUser = { 
+      email, 
+      name: 'Koushik', 
+      id: 1  // <<---- This line ENSURES no undefined user.id anywhere!
+    };
     setUser(dummyUser);
   };
 
