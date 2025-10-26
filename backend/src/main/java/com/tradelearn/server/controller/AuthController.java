@@ -47,7 +47,7 @@ public class AuthController {
         }
 
         // Ensure portfolio exists for the user, creating one if it doesn't.
-        portfolioRepository.findByUserId(user.getId()).orElseGet(() -> {
+        portfolioRepository.findByUser_Id(user.getId()).orElseGet(() -> {
             Portfolio newPortfolio = new Portfolio(user, 100000.0);
             return portfolioRepository.save(newPortfolio);
         });
