@@ -101,9 +101,9 @@ const SimulatorPage = () => {
     try {
       const tradeData = {
         userId: user.id,
-        symbol: selectedStock.symbol,
+        stockSymbol: selectedStock.symbol,
         name: selectedStock.name,
-        type: tradeType.toUpperCase(),
+        tradeType: tradeType.toUpperCase(),
         quantity: quantity,
         price: selectedStock.price
       };
