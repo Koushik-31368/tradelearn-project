@@ -1,4 +1,3 @@
-// src/main/java/com/tradelearn/server/dto/CandleDto.java
 package com.tradelearn.server.dto;
 
 import java.time.LocalDate;
@@ -10,18 +9,44 @@ public class CandleDto {
     private double low;
     private double close;
 
-    public LocalDate getDate() { return date; }
-    public void setDate(LocalDate date) { this.date = date; }
+    // Getters and Setters
+    public LocalDate getDate() {
+        return date;
+    }
 
-    public double getOpen() { return open; }
-    public void setOpen(double open) { this.open = open; }
+    public void setDate(LocalDate date) {
+        this.date = date;
+    }
 
-    public double getHigh() { return high; }
-    public void setHigh(double high) { this.high = high; }
+    public double getOpen() {
+        return open;
+    }
 
-    public double getLow() { return low; }
-    public void setLow(double low) { this.low = low; }
+    public void setOpen(double open) {
+        this.open = open;
+    }
 
-    public double getClose() { return close; }
-    public void setClose(double close) { this.close = close; }
+    public double getHigh() {
+        return high;
+    }
+
+    public void setHigh(double high) {
+        this.high = high;
+    }
+
+    public double getLow() {
+        return low;
+    }
+
+    public void setLow(double low) {
+        this.low = low;
+    }
+
+    public double getClose() {
+        return close;
+    }
+
+    public void setClose(double close) {
+        this.close = close;
+    }
 }
