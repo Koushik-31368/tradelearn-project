@@ -3,6 +3,7 @@ import { indianStocks, getStockBySymbol } from '../data/indianStocks';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 import './SimulatorPage.css';
+import '../styles/theme.css'; // ensure theme is loaded
 
 const INITIAL_BALANCE = 100000;
 const API_URL = process.env.REACT_APP_API_URL || 'https://tradelearn-project-production.up.railway.app';
@@ -135,7 +136,7 @@ const SimulatorPage = () => {
       <div className="simulator-page">
         <div className="container">
           <div className="login-required">
-            <h2>🔒 Login Required</h2>
+            <h2>Login Required</h2>
             <p>Please login to access the trading simulator</p>
             <a href="/login" className="login-link">Go to Login</a>
           </div>
@@ -145,218 +146,218 @@ const SimulatorPage = () => {
   }
 
   return (
-    <div className="simulator-page">
-      <div className="container">
-        
-        <div className="simulator-header">
-          <h1>Trading Simulator</h1>
-          <p>Practice trading with virtual money - Starting balance: ₹{INITIAL_BALANCE.toLocaleString()}</p>
-        </div>
+<div className="simulator-page">
+  <div className="container">
 
-        <div className="portfolio-summary">
-          <div className="summary-card">
-            <h3>💰 Available Balance</h3>
-            <p className="balance">₹{balance.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</p>
-          </div>
-          <div className="summary-card">
-            <h3>📊 Holdings Value</h3>
-            <p className="holdings-value">₹{portfolioValue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</p>
-          </div>
-          <div className="summary-card">
-            <h3>💼 Total Portfolio</h3>
-            <p className="total-value">₹{totalValue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</p>
-          </div>
-          <div className="summary-card">
-            <h3>📈 Total P&L</h3>
-            <p className={`profit-loss ${totalProfitLoss >= 0 ? 'positive' : 'negative'}`}>
-              ₹{totalProfitLoss.toLocaleString('en-IN', { minimumFractionDigits: 2 })} 
-              ({totalProfitLossPercent.toFixed(2)}%)
-            </p>
-          </div>
-        </div>
+    {/* Header */}
+    <div className="simulator-header">
+      <h1>Trading Simulator</h1>
+      <p>Practice with virtual money and track your portfolio.</p>
+    </div>
 
-        <div className="trading-section">
-          <h2>🔍 Search & Trade</h2>
-          
-          <div className="search-bar">
-            <input
-              type="text"
-              placeholder="Search stock by symbol or name (e.g., TCS, Infosys)"
-              value={searchQuery}
-              onChange={(e) => handleSearch(e.target.value)}
-            />
-          </div>
-
-          {selectedStock && (
-            <div className="stock-details">
-              <div className="stock-info">
-                <h3>{selectedStock.symbol}</h3>
-                <p className="stock-name">{selectedStock.name}</p>
-                <p className="stock-price">₹{selectedStock.price.toFixed(2)}</p>
-                <p className={`stock-change ${selectedStock.change >= 0 ? 'positive' : 'negative'}`}>
-                  {selectedStock.change >= 0 ? '▲' : '▼'} {Math.abs(selectedStock.change).toFixed(2)}%
-                </p>
-              </div>
-
-              <div className="trade-form">
-                <div className="trade-type-selector">
-                  <button 
-                    className={`trade-type-btn ${tradeType === 'buy' ? 'active buy' : ''}`}
-                    onClick={() => setTradeType('buy')}
-                  >
-                    Buy
-                  </button>
-                  <button 
-                    className={`trade-type-btn ${tradeType === 'sell' ? 'active sell' : ''}`}
-                    onClick={() => setTradeType('sell')}
-                  >
-                    Sell
-                  </button>
-                </div>
-
-                <div className="quantity-input">
-                  <label>Quantity:</label>
-                  <input
-                    type="number"
-                    min="1"
-                    value={quantity}
-                    onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
-                  />
-                </div>
-
-                <div className="trade-summary">
-                  <p>Total: <strong>₹{(quantity * selectedStock.price).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</strong></p>
-                </div>
-
-                <button className={`execute-btn ${tradeType}`} onClick={executeTrade}>
-                  {tradeType === 'buy' ? 'Buy' : 'Sell'} {quantity} shares
-                </button>
-              </div>
-            </div>
-          )}
-
-          {message.text && (
-            <div className={`message ${message.type}`}>
-              {message.text}
-            </div>
-          )}
-
-          {!selectedStock && searchQuery && (
-            <p className="no-results">No stock found for "{searchQuery}"</p>
-          )}
-
-          {!selectedStock && !searchQuery && (
-            <div className="stock-suggestions">
-              <h3>Popular Stocks:</h3>
-              <div className="suggestions-grid">
-                {indianStocks.slice(0, 6).map(stock => (
-                  <div 
-                    key={stock.symbol} 
-                    className="suggestion-card"
-                    onClick={() => {
-                      setSearchQuery(stock.symbol);
-                      setSelectedStock(stock);
-                    }}
-                  >
-                    <h4>{stock.symbol}</h4>
-                    <p>{stock.name}</p>
-                    <p className="price">₹{stock.price.toFixed(2)}</p>
-                    <p className={`change ${stock.change >= 0 ? 'positive' : 'negative'}`}>
-                      {stock.change >= 0 ? '▲' : '▼'} {Math.abs(stock.change).toFixed(2)}%
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-
-        <div className="holdings-section">
-          <h2>📊 Your Holdings</h2>
-          {holdings.length > 0 ? (
-            <div className="holdings-table">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Symbol</th>
-                    <th>Qty</th>
-                    <th>Avg Price</th>
-                    <th>Current Price</th>
-                    <th>Current Value</th>
-                    <th>P&L</th>
-                    <th>Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {holdings.map(holding => (
-                    <tr key={holding.symbol}>
-                      <td><strong>{holding.symbol}</strong></td>
-                      <td>{holding.quantity}</td>
-                      <td>₹{holding.avgPrice}</td>
-                      <td>₹{holding.currentPrice.toFixed(2)}</td>
-                      <td>₹{holding.currentValue}</td>
-                      <td className={parseFloat(holding.profitLoss) >= 0 ? 'positive' : 'negative'}>
-                        ₹{holding.profitLoss} ({holding.profitLossPercent}%)
-                      </td>
-                      <td>
-                        <button 
-                          className="sell-btn"
-                          onClick={() => {
-                            setSearchQuery(holding.symbol);
-                            setSelectedStock(getStockBySymbol(holding.symbol));
-                            setTradeType('sell');
-                            setQuantity(holding.quantity);
-                          }}
-                        >
-                          Sell
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <p className="no-holdings">No holdings yet. Start trading to build your portfolio!</p>
-          )}
-        </div>
-
-        <div className="history-section">
-          <h2>📜 Trade History</h2>
-          {tradeHistory.length > 0 ? (
-            <div className="history-table">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Date</th>
-                    <th>Type</th>
-                    <th>Symbol</th>
-                    <th>Qty</th>
-                    <th>Price</th>
-                    <th>Total</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {tradeHistory.map((trade, index) => (
-                    <tr key={index}>
-                      <td>{new Date(trade.timestamp).toLocaleDateString()}</td>
-                      <td className={trade.type.toLowerCase()}>{trade.type}</td>
-                      <td><strong>{trade.symbol}</strong></td>
-                      <td>{trade.quantity}</td>
-                      <td>₹{trade.price.toFixed(2)}</td>
-                      <td>₹{(trade.quantity * trade.price).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <p className="no-history">No trades yet. Start trading to see your history!</p>
-          )}
-        </div>
-
+    {/* Portfolio Summary */}
+    <div className="portfolio-summary">
+      <div className="summary-card">
+        <h3>Available Balance</h3>
+        <p className="balance">₹{balance.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</p>
+      </div>
+      <div className="summary-card">
+        <h3>Holdings Value</h3>
+        <p className="holdings-value">₹{portfolioValue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</p>
+      </div>
+      <div className="summary-card">
+        <h3>Total Portfolio</h3>
+        <p className="total-value">₹{totalValue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</p>
+      </div>
+      <div className="summary-card">
+        <h3>Total P&L</h3>
+        <p className={`profit-loss ${totalProfitLoss >= 0 ? 'positive' : 'negative'}`}>
+          ₹{totalProfitLoss.toLocaleString('en-IN', { minimumFractionDigits: 2 })} ({totalProfitLossPercent.toFixed(2)}%)
+        </p>
       </div>
     </div>
+
+    {/* Trading Interface */}
+    <div className="trading-section">
+      <h2>Search and Trade</h2>
+
+      <div className="search-bar">
+        <input
+          className="input"
+          type="text"
+          placeholder="Search stock by symbol or name (e.g., TCS, Infosys)"
+          value={searchQuery}
+          onChange={(e) => handleSearch(e.target.value)}
+        />
+      </div>
+
+      {selectedStock && (
+        <div className="stock-details">
+          <div className="stock-info panel">
+            <h3>{selectedStock.symbol}</h3>
+            <p className="stock-name">{selectedStock.name}</p>
+            <p className="stock-price">₹{selectedStock.price.toFixed(2)}</p>
+            <p className={`stock-change ${selectedStock.change >= 0 ? 'positive' : 'negative'}`}>
+              {selectedStock.change >= 0 ? '+' : ''}{Math.abs(selectedStock.change).toFixed(2)}%
+            </p>
+          </div>
+
+          <div className="trade-form panel">
+            <div className="trade-type-selector">
+              <button
+                className={`trade-type-btn ${tradeType === 'buy' ? 'active buy' : ''}`}
+                onClick={() => setTradeType('buy')}
+              >Buy</button>
+              <button
+                className={`trade-type-btn ${tradeType === 'sell' ? 'active sell' : ''}`}
+                onClick={() => setTradeType('sell')}
+              >Sell</button>
+            </div>
+
+            <div className="quantity-input">
+              <label>Quantity</label>
+              <input
+                className="input"
+                type="number"
+                min="1"
+                value={quantity}
+                onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
+              />
+            </div>
+
+            <div className="trade-summary">
+              <p>Total: ₹{(quantity * selectedStock.price).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</p>
+            </div>
+
+            <button className={`execute-btn ${tradeType}`} onClick={executeTrade}>
+              {tradeType === 'buy' ? 'Buy' : 'Sell'} {quantity} shares
+            </button>
+          </div>
+        </div>
+      )}
+
+      {message.text && (
+        <div className={`message ${message.type}`}>{message.text}</div>
+      )}
+
+      {!selectedStock && searchQuery && (
+        <p className="no-results">No stock found for “{searchQuery}”.</p>
+      )}
+
+      {!selectedStock && !searchQuery && (
+        <div className="stock-suggestions">
+          <h3>Popular Stocks</h3>
+          <div className="suggestions-grid">
+            {indianStocks.slice(0, 6).map(stock => (
+              <div
+                key={stock.symbol}
+                className="suggestion-card"
+                onClick={() => {
+                  setSearchQuery(stock.symbol);
+                  setSelectedStock(stock);
+                }}
+              >
+                <h4>{stock.symbol}</h4>
+                <p className="stock-name">{stock.name}</p>
+                <p className="price">₹{stock.price.toFixed(2)}</p>
+                <p className={`change ${stock.change >= 0 ? 'positive' : 'negative'}`}>
+                  {stock.change >= 0 ? '+' : ''}{Math.abs(stock.change).toFixed(2)}%
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+
+    {/* Holdings */}
+    <div className="holdings-section">
+      <h2>Your Holdings</h2>
+      {holdings.length > 0 ? (
+        <div className="holdings-table panel">
+          <table className="table">
+            <thead>
+              <tr>
+                <th>Symbol</th>
+                <th>Qty</th>
+                <th>Avg Price</th>
+                <th>Current Price</th>
+                <th>Current Value</th>
+                <th>P&L</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {holdings.map(holding => (
+                <tr key={holding.symbol}>
+                  <td><strong>{holding.symbol}</strong></td>
+                  <td>{holding.quantity}</td>
+                  <td>₹{holding.avgPrice}</td>
+                  <td>₹{holding.currentPrice.toFixed(2)}</td>
+                  <td>₹{holding.currentValue}</td>
+                  <td className={parseFloat(holding.profitLoss) >= 0 ? 'badge-pos' : 'badge-neg'}>
+                    ₹{holding.profitLoss} ({holding.profitLossPercent}%)
+                  </td>
+                  <td>
+                    <button
+                      className="sell-btn"
+                      onClick={() => {
+                        setSearchQuery(holding.symbol);
+                        setSelectedStock(getStockBySymbol(holding.symbol));
+                        setTradeType('sell');
+                        setQuantity(holding.quantity);
+                      }}
+                    >
+                      Sell
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <p className="no-holdings">No holdings yet.</p>
+      )}
+    </div>
+
+    {/* Trade History */}
+    <div className="history-section">
+      <h2>Trade History</h2>
+      {tradeHistory.length > 0 ? (
+        <div className="history-table panel">
+          <table className="table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Type</th>
+                <th>Symbol</th>
+                <th>Qty</th>
+                <th>Price</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {tradeHistory.map((trade, index) => (
+                <tr key={index}>
+                  <td>{new Date(trade.timestamp).toLocaleDateString()}</td>
+                  <td className={trade.type.toLowerCase()}>{trade.type}</td>
+                  <td><strong>{trade.symbol}</strong></td>
+                  <td>{trade.quantity}</td>
+                  <td>₹{trade.price.toFixed(2)}</td>
+                  <td>₹{(trade.quantity * trade.price).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <p className="no-history">No trades yet.</p>
+      )}
+    </div>
+
+  </div>
+</div>
   );
 };
 
