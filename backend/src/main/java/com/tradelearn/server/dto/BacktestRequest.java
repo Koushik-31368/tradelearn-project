@@ -1,4 +1,3 @@
-// src/main/java/com/tradelearn/server/dto/BacktestRequest.java
 package com.tradelearn.server.dto;
 
 import java.util.List;
@@ -10,18 +9,44 @@ public class BacktestRequest {
     private int smaSlow;
     private List<CandleDto> candles;
 
-    public String getSymbol() { return symbol; }
-    public void setSymbol(String symbol) { this.symbol = symbol; }
+    // Getters and Setters
+    public String getSymbol() {
+        return symbol;
+    }
 
-    public double getInitialCapital() { return initialCapital; }
-    public void setInitialCapital(double initialCapital) { this.initialCapital = initialCapital; }
+    public void setSymbol(String symbol) {
+        this.symbol = symbol;
+    }
 
-    public int getSmaFast() { return smaFast; }
-    public void setSmaFast(int smaFast) { this.smaFast = smaFast; }
+    public double getInitialCapital() {
+        return initialCapital;
+    }
 
-    public int getSmaSlow() { return smaSlow; }
-    public void setSmaSlow(int smaSlow) { this.smaSlow = smaSlow; }
+    public void setInitialCapital(double initialCapital) {
+        this.initialCapital = initialCapital;
+    }
 
-    public List<CandleDto> getCandles() { return candles; }
-    public void setCandles(List<CandleDto> candles) { this.candles = candles; }
+    public int getSmaFast() {
+        return smaFast;
+    }
+
+    public void setSmaFast(int smaFast) {
+        this.smaFast = smaFast;
+    }
+
+    public int getSmaSlow() {
+        return smaSlow;
+    }
+
+    public void setSmaSlow(int smaSlow) {
+        this.smaSlow = smaSlow;
+    }
+
+    public List<CandleDto> getCandles() {
+        return candles;
+    }
+
+    public void setCandles(List<CandleDto> candles) {
+        this.candles = candles;
+    }
 }
