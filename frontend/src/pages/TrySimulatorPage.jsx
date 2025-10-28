@@ -40,6 +40,9 @@ export default function TrySimulatorPage() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
+  const [batchSymbols, setBatchSymbols] = useState('AAPL,GOOG,MSFT');
+  const [oosEnabled, setOosEnabled] = useState(false);
+  const [oosSplitDate, setOosSplitDate] = useState(''); // e.g. '2024-01-15'
 
   // URL overrides (e.g., ?fast=7&slow=21)
   useEffect(() => {
@@ -165,6 +168,66 @@ equity = cash + shares * close`}
               <div><p style={{color:'var(--muted)'}}>Win Rate</p><p>{result.winRatePct}%</p></div>
               <div><p style={{color:'var(--muted)'}}>Trades</p><p>{result.tradesCount}</p></div>
             </div>
+          </div>
+
+          <div className="panel" style={{padding:16}}>
+            <h2>Mini Batch</h2>
+            <div style={{display:'flex', gap:8}}>
+              <input className="input" value={batchSymbols} onChange={e=>setBatchSymbols(e.target.value)} />
+              <button
+                className="btn btn-outline"
+                type="button"
+                onClick={async () => {
+                  try {
+                    setError('');
+                    const symbols = batchSymbols.split(',').map(s => s.trim().toUpperCase()).filter(Boolean).slice(0, 5);
+                    const body = {
+                      symbols,
+                      initialCapital: Number(initialCapital),
+                      smaFast: Number(smaFast),
+                      smaSlow: Number(smaSlow),
+                      candles: candles.map(c => ({ ...c, open:+c.open, high:+c.high, low:+c.low, close:+c.close })),
+                      oos: oosEnabled ? { enabled: true, splitDate: oosSplitDate } : null
+                    };
+                    const resp = await axios.post(`${API_URL}/api/strategy/backtest/batch`, body);
+                    const rows = resp.data.results || [];
+                    // store in local state next to result:
+                    setResult(r => ({ ...(r || {}), batch: rows }));
+                  } catch (err) {
+                    setError(err?.response?.data?.message || err.message || 'Batch failed');
+                  }
+                }}
+              >
+                Run Batch
+              </button>
+            </div>
+
+            {result?.batch?.length ? (
+              <table className="table" style={{marginTop:10}}>
+                <thead>
+                  <tr>
+                    <th>Symbol</th>
+                    <th>Return</th>
+                    <th>Max DD</th>
+                    <th>Win Rate</th>
+                    <th>Trades</th>
+                    <th>Final Capital</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {result.batch.map((it, i) => (
+                    <tr key={i}>
+                      <td>{it.symbol}</td>
+                      <td>{it.returnPct.toFixed(2)}%</td>
+                      <td>{it.maxDrawdownPct.toFixed(2)}%</td>
+                      <td>{it.winRatePct.toFixed(2)}%</td>
+                      <td>{it.trades}</td>
+                      <td>₹{it.finalCapital.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : <p className="no-history" style={{marginTop:8}}>Enter up to 5 symbols separated by commas and click Run Batch.</p>}
           </div>
 
           <div className="panel" style={{padding:16}}>
