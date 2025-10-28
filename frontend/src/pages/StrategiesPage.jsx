@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { strategies, quizQuestions } from '../data/strategyData';
 import './StrategiesPage.css';
-import TrySimulatorPage from './TrySimulatorPage';
 
 const StrategiesPage = () => {
   const [activeTab, setActiveTab] = useState('library');
@@ -103,12 +103,6 @@ const StrategiesPage = () => {
             📚 Strategy Library
           </button>
           <button 
-            className={`tab-btn ${activeTab === 'simulator' ? 'active' : ''}`}
-            onClick={() => setActiveTab('simulator')}
-          >
-            Try Simulator
-          </button>
-          <button 
             className={`tab-btn ${activeTab === 'quiz' ? 'active' : ''}`}
             onClick={() => setActiveTab('quiz')}
           >
@@ -167,24 +161,13 @@ const StrategiesPage = () => {
                     </div>
                   </div>
 
-                  <button 
-                    className="try-btn"
-                    onClick={() => {
-                      setSelectedStrategy(strategy);
-                      setActiveTab('simulator');
-                    }}
-                  >
+                  <Link to={`/try-simulator/${strategy.slug}`} className="try-btn">
                     Try This Strategy →
-                  </button>
+                  </Link>
                 </div>
               ))}
             </div>
           </section>
-        )}
-
-        {/* Simulator Tab */}
-        {activeTab === 'simulator' && (
-          <TrySimulatorPage />
         )}
 
         {/* Quiz Tab */}
