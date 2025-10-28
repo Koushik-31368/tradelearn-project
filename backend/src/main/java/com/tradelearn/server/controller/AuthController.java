@@ -27,7 +27,9 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@RequestBody User user) {
-        // TODO: Add validation to check if user with the email already exists
+        if (userRepository.findByEmail(user.getEmail()).isPresent()) {
+            return ResponseEntity.status(409).body(Map.of("message", "Error: Email is already in use!"));
+        }
         User savedUser = userRepository.save(user);
         Portfolio newPortfolio = new Portfolio(savedUser, 100000.0);
         portfolioRepository.save(newPortfolio);
