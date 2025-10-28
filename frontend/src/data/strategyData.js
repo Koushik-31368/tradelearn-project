@@ -2,6 +2,7 @@
 export const strategies = [
   {
     id: 1,
+    slug: 'scalping',
     category: 'Day Trading',
     name: 'Scalping',
     icon: '⚡',
@@ -15,6 +16,7 @@ export const strategies = [
   },
   {
     id: 2,
+    slug: 'momentum-trading',
     category: 'Day Trading',
     name: 'Momentum Trading',
     icon: '🚀',
@@ -28,6 +30,7 @@ export const strategies = [
   },
   {
     id: 3,
+    slug: 'support-resistance',
     category: 'Swing Trading',
     name: 'Support & Resistance',
     icon: '📊',
@@ -41,6 +44,7 @@ export const strategies = [
   },
   {
     id: 4,
+    slug: 'sma-cross',
     category: 'Swing Trading',
     name: 'Moving Average Crossover',
     icon: '〰️',
@@ -54,6 +58,7 @@ export const strategies = [
   },
   {
     id: 5,
+    slug: 'buy-hold',
     category: 'Long-term Investing',
     name: 'Buy & Hold',
     icon: '💎',
@@ -67,6 +72,7 @@ export const strategies = [
   },
   {
     id: 6,
+    slug: 'dividend-investing',
     category: 'Long-term Investing',
     name: 'Dividend Investing',
     icon: '💰',
@@ -79,7 +85,9 @@ export const strategies = [
     capital: '₹50,000+'
   },
   {
+also
     id: 7,
+    slug: 'rsi-reversion',
     category: 'Technical Analysis',
     name: 'RSI Strategy',
     icon: '📈',
@@ -93,6 +101,7 @@ export const strategies = [
   },
   {
     id: 8,
+    slug: 'macd-strategy',
     category: 'Technical Analysis',
     name: 'MACD Strategy',
     icon: '',

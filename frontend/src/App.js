@@ -30,6 +30,7 @@ function App() {
             <Route path="/strategies" element={<StrategiesPage />} />
             <Route path="/simulator" element={<SimulatorPage />} /> {/* 2. Add route */}
             <Route path="/try-simulator" element={<TrySimulatorPage />} />
+            <Route path="/try-simulator/:slug" element={<TrySimulatorPage />} />
           </Routes>
           <StockTicker />
         </div>
