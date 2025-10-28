@@ -85,7 +85,6 @@ export const strategies = [
     capital: '₹50,000+'
   },
   {
-also
     id: 7,
     slug: 'rsi-reversion',
     category: 'Technical Analysis',
