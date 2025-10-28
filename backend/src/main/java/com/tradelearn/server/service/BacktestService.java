@@ -3,6 +3,8 @@ package com.tradelearn.server.service;
 
 import com.tradelearn.server.dto.BacktestRequest;
 import com.tradelearn.server.dto.BacktestResult;
+import com.tradelearn.server.dto.BatchBacktestRequest;
+import com.tradelearn.server.dto.BatchBacktestResult;
 import com.tradelearn.server.dto.CandleDto;
 import com.tradelearn.server.dto.EquityPointDto;
 import com.tradelearn.server.dto.TradeDto;
@@ -127,6 +129,39 @@ public class BacktestService {
         result.setEquityCurve(equity);
         return result;
     }
+
+    public BatchBacktestResult runBatch(BatchBacktestRequest req) {
+    if (req.getSymbols() == null || req.getSymbols().isEmpty())
+        throw new IllegalArgumentException("symbols required");
+
+    List<BatchBacktestResult.Item> items = new ArrayList<>();
+    for (String sym : req.getSymbols()) {
+        BacktestRequest one = new BacktestRequest();
+        one.setSymbol(sym);
+        one.setInitialCapital(req.getInitialCapital());
+        one.setSmaFast(req.getSmaFast());
+        one.setSmaSlow(req.getSmaSlow());
+        one.setCandles(req.getCandles());
+        one.setOos(req.getOos());
+
+        BacktestResult r = runSmaCross(one);
+
+        BatchBacktestResult.Item it = new BatchBacktestResult.Item();
+        it.setSymbol(sym);
+        it.setReturnPct(r.getReturnPct());
+        it.setMaxDrawdownPct(r.getMaxDrawdownPct());
+        it.setWinRatePct(r.getWinRatePct());
+        it.setTrades(r.getTradesCount());
+        it.setFinalCapital(r.getFinalCapital());
+        items.add(it);
+    }
+    // Sort by Return descending by default
+    items.sort((a,b) -> Double.compare(b.getReturnPct(), a.getReturnPct()));
+
+    BatchBacktestResult out = new BatchBacktestResult();
+    out.setResults(items);
+    return out;
+}
 
     private static double[] sma(double[] x, int period) {
         int n = x.length;

@@ -8,6 +8,28 @@ public class BacktestRequest {
     private int smaFast;
     private int smaSlow;
     private List<CandleDto> candles;
+    private OosConfig oos;
+
+    public static class OosConfig {
+        private boolean enabled;
+        private String splitDate;
+
+        public boolean isEnabled() {
+            return enabled;
+        }
+
+        public void setEnabled(boolean enabled) {
+            this.enabled = enabled;
+        }
+
+        public String getSplitDate() {
+            return splitDate;
+        }
+
+        public void setSplitDate(String splitDate) {
+            this.splitDate = splitDate;
+        }
+    }
 
     // Getters and Setters
     public String getSymbol() {
@@ -48,5 +70,13 @@ public class BacktestRequest {
 
     public void setCandles(List<CandleDto> candles) {
         this.candles = candles;
+    }
+
+    public OosConfig getOos() {
+        return oos;
+    }
+
+    public void setOos(OosConfig oos) {
+        this.oos = oos;
     }
 }
