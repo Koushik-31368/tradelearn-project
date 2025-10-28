@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { strategies, quizQuestions } from '../data/strategyData';
 import './StrategiesPage.css';
+import TrySimulatorPage from './TrySimulatorPage';
 
 const StrategiesPage = () => {
   const [activeTab, setActiveTab] = useState('library');
@@ -183,41 +184,7 @@ const StrategiesPage = () => {
 
         {/* Simulator Tab */}
         {activeTab === 'simulator' && (
-          <section className="simulator-section">
-            <div className="simulator-card">
-              <h2>🎮 Strategy Simulator</h2>
-              <p className="coming-soon">
-                Interactive backtesting simulator coming soon! 
-                You'll be able to test {selectedStrategy ? selectedStrategy.name : 'any strategy'} on historical data.
-              </p>
-              <div className="simulator-preview">
-                <div className="preview-features">
-                  <div className="feature">
-                    <span>📊</span>
-                    <p>Backtest on real historical data</p>
-                  </div>
-                  <div className="feature">
-                    <span>📈</span>
-                    <p>Interactive charts with buy/sell signals</p>
-                  </div>
-                  <div className="feature">
-                    <span>💰</span>
-                    <p>See profit/loss and win rate</p>
-                  </div>
-                  <div className="feature">
-                    <span>🎯</span>
-                    <p>Compare multiple strategies</p>
-                  </div>
-                </div>
-              </div>
-              {selectedStrategy && (
-                <div className="selected-strategy-info">
-                  <p>Selected Strategy: <strong>{selectedStrategy.name}</strong></p>
-                  <button onClick={() => setActiveTab('library')}>← Choose Different Strategy</button>
-                </div>
-              )}
-            </div>
-          </section>
+          <TrySimulatorPage />
         )}
 
         {/* Quiz Tab */}
