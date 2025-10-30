@@ -2,9 +2,9 @@
 
 export const strategyCatalog = [
 
-// ============================================================
+// ============================================================ 
 // STRATEGY 1: SMA CROSSOVER
-// ============================================================
+// ============================================================ 
 {
   slug: 'sma-cross',
   name: 'SMA Crossover',
@@ -96,19 +96,19 @@ export const strategyCatalog = [
   ]
 },
 
-// ============================================================
+// ============================================================ 
 // STRATEGY 2: RSI MEAN REVERSION
-// ============================================================
+// ============================================================ 
 {
   slug: 'rsi-reversion',
   name: 'RSI Mean Reversion',
   kind: 'RSI',
   comingSoon: true,
   tagline: 'Buy the dip, sell the rip—when prices stretch too far',
-  hero: 'Imagine a rubber band: stretch it too low (RSI &lt; 30), it snaps back up—buy there. Stretch it too high (RSI &gt; 70), it contracts—sell. This hunts oversold bounces and overbought pullbacks.',
+  hero: 'Imagine a rubber band: stretch it too low (RSI < 30), it snaps back up—buy there. Stretch it too high (RSI > 70), it contracts—sell. This hunts oversold bounces and overbought pullbacks.',
 
   concept: {
-    simple: 'The Relative Strength Index (RSI) measures how overbought or oversold a stock is on a 0-100 scale. Values below 30 suggest "oversold" (bounce likely); above 70 suggests "overbought" (pullback likely).',
+    simple: 'The Relative Strength Index (RSI) measures how overbought or oversold a stock is on a 0-100 scale. Values below 30 suggest "oversold" (bounce likely); above 70 suggest "overbought" (pullback likely).',
     why: 'Prices oscillate around a mean. Extreme moves often correct. RSI detects those extremes numerically.'
   },
 
@@ -130,7 +130,7 @@ export const strategyCatalog = [
       {
         label: 'Post-panic dips in quality stocks',
         examples: 'HDFCBANK after a macro scare, INFY after a sector sell-off.',
-        why: 'Strong stocks that dip to RSI &lt; 30 often recover quickly.',
+        why: 'Strong stocks that dip to RSI < 30 often recover quickly.',
         result: 'Sharp bounce trades with 5-10% gains in days.'
       }
     ]
@@ -142,13 +142,13 @@ export const strategyCatalog = [
       {
         label: 'Strong trending markets',
         examples: 'RELIANCE in a 3-month uptrend, TATAMOTORS during a bull run.',
-        why: 'RSI can stay "overbought" (&gt;70) for weeks in a strong trend; selling early kills profits.',
+        why: 'RSI can stay "overbought" (>70) for weeks in a strong trend; selling early kills profits.',
         result: 'Exits way too soon, misses the bulk of the move.'
       },
       {
         label: 'Falling knives (weak fundamentals)',
         examples: 'Stocks with earnings miss, debt issues, or sector collapse.',
-        why: '''RSI &lt; 30 doesn'''t mean the bottom is in—price can keep falling ("oversold can get more oversold").''',
+        why: 'RSI < 30 doesn\'t mean the bottom is in—price can keep falling ("oversold can get more oversold").',
         result: 'Buys into continued decline; repeated losses.'
       }
     ]
@@ -175,20 +175,20 @@ export const strategyCatalog = [
   defaults: { initialCapital: 100000, rsiPeriod: 14, lower: 30, upper: 70 },
   params: [
     { key: 'rsiPeriod', label: 'RSI Period', type: 'number', min: 2, hint: '14 is standard; lower = more sensitive.' },
-    { key: 'lower', label: 'Lower (Buy &lt;)', type: 'number', min: 1, max: 50, hint: '30 is classic oversold.' },
-    { key: 'upper', label: 'Upper (Sell &gt;)', type: 'number', min: 50, max: 99, hint: '70 is classic overbought.' }
+    { key: 'lower', label: 'Lower (Buy <)', type: 'number', min: 1, max: 50, hint: '30 is classic oversold.' },
+    { key: 'upper', label: 'Upper (Sell >)', type: 'number', min: 50, max: 99, hint: '70 is classic overbought.' }
   ],
 
   proTips: [
     'Use 20/80 thresholds in strong trends to avoid premature exits.',
-    'Combine with support/resistance: only buy RSI &lt; 30 if price is near a known support level.',
-    'Check volume: if RSI &lt; 30 with low volume, bounce may be weak.'
+    'Combine with support/resistance: only buy RSI < 30 if price is near a known support level.',
+    'Check volume: if RSI < 30 with low volume, bounce may be weak.'
   ]
 },
 
-// ============================================================
+// ============================================================ 
 // STRATEGY 3: BOLLINGER BAND BOUNCE
-// ============================================================
+// ============================================================ 
 {
   slug: 'bollinger-bounce',
   name: 'Bollinger Band Bounce',
@@ -198,7 +198,7 @@ export const strategyCatalog = [
   hero: 'Imagine price bouncing inside a channel like a ball in a tunnel. When it hits the lower wall (bottom band), it bounces up—buy. When it hits the upper wall, it bounces down—sell. Perfect for range traders.',
 
   concept: {
-    simple: 'Bollinger Bands draw a moving average with two bands above and below (±2 standard deviations). When price touches the lower band, it'''s statistically "cheap"; when it touches the upper band, it'''s "expensive." We buy low touches and sell high touches.',
+    simple: 'Bollinger Bands draw a moving average with two bands above and below (±2 standard deviations). When price touches the lower band, it\'s statistically "cheap"; when it touches the upper band, it\'s "expensive." We buy low touches and sell high touches.',
     why: 'Prices tend to revert to the mean after extreme deviations. The bands quantify what "extreme" means for each stock dynamically.'
   },
 
@@ -269,15 +269,15 @@ export const strategyCatalog = [
   ],
 
   proTips: [
-    'Combine with RSI: only buy lower band touch if RSI &lt; 30 for double confirmation.',
+    'Combine with RSI: only buy lower band touch if RSI < 30 for double confirmation.',
     'Use tighter bands (1.5 std dev) in low-volatility stocks for more entries.',
     'Avoid during earnings weeks—bands lose predictive power during high volatility.'
   ]
 },
 
-// ============================================================
+// ============================================================ 
 // STRATEGY 4: MACD MOMENTUM
-// ============================================================
+// ============================================================ 
 {
   slug: 'macd-momentum',
   name: 'MACD Momentum',
@@ -365,16 +365,16 @@ export const strategyCatalog = [
   ]
 },
 
-// ============================================================
+// ============================================================ 
 // STRATEGY 5: 52-WEEK BREAKOUT
-// ============================================================
+// ============================================================ 
 {
   slug: 'breakout-52week',
   name: '52-Week Breakout',
   kind: 'BREAKOUT',
   comingSoon: true,
   tagline: 'Ride the rocket when price breaks all-time highs',
-  hero: '''When a stock hits a new 52-week high, it means every single person who bought in the past year is now profitable—no one is underwater trying to "get out even." That'''s fuel for explosive continuation.''',
+  hero: 'When a stock hits a new 52-week high, it means every single person who bought in the past year is now profitable—no one is underwater trying to \"get out even.\" That\'s fuel for explosive continuation.',
 
   concept: {
     simple: 'Buy stocks when they break above their 52-week high. No overhead supply (trapped sellers) means price can run unimpeded. Momentum follows momentum.',
@@ -454,9 +454,9 @@ export const strategyCatalog = [
   ]
 },
 
-// ============================================================
+// ============================================================ 
 // STRATEGY 6: SUPPORT/RESISTANCE BOUNCE
-// ============================================================
+// ============================================================ 
 {
   slug: 'support-resistance',
   name: 'Support/Resistance Bounce',
@@ -543,24 +543,24 @@ export const strategyCatalog = [
   ]
 },
 
-// ============================================================
+// ============================================================ 
 // STRATEGY 7: MOVING AVERAGE RIBBON
-// ============================================================
+// ============================================================ 
 {
   slug: 'ma-ribbon',
   name: 'Moving Average Ribbon',
   kind: 'MA_RIBBON',
   comingSoon: true,
   tagline: 'Ride the rainbow—when all averages align, trends are strong',
-  hero: '''Plot 8 moving averages (5, 10, 15, 20, 30, 40, 50, 100) on one chart. When they stack in order (5 &gt; 10 &gt; 15... &gt; 100), it'''s a powerful uptrend. When they flip, exit. Visual and bulletproof.''',
+  hero: 'Plot 8 moving averages (5, 10, 15, 20, 30, 40, 50, 100) on one chart. When they stack in order (5 > 10 > 15... > 100), it\'s a powerful uptrend. When they flip, exit. Visual and bulletproof.',
 
   concept: {
     simple: 'A ribbon of multiple MAs shows trend strength visually. Tight ribbon = strong trend. Expanding ribbon = weakening trend. Flipping ribbon = reversal.',
-    why: '''Multiple timeframes confirming the same direction reduces false signals. It'''s like getting unanimous votes from 8 different analysts.'''
+    why: 'Multiple timeframes confirming the same direction reduces false signals. It\'s like getting unanimous votes from 8 different analysts.'
   },
 
   rules: {
-    entry: 'Buy when all MAs stack bullishly (5 &gt; 10 &gt; 15 &gt; ... &gt; 100) and price is above all.',
+    entry: 'Buy when all MAs stack bullishly (5 > 10 > 15 > ... > 100) and price is above all.',
     exit: 'Sell when price crosses below the 20-day MA or ribbon starts flipping (e.g., 10 crosses below 20).',
     position: 'All-in on entry; flat on exit.'
   },
@@ -631,9 +631,9 @@ export const strategyCatalog = [
   ]
 },
 
-// ============================================================
+// ============================================================ 
 // STRATEGY 8: GAP FILL REVERSAL
-// ============================================================
+// ============================================================ 
 {
   slug: 'gap-fill',
   name: 'Gap Fill Reversal',
@@ -643,7 +643,7 @@ export const strategyCatalog = [
   hero: 'Stocks gap down on bad news, leaving a void on the chart. Within days, price often drifts back up to "fill the gap." Buy the panic, sell the relief rally. Quick, high-probability trades.',
 
   concept: {
-    simple: 'A gap occurs when today'''s open is far from yesterday'''s close (e.g., gap down on earnings miss). Statistically, 70% of gaps get filled within 5 days as early sellers regret and buyers hunt bargains.',
+    simple: 'A gap occurs when today\'s open is far from yesterday\'s close (e.g., gap down on earnings miss). Statistically, 70% of gaps get filled within 5 days as early sellers regret and buyers hunt bargains.',
     why: 'Market overreacts to news. Gaps create technical imbalance. Savvy traders fade the gap, knowing price tends to revert.'
   },
 
@@ -660,7 +660,7 @@ export const strategyCatalog = [
         label: 'Quality stocks with temporary scares',
         examples: 'HDFCBANK gap down on sector worry, TCS gap down on single bad quarter, INFY gap on currency headwind.',
         why: 'Fundamentals intact; gap is emotional overreaction; quick recovery likely.',
-        result: '5-8% bounce in 2-5 days; high win rate (70%+).'
+        result: '5-8% bounce in 2-5 days; high win rate (70%+).' 
       },
       {
         label: 'Index component stocks',
@@ -677,7 +677,7 @@ export const strategyCatalog = [
       {
         label: 'Fundamental deterioration gaps',
         examples: 'Earnings miss with guidance cut, fraud discovery, debt default.',
-        why: 'Gap reflects real bad news; price continues lower, gap doesn'''t fill for months.',
+        why: 'Gap reflects real bad news; price continues lower, gap doesn\'t fill for months.',
         result: 'Catching falling knife; 10-20% losses.'
       },
       {
@@ -716,7 +716,7 @@ export const strategyCatalog = [
   proTips: [
     'Only trade gaps in stocks with strong balance sheets and no fraud history.',
     'Check news: if earnings miss with guidance cut, skip the trade.',
-    'Set tight stop at 5% below entry; don'''t hold losing gap trades.'
+    'Set tight stop at 5% below entry; don\'t hold losing gap trades.'
   ]
 }
 
