@@ -1,12 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useParams, useSearchParams } from 'react-router-dom';
+import { useParams, useSearchParams, Link } from 'react-router-dom';
 import axios from 'axios';
 import '../styles/theme.css';
 import { strategyCatalog } from '../data/strategies';
 
 const API_URL = process.env.REACT_APP_API_URL || 'https://tradelearn-project-production.up.railway.app';
 
-// tiny sample so page runs instantly
+// Tiny sample data so the page runs instantly
 const sampleCandles = [
   { date: '2024-01-02', open: 100, high: 102, low: 99, close: 101 },
   { date: '2024-01-03', open: 101, high: 104, low: 100, close: 103 },
@@ -22,55 +22,64 @@ const sampleCandles = [
   { date: '2024-01-23', open: 104, high: 105, low: 101, close: 102 },
 ];
 
+// Helper to create a dynamic initial state for parameters
+const getInitialParams = (strategy, search) => {
+  const params = { ...strategy.defaults };
+  for (const p of strategy.params) {
+    const urlValue = search.get(p.key);
+    if (urlValue) {
+      params[p.key] = p.type === 'number' ? Number(urlValue) : urlValue;
+    }
+  }
+  return params;
+};
+
 export default function TrySimulatorPage() {
   const { slug } = useParams();
-  const [search] = useSearchParams();
+  const [search, setSearch] = useSearchParams();
   const strategy = useMemo(
     () => strategyCatalog.find(s => s.slug === slug) || strategyCatalog.find(s => s.slug === 'sma-cross'),
     [slug]
   );
 
-  // parameters state, seeded from defaults or URL overrides
   const [symbol, setSymbol] = useState(search.get('symbol') || 'RELIANCE');
-  const [initialCapital, setInitialCapital] = useState(strategy.defaults.initialCapital);
-  const [smaFast, setSmaFast] = useState(strategy.defaults.smaFast ?? 5);
-  const [smaSlow, setSmaSlow] = useState(strategy.defaults.smaSlow ?? 10);
+  const [params, setParams] = useState(getInitialParams(strategy, search));
   const [candles, setCandles] = useState(sampleCandles);
 
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
-  const [batchSymbols, setBatchSymbols] = useState('AAPL,GOOG,MSFT');
-  const [oosEnabled, setOosEnabled] = useState(false);
-  const [oosSplitDate, setOosSplitDate] = useState(''); // e.g. '2024-01-15'
 
-  // URL overrides (e.g., ?fast=7&slow=21)
+  // When strategy changes, reset params
   useEffect(() => {
-    const fast = Number(search.get('fast'));
-    const slow = Number(search.get('slow'));
-    const cap = Number(search.get('cap'));
-    if (fast) setSmaFast(fast);
-    if (slow) setSmaSlow(slow);
-    if (cap) setInitialCapital(cap);
-  }, [search]);
+    setParams(getInitialParams(strategy, search));
+    setResult(null);
+    setError('');
+  }, [strategy, search]);
+
+  const handleParamChange = (key, value, type) => {
+    setParams(prev => ({ ...prev, [key]: type === 'number' ? Number(value) : value }));
+  };
 
   const runBacktest = async (e) => {
     e.preventDefault();
     setError('');
     setResult(null);
 
-    if (strategy.comingSoon || strategy.kind !== 'SMA_CROSS') {
-      setError('This strategy will be available soon in the simulator.');
+    if (strategy.comingSoon) {
+      setError('This strategy simulator is coming soon. Try another one!');
       return;
     }
 
     setLoading(true);
     try {
       const body = {
+        strategy: {
+          kind: strategy.kind,
+          params: params,
+        },
         symbol,
-        initialCapital: Number(initialCapital),
-        smaFast: Number(smaFast),
-        smaSlow: Number(smaSlow),
+        initialCapital: Number(params.initialCapital),
         candles: candles.map(c => ({ ...c, open:+c.open, high:+c.high, low:+c.low, close:+c.close })),
       };
       const resp = await axios.post(`${API_URL}/api/strategy/backtest`, body);
@@ -83,68 +92,92 @@ export default function TrySimulatorPage() {
   };
 
   return (
-    <div className="container" style={{paddingTop:24,paddingBottom:24}}>
-      <h1>{strategy.name}</h1>
-      <p style={{color:'var(--muted)'}}>{strategy.summary}</p>
+    <div className="container" style={{paddingTop:24,paddingBottom:24, maxWidth: 900}}>
+      <h1 style={{fontSize: '2.5rem'}}>{strategy.name}</h1>
+      <p style={{fontSize: '1.2rem', color:'var(--muted)'}}>{strategy.tagline}</p>
+      <p style={{marginTop: 16, lineHeight: 1.6}}>{strategy.hero}</p>
 
-      {/* Teaching panel */}
+      {/* Core Concept */}
+      <div className="panel" style={{padding:16, marginTop:24}}>
+        <h2>Core Concept</h2>
+        <p style={{marginTop: 8}}>{strategy.concept.simple}</p>
+        <p style={{marginTop: 12, color: 'var(--muted-dark)'}}>{strategy.concept.why}</p>
+      </div>
+
+      {/* Rules */}
       <div className="panel" style={{padding:16, marginTop:16}}>
-        <h2>How this strategy works</h2>
-        <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, marginTop:12}}>
-          <div>
-            <p style={{color:'var(--muted)'}}>Entry rule</p>
-            <p>{strategy.rules.entry}</p>
-            <p style={{color:'var(--muted)', marginTop:12}}>Exit rule</p>
-            <p>{strategy.rules.exit}</p>
-          </div>
-          <div>
-            <p style={{color:'var(--muted)'}}>Pseudocode</p>
-            <pre style={{margin:0, background:'#0b1220', padding:12, borderRadius:8, overflow:'auto'}}>
-{`for each day:
-  if SMA_fast crosses above SMA_slow and not in position:
-    buy as many shares as possible
-  if SMA_fast crosses below SMA_slow and in position:
-    sell all shares
-end
-equity = cash + shares * close`}
-            </pre>
-          </div>
+        <h2>Rules</h2>
+        <div style={{display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:16, marginTop:12}}>
+          <div><p style={{color:'var(--muted)'}}>Entry</p><p>{strategy.rules.entry}</p></div>
+          <div><p style={{color:'var(--muted)'}}>Exit</p><p>{strategy.rules.exit}</p></div>
+          <div><p style={{color:'var(--muted)'}}>Position Sizing</p><p>{strategy.rules.position}</p></div>
         </div>
-        {strategy.example?.text && (
-          <div style={{marginTop:12}}>
-            <p style={{color:'var(--muted)'}}>Example</p>
-            <p>{strategy.example.text}</p>
-          </div>
-        )}
+      </div>
+
+      {/* Scenarios */}
+      <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, marginTop:16}}>
+        <div className="panel" style={{padding:16}}>
+          <h3 style={{color:'var(--success)'}}>{strategy.bestFor.title}</h3>
+          {strategy.bestFor.scenarios.map((s,i) => (
+            <div key={i} style={{marginTop:12}}>
+              <p><strong>{s.label}</strong></p>
+              <p style={{fontSize:'.9rem', color:'var(--muted)'}}>{s.examples}</p>
+              <p style={{fontSize:'.9rem', marginTop:4}}>{s.why}</p>
+            </div>
+          ))}
+        </div>
+        <div className="panel" style={{padding:16}}>
+          <h3 style={{color:'var(--danger)'}}>{strategy.avoidFor.title}</h3>
+          {strategy.avoidFor.scenarios.map((s,i) => (
+            <div key={i} style={{marginTop:12}}>
+              <p><strong>{s.label}</strong></p>
+              <p style={{fontSize:'.9rem', color:'var(--muted)'}}>{s.examples}</p>
+              <p style={{fontSize:'.9rem', marginTop:4}}>{s.why}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Interactive Demo Links */}
+      <div className="panel" style={{padding:16, marginTop:16}}>
+        <h3>Interactive Demo</h3>
+        <p style={{color:'var(--muted)'}}>{strategy.interactiveDemo.setup}</p>
+        <div style={{display:'flex', gap:8, marginTop:12, flexWrap:'wrap'}}>
+          {strategy.interactiveDemo.scenarios.map((s,i) => {
+            const urlParams = new URLSearchParams({
+              symbol: s.symbol,
+              ...s.params
+            });
+            return <Link key={i} to={`?${urlParams}`} className="btn btn-outline">{s.label}</Link>
+          })}
+        </div>
       </div>
 
       {/* Parameters + Run */}
-      <form onSubmit={runBacktest} className="panel" style={{padding:16, marginTop:16}}>
-        <h2>Parameters</h2>
-        <div style={{display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:12, marginTop:8}}>
+      <form onSubmit={runBacktest} className="panel" style={{padding:16, marginTop:24}}>
+        <h2>Try It Live</h2>
+        <div style={{display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(150px, 1fr))', gap:12, marginTop:8}}>
           <div>
             <label>Symbol</label>
             <input className="input" value={symbol} onChange={e=>setSymbol(e.target.value.toUpperCase())} />
           </div>
-          <div>
-            <label>Initial Capital</label>
-            <input className="input" type="number" min="1" value={initialCapital} onChange={e=>setInitialCapital(e.target.value)} />
-          </div>
-          {strategy.kind === 'SMA_CROSS' && (
-            <>
-              <div>
-                <label>Fast SMA</label>
-                <input className="input" type="number" min="1" value={smaFast} onChange={e=>setSmaFast(e.target.value)} />
-              </div>
-              <div>
-                <label>Slow SMA</label>
-                <input className="input" type="number" min="2" value={smaSlow} onChange={e=>setSmaSlow(e.target.value)} />
-              </div>
-            </>
-          )}
+          {strategy.params.map(p => (
+            <div key={p.key}>
+              <label>{p.label}</label>
+              <input
+                className="input"
+                type={p.type}
+                min={p.min}
+                max={p.max}
+                value={params[p.key]}
+                onChange={e => handleParamChange(p.key, e.target.value, p.type)}
+                title={p.hint}
+              />
+            </div>
+          ))}
         </div>
 
-        <div style={{marginTop:12, display:'flex', gap:8}}>
+        <div style={{marginTop:16, display:'flex', gap:8}}>
           <button className="btn btn-primary" type="submit" disabled={loading || strategy.comingSoon}>
             {strategy.comingSoon ? 'Coming Soon' : (loading ? 'Running...' : 'Run Backtest')}
           </button>
@@ -171,77 +204,19 @@ equity = cash + shares * close`}
           </div>
 
           <div className="panel" style={{padding:16}}>
-            <h2>Mini Batch</h2>
-            <div style={{display:'flex', gap:8}}>
-              <input className="input" value={batchSymbols} onChange={e=>setBatchSymbols(e.target.value)} />
-              <button
-                className="btn btn-outline"
-                type="button"
-                onClick={async () => {
-                  try {
-                    setError('');
-                    const symbols = batchSymbols.split(',').map(s => s.trim().toUpperCase()).filter(Boolean).slice(0, 5);
-                    const body = {
-                      symbols,
-                      initialCapital: Number(initialCapital),
-                      smaFast: Number(smaFast),
-                      smaSlow: Number(smaSlow),
-                      candles: candles.map(c => ({ ...c, open:+c.open, high:+c.high, low:+c.low, close:+c.close })),
-                      oos: oosEnabled ? { enabled: true, splitDate: oosSplitDate } : null
-                    };
-                    const resp = await axios.post(`${API_URL}/api/strategy/backtest/batch`, body);
-                    const rows = resp.data.results || [];
-                    // store in local state next to result:
-                    setResult(r => ({ ...(r || {}), batch: rows }));
-                  } catch (err) {
-                    setError(err?.response?.data?.message || err.message || 'Batch failed');
-                  }
-                }}
-              >
-                Run Batch
-              </button>
-            </div>
-
-            {result?.batch?.length ? (
+            <h2>Trades</h2>
+            {result.trades?.length > 0 ? (
               <table className="table" style={{marginTop:10}}>
-                <thead>
-                  <tr>
-                    <th>Symbol</th>
-                    <th>Return</th>
-                    <th>Max DD</th>
-                    <th>Win Rate</th>
-                    <th>Trades</th>
-                    <th>Final Capital</th>
-                  </tr>
-                </thead>
+                <thead><tr><th>Date</th><th>Type</th><th>Price</th><th>Qty</th></tr></thead>
                 <tbody>
-                  {result.batch.map((it, i) => (
+                  {result.trades.map((t, i) => (
                     <tr key={i}>
-                      <td>{it.symbol}</td>
-                      <td>{it.returnPct.toFixed(2)}%</td>
-                      <td>{it.maxDrawdownPct.toFixed(2)}%</td>
-                      <td>{it.winRatePct.toFixed(2)}%</td>
-                      <td>{it.trades}</td>
-                      <td>₹{it.finalCapital.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                      <td>{t.date}</td><td>{t.type}</td><td>₹{t.price.toFixed(2)}</td><td>{t.quantity}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
-            ) : <p className="no-history" style={{marginTop:8}}>Enter up to 5 symbols separated by commas and click Run Batch.</p>}
-          </div>
-
-          <div className="panel" style={{padding:16}}>
-            <h2>Trades</h2>
-            <table className="table" style={{marginTop:10}}>
-              <thead><tr><th>Date</th><th>Type</th><th>Price</th><th>Qty</th></tr></thead>
-              <tbody>
-                {result.trades?.map((t, i) => (
-                  <tr key={i}>
-                    <td>{t.date}</td><td>{t.type}</td><td>₹{t.price.toFixed(2)}</td><td>{t.quantity}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            ) : <p className="no-history">No trades were executed.</p>}
           </div>
 
           <div className="panel" style={{padding:16}}>
@@ -260,6 +235,14 @@ equity = cash + shares * close`}
           </div>
         </div>
       )}
+
+      {/* Pro Tips */}
+      <div className="panel" style={{padding:16, marginTop:24}}>
+        <h3>Pro Tips</h3>
+        <ul style={{margin:0, paddingLeft:20, marginTop:12}}>
+          {strategy.proTips.map((tip, i) => <li key={i} style={{marginBottom:8}}>{tip}</li>)}
+        </ul>
+      </div>
     </div>
   );
 }
