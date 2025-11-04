@@ -1,14 +1,28 @@
 // src/context/AuthContext.js
-import React, { createContext, useState, useContext } from 'react';
+import React, { createContext, useContext, useEffect, useState } from "react";
 
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null); // Will hold user data after login
+  // Try to load user from localStorage (persisted login)
+  const [user, setUser] = useState(() => {
+    try {
+      const raw = localStorage.getItem("tradelearn_user");
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) {
+      console.error("Failed to parse stored user", e);
+      return null;
+    }
+  });
 
-  // Update login to accept and store the full user object
-  const login = (userData) => {
-    setUser(userData);
+  useEffect(() => {
+    if (user) localStorage.setItem("tradelearn_user", JSON.stringify(user));
+    else localStorage.removeItem("tradelearn_user");
+  }, [user]);
+
+  const login = (userObj) => {
+    // Expect a full object: { id, username, email } from backend
+    setUser(userObj);
   };
 
   const logout = () => {
@@ -16,7 +30,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const value = {
-    user, // This will now be an object like { id: 1, email: '...' }
+    user,
     isAuthenticated: !!user,
     login,
     logout,
@@ -25,6 +39,4 @@ export const AuthProvider = ({ children }) => {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
-export const useAuth = () => {
-  return useContext(AuthContext);
-};
+export const useAuth = () => useContext(AuthContext);

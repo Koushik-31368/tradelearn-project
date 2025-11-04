@@ -6,6 +6,7 @@ import com.tradelearn.server.repository.PortfolioRepository;
 import com.tradelearn.server.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -18,11 +19,15 @@ import java.util.Optional;
 public class AuthController {
     private final UserRepository userRepository;
     private final PortfolioRepository portfolioRepository;
+    private final BCryptPasswordEncoder passwordEncoder;
 
     @Autowired
-    public AuthController(UserRepository userRepository, PortfolioRepository portfolioRepository) {
+    public AuthController(UserRepository userRepository,
+                          PortfolioRepository portfolioRepository,
+                          BCryptPasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.portfolioRepository = portfolioRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @PostMapping("/register")
@@ -30,10 +35,12 @@ public class AuthController {
         if (userRepository.findByEmail(user.getEmail()).isPresent()) {
             return ResponseEntity.status(409).body(Map.of("message", "Error: Email is already in use!"));
         }
+        // Hash password
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
         User savedUser = userRepository.save(user);
         Portfolio newPortfolio = new Portfolio(savedUser, 100000.0);
         portfolioRepository.save(newPortfolio);
-        return ResponseEntity.ok("User registered successfully!");
+        return ResponseEntity.ok(Map.of("message", "User registered successfully!", "id", savedUser.getId()));
     }
 
     @PostMapping("/login")
@@ -44,7 +51,7 @@ public class AuthController {
         }
 
         User user = optionalUser.get();
-        if (!user.getPassword().equals(loginDetails.getPassword())) {
+        if (!passwordEncoder.matches(loginDetails.getPassword(), user.getPassword())) {
             return ResponseEntity.status(401).body(Map.of("message", "Error: Invalid credentials"));
         }
 
@@ -54,7 +61,6 @@ public class AuthController {
             return portfolioRepository.save(newPortfolio);
         });
 
-        // ✅ Return full user info as JSON (id, username, email)
         Map<String, Object> response = new HashMap<>();
         response.put("id", user.getId());
         response.put("username", user.getUsername());
