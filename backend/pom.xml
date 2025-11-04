@@ -45,6 +45,12 @@
   <artifactId>spring-boot-starter-test</artifactId>
   <scope>test</scope>
 </dependency>
+    <!-- BCrypt support for password hashing -->
+    <dependency>
+      <groupId>org.springframework.security</groupId>
+      <artifactId>spring-security-core</artifactId>
+    </dependency>
+
 
     <dependency>
       <groupId>org.junit.jupiter</groupId>

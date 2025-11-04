@@ -1,5 +1,6 @@
 package com.tradelearn.server.service;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -12,48 +13,56 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 @Service
 public class StockDataService {
 
+    private static final Logger logger = LoggerFactory.getLogger(StockDataService.class);
+
     private final RestTemplate restTemplate = new RestTemplate();
-    // Your new API Key
-    private final String apiKey = "F9HE0WX2CTKBJOGU";
     private final ObjectMapper objectMapper = new ObjectMapper();
 
+    @Value("${alphavantage.key:}")
+    private String apiKey;
+
     public List<StockDataPoint> getDailyDataParsed(String symbol) {
+        if (apiKey == null || apiKey.isBlank()) {
+            logger.error("AlphaVantage API key is not configured (alphavantage.key).");
+            return null;
+        }
+
         String apiUrl = "https://www.alphavantage.co/query?function=TIME_SERIES_DAILY"
                 + "&symbol=" + symbol
-                + "&outputsize=full" // Request full history
+                + "&outputsize=full"
                 + "&apikey=" + apiKey;
 
         try {
             String jsonResponse = restTemplate.getForObject(apiUrl, String.class);
             if (jsonResponse == null) {
-                System.err.println("Error: Received null response from Alpha Vantage API.");
+                logger.error("Received null response from Alpha Vantage for symbol: {}", symbol);
                 return null;
             }
 
             JsonNode rootNode = objectMapper.readTree(jsonResponse);
 
-            // Check for API error messages
             if (rootNode.has("Error Message")) {
-                System.err.println("Alpha Vantage API Error: " + rootNode.path("Error Message").asText());
+                logger.error("Alpha Vantage API Error: {}", rootNode.path("Error Message").asText());
                 return null;
             }
             if (rootNode.has("Note")) {
-                System.err.println("Alpha Vantage API Note (likely rate limit): " + rootNode.path("Note").asText());
+                logger.warn("Alpha Vantage API Note (rate limit likely): {}", rootNode.path("Note").asText());
                 return null;
             }
             if (rootNode.has("Information")) {
-                System.err.println("Alpha Vantage API Info (check symbol?): " + rootNode.path("Information").asText());
+                logger.warn("Alpha Vantage API Info: {}", rootNode.path("Information").asText());
                 return null;
             }
 
-
             JsonNode timeSeriesNode = rootNode.path("Time Series (Daily)");
             if (timeSeriesNode.isMissingNode() || !timeSeriesNode.isObject()) {
-                System.err.println("Error: 'Time Series (Daily)' data not found or not an object in API response.");
-                System.err.println("Full Response: " + jsonResponse);
+                logger.error("'Time Series (Daily)' data not found for symbol {}. Full response: {}", symbol, jsonResponse);
                 return null;
             }
 
@@ -66,7 +75,7 @@ public class StockDataService {
                 JsonNode dayData = entry.getValue();
 
                 if (!dayData.has("1. open") || !dayData.has("4. close")) {
-                    System.err.println("Warning: Skipping date " + date + " due to missing data fields.");
+                    logger.warn("Skipping date {} for symbol {} due to missing fields.", date, symbol);
                     continue;
                 }
 
@@ -81,7 +90,7 @@ public class StockDataService {
             }
 
             if (dataPoints.isEmpty()) {
-                System.err.println("Error: No valid data points extracted from API response.");
+                logger.error("No valid data extracted for symbol {}.", symbol);
                 return null;
             }
 
@@ -95,25 +104,26 @@ public class StockDataService {
             return dataPoints;
 
         } catch (IOException e) {
-            System.err.println("Error parsing JSON response from Alpha Vantage: " + e.getMessage());
-            e.printStackTrace();
+            logger.error("Error parsing JSON response from Alpha Vantage: {}", e.getMessage(), e);
             return null;
         } catch (Exception e) {
-            System.err.println("An unexpected error occurred in getDailyDataParsed: " + e.getMessage());
-            e.printStackTrace();
+            logger.error("Unexpected error in getDailyDataParsed: {}", e.getMessage(), e);
             return null;
         }
     }
 
-    // This method is used by the StockSearch component
     public String getDailyData(String symbol) {
+        if (apiKey == null || apiKey.isBlank()) {
+            logger.error("AlphaVantage API key is not configured (alphavantage.key).");
+            return "{\"Error\": \"API key not configured\"}";
+        }
         String apiUrl = "https://www.alphavantage.co/query?function=TIME_SERIES_DAILY"
                 + "&symbol=" + symbol
                 + "&apikey=" + apiKey;
         try {
             return restTemplate.getForObject(apiUrl, String.class);
         } catch (Exception e) {
-            System.err.println("Error fetching raw data: " + e.getMessage());
+            logger.error("Error fetching raw data for {}: {}", symbol, e.getMessage(), e);
             return "{\"Error\": \"Could not fetch data\"}";
         }
     }
