@@ -1,0 +1,2 @@
+# Ignore local database config
+backend/src/main/resources/application-local.properties
