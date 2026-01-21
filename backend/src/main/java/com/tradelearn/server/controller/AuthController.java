@@ -1,22 +1,34 @@
 package com.tradelearn.server.controller;
 
-import com.tradelearn.server.model.Portfolio;
-import com.tradelearn.server.model.User;
-import com.tradelearn.server.repository.PortfolioRepository;
-import com.tradelearn.server.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.web.bind.annotation.*;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.tradelearn.server.model.Portfolio;
+import com.tradelearn.server.model.User;
+import com.tradelearn.server.repository.PortfolioRepository;
+import com.tradelearn.server.repository.UserRepository;
+
+@CrossOrigin(
+    origins = {
+        "http://localhost:3000",
+        "https://tradelearn-project.vercel.app"
+    },
+    allowCredentials = "true"
+)
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(origins = {"http://localhost:3000", "https://tradelearn-project.vercel.app"}, allowCredentials = "true")
 public class AuthController {
+
     private final UserRepository userRepository;
     private final PortfolioRepository portfolioRepository;
     private final BCryptPasswordEncoder passwordEncoder;
@@ -32,33 +44,40 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@RequestBody User user) {
+
         if (userRepository.findByEmail(user.getEmail()).isPresent()) {
-            return ResponseEntity.status(409).body(Map.of("message", "Error: Email is already in use!"));
+            return ResponseEntity
+                    .status(409)
+                    .body(Map.of("message", "Error: Email is already in use!"));
         }
-        // Hash password
+
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         User savedUser = userRepository.save(user);
-        Portfolio newPortfolio = new Portfolio(savedUser, 100000.0);
-        portfolioRepository.save(newPortfolio);
-        return ResponseEntity.ok(Map.of("message", "User registered successfully!", "id", savedUser.getId()));
+
+        Portfolio portfolio = new Portfolio(savedUser, 100000.0);
+        portfolioRepository.save(portfolio);
+
+        return ResponseEntity.ok(
+                Map.of("message", "User registered successfully!", "id", savedUser.getId())
+        );
     }
 
     @PostMapping("/login")
     public ResponseEntity<?> loginUser(@RequestBody User loginDetails) {
+
         Optional<User> optionalUser = userRepository.findByEmail(loginDetails.getEmail());
         if (optionalUser.isEmpty()) {
-            return ResponseEntity.status(401).body(Map.of("message", "Error: User not found"));
+            return ResponseEntity.status(401).body(Map.of("message", "User not found"));
         }
 
         User user = optionalUser.get();
         if (!passwordEncoder.matches(loginDetails.getPassword(), user.getPassword())) {
-            return ResponseEntity.status(401).body(Map.of("message", "Error: Invalid credentials"));
+            return ResponseEntity.status(401).body(Map.of("message", "Invalid credentials"));
         }
 
-        // Ensure portfolio exists for the user, creating one if it doesn't.
         portfolioRepository.findByUser_Id(user.getId()).orElseGet(() -> {
-            Portfolio newPortfolio = new Portfolio(user, 100000.0);
-            return portfolioRepository.save(newPortfolio);
+            Portfolio p = new Portfolio(user, 100000.0);
+            return portfolioRepository.save(p);
         });
 
         Map<String, Object> response = new HashMap<>();
