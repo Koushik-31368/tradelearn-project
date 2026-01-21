@@ -7,7 +7,6 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -18,13 +17,6 @@ import com.tradelearn.server.model.User;
 import com.tradelearn.server.repository.PortfolioRepository;
 import com.tradelearn.server.repository.UserRepository;
 
-@CrossOrigin(
-    origins = {
-        "http://localhost:3000",
-        "https://tradelearn-project.vercel.app"
-    },
-    allowCredentials = "true"
-)
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -48,7 +40,7 @@ public class AuthController {
         if (userRepository.findByEmail(user.getEmail()).isPresent()) {
             return ResponseEntity
                     .status(409)
-                    .body(Map.of("message", "Error: Email is already in use!"));
+                    .body(Map.of("message", "Email already exists"));
         }
 
         user.setPassword(passwordEncoder.encode(user.getPassword()));
@@ -58,21 +50,31 @@ public class AuthController {
         portfolioRepository.save(portfolio);
 
         return ResponseEntity.ok(
-                Map.of("message", "User registered successfully!", "id", savedUser.getId())
+                Map.of("message", "User registered", "id", savedUser.getId())
         );
     }
 
     @PostMapping("/login")
     public ResponseEntity<?> loginUser(@RequestBody User loginDetails) {
 
-        Optional<User> optionalUser = userRepository.findByEmail(loginDetails.getEmail());
+        Optional<User> optionalUser =
+                userRepository.findByEmail(loginDetails.getEmail());
+
         if (optionalUser.isEmpty()) {
-            return ResponseEntity.status(401).body(Map.of("message", "User not found"));
+            return ResponseEntity
+                    .status(401)
+                    .body(Map.of("message", "User not found"));
         }
 
         User user = optionalUser.get();
-        if (!passwordEncoder.matches(loginDetails.getPassword(), user.getPassword())) {
-            return ResponseEntity.status(401).body(Map.of("message", "Invalid credentials"));
+
+        if (!passwordEncoder.matches(
+                loginDetails.getPassword(),
+                user.getPassword())) {
+
+            return ResponseEntity
+                    .status(401)
+                    .body(Map.of("message", "Invalid credentials"));
         }
 
         portfolioRepository.findByUser_Id(user.getId()).orElseGet(() -> {
