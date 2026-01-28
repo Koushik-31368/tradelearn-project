@@ -1,18 +1,26 @@
 // src/utils/api.js
-const API_URL = process.env.REACT_APP_API_URL || "http://localhost:8080";
+const API_URL = process.env.REACT_APP_API_URL;
+
+
+if (!API_URL) {
+console.error("REACT_APP_API_URL is not defined");
+}
+
 
 export function backendUrl(path) {
-  // ensure leading slash
-  if (!path.startsWith("/")) path = "/" + path;
-  return `${API_URL}${path}`;
+if (!path.startsWith("/")) path = "/" + path;
+return `${API_URL}${path}`;
 }
 
-// Derive WS base for SockJS: convert http(s) -> ws(s)
+
 export function wsBase() {
-  const url = API_URL;
-  if (url.startsWith("https://")) return "wss://" + url.replace(/^https?:\/\//, "");
-  if (url.startsWith("http://")) return "ws://" + url.replace(/^https?:\/\//, "");
-  return url;
+if (!API_URL) return "";
+if (API_URL.startsWith("https://"))
+return "wss://" + API_URL.replace(/^https?:\/\//, "");
+if (API_URL.startsWith("http://"))
+return "ws://" + API_URL.replace(/^https?:\/\//, "");
+return API_URL;
 }
+
 
 export default API_URL;
