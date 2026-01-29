@@ -1,0 +1,84 @@
+/* RegisterPage.css */
+
+
+.register-container {
+  max-width: 420px;
+  margin: 80px auto;
+  padding: 32px;
+  background: rgba(15, 23, 42, 0.9); /* dark blue */
+  border-radius: 14px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+  color: #ffffff;
+}
+
+
+.register-container h2 {
+  margin-bottom: 24px;
+  font-size: 26px;
+  font-weight: 600;
+}
+
+
+.register-container form {
+  display: flex;
+  flex-direction: column;
+}
+
+
+.register-container input {
+  margin-bottom: 14px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  border: none;
+  outline: none;
+  font-size: 15px;
+}
+
+
+.register-container input:focus {
+  box-shadow: 0 0 0 2px #22c55e;
+}
+
+
+.register-container button {
+  margin-top: 8px;
+  padding: 12px;
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  border: none;
+  border-radius: 8px;
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+
+.register-container button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(34, 197, 94, 0.4);
+}
+
+
+.error-text {
+  margin-top: 14px;
+  color: #f87171;
+  font-size: 14px;
+}
+
+
+.login-link {
+  margin-top: 18px;
+  font-size: 14px;
+}
+
+
+.login-link a {
+  color: #38bdf8;
+  text-decoration: none;
+}
+
+
+.login-link a:hover {
+  text-decoration: underline;
+}
