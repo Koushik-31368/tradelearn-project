@@ -25,15 +25,14 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(csrf -> csrf.disable())
+            .cors(cors -> {})
             .authorizeHttpRequests(auth -> auth
-                // Allow Preflight requests to pass through security
+                // ✅ allow CORS preflight
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                // Allow auth endpoints
-                .requestMatchers("/api/auth/**").permitAll()
-                // Require authentication for everything else
-                .anyRequest().authenticated()
+                // ✅ allow all APIs for now
+                .requestMatchers("/**").permitAll()
+                .anyRequest().permitAll()
             );
 
         return http.build();
@@ -43,19 +42,24 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
 
-        // When allowCredentials(true), you MUST specify exact origins
-        config.setAllowedOrigins(List.of(
+        config.setAllowedOriginPatterns(List.of(
             "http://localhost:3000",
-            "https://tradelearn-project.vercel.app" 
+            "https://*.vercel.app"
         ));
 
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        config.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept"));
-        config.setAllowCredentials(true); 
-        config.setMaxAge(3600L); // Cache preflight response for 1 hour
+        config.setAllowedMethods(List.of(
+            "GET", "POST", "PUT", "DELETE", "OPTIONS"
+        ));
 
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        config.setAllowedHeaders(List.of("*"));
+
+        // ❗ must be false with wildcard origins
+        config.setAllowCredentials(false);
+
+        UrlBasedCorsConfigurationSource source =
+                new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
+
         return source;
     }
 }

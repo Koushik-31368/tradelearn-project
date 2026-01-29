@@ -1,88 +1,81 @@
 import React, { useState } from "react";
 import axios from "axios";
-import { useNavigate, Link } from "react-router-dom";
+import "./RegisterPage.css";
 
-const API_URL =
-  process.env.REACT_APP_API_URL ||
-  "https://tradelearn-project-1.onrender.com";
+const API_URL = process.env.REACT_APP_API_URL;
 
-const RegisterPage = () => {
-  const [username, setUsername] = useState("");
+export default function RegisterPage() {
   const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [message, setMessage] = useState("");
-  const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
+  const [error, setError] = useState("");
 
-  const handleSubmit = async (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
-    setLoading(true);
-    setMessage("");
+    setError("");
 
     try {
-      // ✅ Added withCredentials to match backend SecurityConfig
-      await axios.post(`${API_URL}/api/auth/register`, {
-        username,
-        email,
-        password,
-      }, {
-        withCredentials: true 
-      });
+      await axios.post(
+        `${API_URL}/api/auth/register`,
+        {
+          email,
+          username,
+          password,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
-      setMessage("Registration successful! Redirecting...");
-      setTimeout(() => navigate("/login"), 1500);
+      alert("Registration successful!");
+      window.location.href = "/login";
+
     } catch (err) {
-      // ✅ Display specific error from your AuthController (e.g., "Email already exists")
-      const errorMsg = err.response?.data?.message || "Registration failed. Server might be sleeping.";
-      setMessage(errorMsg);
-    } finally {
-      setLoading(false);
+      setError(
+        err.response?.data || "Registration failed. Server might be sleeping."
+      );
     }
   };
 
   return (
-    <div style={{ padding: 40 }}>
+    <div className="register-container">
       <h2>Create Account</h2>
 
-      <form onSubmit={handleSubmit}>
-        <input
-          placeholder="Username"
-          value={username}
-          onChange={e => setUsername(e.target.value)}
-          required
-        />
-        <br /><br />
-
+      <form onSubmit={handleRegister}>
         <input
           type="email"
           placeholder="Email"
           value={email}
-          onChange={e => setEmail(e.target.value)}
           required
+          onChange={(e) => setEmail(e.target.value)}
         />
-        <br /><br />
+
+        <input
+          type="text"
+          placeholder="Username"
+          value={username}
+          required
+          onChange={(e) => setUsername(e.target.value)}
+        />
 
         <input
           type="password"
           placeholder="Password"
           value={password}
-          onChange={e => setPassword(e.target.value)}
           required
+          onChange={(e) => setPassword(e.target.value)}
         />
-        <br /><br />
 
-        <button type="submit" disabled={loading}>
-          {loading ? "Creating Account..." : "Create Account"}
-        </button>
+        <button type="submit">Create Account</button>
       </form>
 
-      {message && <p style={{ color: message.includes("successful") ? "green" : "red" }}>{message}</p>}
+      {error && <p className="error-text">{error}</p>}
 
-      <p>
-        Already have an account? <Link to="/login">Login</Link>
+      <p className="login-link">
+        Already have an account? <a href="/login">Login</a>
       </p>
     </div>
   );
-};
-
-export default RegisterPage;
+}

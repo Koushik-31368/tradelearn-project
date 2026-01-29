@@ -1,66 +1,67 @@
 package com.tradelearn.server.service;
 
-import com.tradelearn.server.model.Trade;
-import com.tradelearn.server.repository.TradeRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Optional;
+import com.tradelearn.server.model.Trade;
+import com.tradelearn.server.repository.TradeRepository;
 
 @Service
 public class TradeService {
 
-    @Autowired
-    private TradeRepository tradeRepository;
+    private final TradeRepository tradeRepository;
 
-    // Create new trade with basic validation and error handling
+    public TradeService(TradeRepository tradeRepository) {
+        this.tradeRepository = tradeRepository;
+    }
+
+    // Create new trade with validation
     @Transactional
-    public Trade createTrade(Trade trade) throws IllegalArgumentException {
-        // Basic checks for minimal required fields
-        if (trade.getUserId() == null) {
+    public Trade createTrade(Trade trade) {
+
+        if (trade.getUserId() <= 0) {
             throw new IllegalArgumentException("User ID is required");
         }
-        if (trade.getSymbol() == null || trade.getSymbol().isEmpty()) {
+        if (trade.getSymbol() == null || trade.getSymbol().isBlank()) {
             throw new IllegalArgumentException("Stock symbol is required");
         }
-        if (trade.getQuantity() == null || trade.getQuantity() <= 0) {
+        if (trade.getQuantity() <= 0) {
             throw new IllegalArgumentException("Quantity must be positive");
         }
-        // Add more business logic checks here if needed (for 'type', 'price', etc.)
 
-        // Save to DB
         return tradeRepository.save(trade);
     }
 
     // Get all trades for a user
-    public List<Trade> getUserTrades(Long userId) {
+    public List<Trade> getUserTrades(long userId) {
         return tradeRepository.findByUserIdOrderByTimestampDesc(userId);
     }
 
     // Get single trade by ID
-    public Optional<Trade> getTradeById(Long id) {
-        return tradeRepository.findById(id);
+    public Optional<Trade> getTradeById(long tradeId) {
+        return tradeRepository.findById(tradeId);
     }
 
     // Get trades by symbol
-    public List<Trade> getUserTradesBySymbol(Long userId, String symbol) {
+    public List<Trade> getUserTradesBySymbol(long userId, String symbol) {
         return tradeRepository.findByUserIdAndSymbol(userId, symbol);
     }
 
     // Delete trade
     @Transactional
-    public void deleteTrade(Long id) {
-        tradeRepository.deleteById(id);
+    public void deleteTrade(long tradeId) {
+        tradeRepository.deleteById(tradeId);
     }
 
     // Get total trade count for user
-    public Long getUserTradeCount(Long userId) {
+    public long getUserTradeCount(long userId) {
         return tradeRepository.countByUserId(userId);
     }
 
-    // Get all trades (admin only)
+    // Admin: get all trades
     public List<Trade> getAllTrades() {
         return tradeRepository.findAll();
     }
