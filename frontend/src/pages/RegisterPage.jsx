@@ -11,22 +11,32 @@ const RegisterPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+    setMessage("");
 
     try {
+      // ✅ Added withCredentials to match backend SecurityConfig
       await axios.post(`${API_URL}/api/auth/register`, {
         username,
         email,
         password,
+      }, {
+        withCredentials: true 
       });
 
-      setMessage("Registration successful!");
+      setMessage("Registration successful! Redirecting...");
       setTimeout(() => navigate("/login"), 1500);
     } catch (err) {
-      setMessage("Registration failed");
+      // ✅ Display specific error from your AuthController (e.g., "Email already exists")
+      const errorMsg = err.response?.data?.message || "Registration failed. Server might be sleeping.";
+      setMessage(errorMsg);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -44,6 +54,7 @@ const RegisterPage = () => {
         <br /><br />
 
         <input
+          type="email"
           placeholder="Email"
           value={email}
           onChange={e => setEmail(e.target.value)}
@@ -60,10 +71,12 @@ const RegisterPage = () => {
         />
         <br /><br />
 
-        <button type="submit">Create Account</button>
+        <button type="submit" disabled={loading}>
+          {loading ? "Creating Account..." : "Create Account"}
+        </button>
       </form>
 
-      {message && <p>{message}</p>}
+      {message && <p style={{ color: message.includes("successful") ? "green" : "red" }}>{message}</p>}
 
       <p>
         Already have an account? <Link to="/login">Login</Link>

@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -36,50 +37,44 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@RequestBody User user) {
+        try {
+            if (userRepository.findByEmail(user.getEmail()).isPresent()) {
+                return ResponseEntity
+                        .status(HttpStatus.CONFLICT)
+                        .body(Map.of("message", "Email already exists"));
+            }
 
-        if (userRepository.findByEmail(user.getEmail()).isPresent()) {
+            user.setPassword(passwordEncoder.encode(user.getPassword()));
+            User savedUser = userRepository.save(user);
+
+            Portfolio portfolio = new Portfolio(savedUser, 100000.0);
+            portfolioRepository.save(portfolio);
+
+            return ResponseEntity.ok(
+                    Map.of("message", "User registered successfully", "id", savedUser.getId())
+            );
+        } catch (Exception e) {
             return ResponseEntity
-                    .status(409)
-                    .body(Map.of("message", "Email already exists"));
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "Server error: " + e.getMessage()));
         }
-
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-        User savedUser = userRepository.save(user);
-
-        Portfolio portfolio = new Portfolio(savedUser, 100000.0);
-        portfolioRepository.save(portfolio);
-
-        return ResponseEntity.ok(
-                Map.of("message", "User registered", "id", savedUser.getId())
-        );
     }
 
     @PostMapping("/login")
     public ResponseEntity<?> loginUser(@RequestBody User loginDetails) {
+        Optional<User> optionalUser = userRepository.findByEmail(loginDetails.getEmail());
 
-        Optional<User> optionalUser =
-                userRepository.findByEmail(loginDetails.getEmail());
-
-        if (optionalUser.isEmpty()) {
+        if (optionalUser.isEmpty() || !passwordEncoder.matches(loginDetails.getPassword(), optionalUser.get().getPassword())) {
             return ResponseEntity
-                    .status(401)
-                    .body(Map.of("message", "User not found"));
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("message", "Invalid email or password"));
         }
 
         User user = optionalUser.get();
-
-        if (!passwordEncoder.matches(
-                loginDetails.getPassword(),
-                user.getPassword())) {
-
-            return ResponseEntity
-                    .status(401)
-                    .body(Map.of("message", "Invalid credentials"));
-        }
-
+        
+        // Ensure portfolio exists
         portfolioRepository.findByUser_Id(user.getId()).orElseGet(() -> {
-            Portfolio p = new Portfolio(user, 100000.0);
-            return portfolioRepository.save(p);
+            return portfolioRepository.save(new Portfolio(user, 100000.0));
         });
 
         Map<String, Object> response = new HashMap<>();
