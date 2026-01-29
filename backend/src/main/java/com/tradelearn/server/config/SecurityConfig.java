@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -16,55 +17,45 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @EnableWebSecurity
 public class SecurityConfig {
 
-    // 🔐 Password Encoder
     @Bean
     public BCryptPasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
-    // 🔓 Security Configuration
- @Bean
-public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-    http
-        .csrf(csrf -> csrf.disable())
-        .cors(cors -> {})
-        .authorizeHttpRequests(auth -> auth
-            // ✅ allow preflight
-            .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
-            // ✅ allow all APIs
-            .requestMatchers("/**").permitAll()
-            .anyRequest().permitAll()
-        );
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        http
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            .csrf(csrf -> csrf.disable())
+            .authorizeHttpRequests(auth -> auth
+                // Allow Preflight requests to pass through security
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                // Allow auth endpoints
+                .requestMatchers("/api/auth/**").permitAll()
+                // Require authentication for everything else
+                .anyRequest().authenticated()
+            );
 
-    return http.build();
-}
+        return http.build();
+    }
 
-    // 🌍 CORS Configuration (RENDER + VERCEL SAFE)
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
 
-        // Allow localhost + ALL vercel deployments
-        config.setAllowedOriginPatterns(List.of(
+        // When allowCredentials(true), you MUST specify exact origins
+        config.setAllowedOrigins(List.of(
             "http://localhost:3000",
-            "https://*.vercel.app"
+            "https://tradelearn-project.vercel.app" 
         ));
 
-        // Allow all common HTTP methods
-        config.setAllowedMethods(List.of(
-            "GET", "POST", "PUT", "DELETE", "OPTIONS"
-        ));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept"));
+        config.setAllowCredentials(true); 
+        config.setMaxAge(3600L); // Cache preflight response for 1 hour
 
-        // Allow all headers
-        config.setAllowedHeaders(List.of("*"));
-
-        // ❗ IMPORTANT: must be FALSE for wildcard origins
-        config.setAllowCredentials(false);
-
-        UrlBasedCorsConfigurationSource source =
-                new UrlBasedCorsConfigurationSource();
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
-
         return source;
     }
 }
