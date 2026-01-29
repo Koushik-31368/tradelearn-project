@@ -23,23 +23,21 @@ public class SecurityConfig {
     }
 
     // 🔓 Security Configuration
-    @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http
-            // Disable CSRF (required for REST APIs)
-            .csrf(csrf -> csrf.disable())
+ @Bean
+public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    http
+        .csrf(csrf -> csrf.disable())
+        .cors(cors -> {})
+        .authorizeHttpRequests(auth -> auth
+            // ✅ allow preflight
+            .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
+            // ✅ allow all APIs
+            .requestMatchers("/**").permitAll()
+            .anyRequest().permitAll()
+        );
 
-            // Enable CORS
-            .cors(cors -> {})
-
-            // Allow everything for now
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/**").permitAll()
-                .anyRequest().permitAll()
-            );
-
-        return http.build();
-    }
+    return http.build();
+}
 
     // 🌍 CORS Configuration (RENDER + VERCEL SAFE)
     @Bean
