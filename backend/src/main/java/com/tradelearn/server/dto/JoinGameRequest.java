@@ -1,14 +1,14 @@
-// src/main/java/com/tradelearn/server/dto/JoinGameRequest.java
 package com.tradelearn.server.dto;
 
 public class JoinGameRequest {
-    private Long opponentId;
 
-    // Getter and Setter
-    public Long getOpponentId() {
+    private long opponentId;   // 🔥 primitive
+
+    public long getOpponentId() {
         return opponentId;
     }
-    public void setOpponentId(Long opponentId) {
+
+    public void setOpponentId(long opponentId) {
         this.opponentId = opponentId;
     }
 }
