@@ -1,12 +1,11 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useParams, useSearchParams, Link } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import '../styles/theme.css';
 import { strategyCatalog } from '../data/strategies';
 
-const API_URL =
-  process.env.REACT_APP_API_URL ||
-  'https://tradelearn-project-1.onrender.com';
+// ✅ ONLY env-based backend URL
+const API_URL = process.env.REACT_APP_API_URL;
 
 // Tiny sample data
 const sampleCandles = [
@@ -27,7 +26,7 @@ const getInitialParams = (strategy, search) => {
 
 export default function TrySimulatorPage() {
   const { slug } = useParams();
-  const [search] = useSearchParams(); // ✅ FIXED (no setSearch)
+  const [search] = useSearchParams();
 
   const strategy = useMemo(
     () =>
@@ -38,7 +37,7 @@ export default function TrySimulatorPage() {
 
   const [symbol, setSymbol] = useState(search.get('symbol') || 'RELIANCE');
   const [params, setParams] = useState(getInitialParams(strategy, search));
-  const [candles, setCandles] = useState(sampleCandles);
+  const [candles] = useState(sampleCandles); // ✅ setCandles removed
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');

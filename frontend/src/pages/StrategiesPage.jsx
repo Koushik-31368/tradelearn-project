@@ -6,7 +6,7 @@ import './StrategiesPage.css';
 const StrategiesPage = () => {
   const [activeTab, setActiveTab] = useState('library');
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [selectedStrategy, setSelectedStrategy] = useState(null);
+  const [, setSelectedStrategy] = useState(null);
   const [quizStarted, setQuizStarted] = useState(false);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [quizAnswers, setQuizAnswers] = useState([]);
