@@ -1,43 +1,7 @@
-import React, { useState } from 'react';
+import React from 'react';
 import './LearnPage.css';
 
 const LearnPage = () => {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [stockData, setStockData] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [searchError, setSearchError] = useState('');
-
-  const searchStock = async () => {
-    if (!searchQuery.trim()) return;
-
-    setLoading(true);
-    setSearchError('');
-    setStockData(null);
-    try {
-      const apiKey = process.env.REACT_APP_ALPHA_VANTAGE_KEY;
-      if (!apiKey) {
-        setSearchError('Stock search is not configured. Set REACT_APP_ALPHA_VANTAGE_KEY in .env');
-        return;
-      }
-      const res = await fetch(
-        `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${searchQuery}.BSE&apikey=${apiKey}`
-      );
-      if (!res.ok) throw new Error('API request failed');
-      const json = await res.json();
-      const quote = json['Global Quote'];
-      if (!quote || !quote['01. symbol']) {
-        setSearchError('Stock not found. Try a symbol like TCS, INFY, RELIANCE');
-        return;
-      }
-      setStockData(quote);
-    } catch (error) {
-      console.error('Error fetching stock:', error);
-      setSearchError('Stock lookup failed. Please try again later.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
     <div className="learn-page">
       <div className="container">
@@ -63,54 +27,6 @@ const LearnPage = () => {
               <p>Higher potential returns come with higher risk. Diversify your portfolio to manage risk.</p>
             </div>
           </div>
-        </section>
-
-        {/* Stock Search Section */}
-        <section className="search-section">
-          <h2>Search Stock</h2>
-          <div className="search-bar">
-            <input
-              type="text"
-              placeholder="Enter stock symbol (e.g., TCS, INFY, RELIANCE)"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value.toUpperCase())}
-              onKeyPress={(e) => e.key === 'Enter' && searchStock()}
-            />
-            <button onClick={searchStock} disabled={loading}>
-              {loading ? 'Searching...' : 'Search'}
-            </button>
-          </div>
-
-          {stockData && stockData['01. symbol'] && (
-            <div className="stock-card">
-              <h3>{stockData['01. symbol']}</h3>
-              <div className="stock-details">
-                <div className="detail-item">
-                  <span className="label">Price:</span>
-                  <span className="value">₹{parseFloat(stockData['05. price']).toFixed(2)}</span>
-                </div>
-                <div className="detail-item">
-                  <span className="label">Change:</span>
-                  <span className={`value ${parseFloat(stockData['09. change']) >= 0 ? 'positive' : 'negative'}`}>
-                    {stockData['09. change']} ({stockData['10. change percent']})
-                  </span>
-                </div>
-                <div className="detail-item">
-                  <span className="label">High:</span>
-                  <span className="value">₹{parseFloat(stockData['03. high']).toFixed(2)}</span>
-                </div>
-                <div className="detail-item">
-                  <span className="label">Low:</span>
-                  <span className="value">₹{parseFloat(stockData['04. low']).toFixed(2)}</span>
-                </div>
-                <div className="detail-item">
-                  <span className="label">Volume:</span>
-                  <span className="value">{parseInt(stockData['06. volume']).toLocaleString()}</span>
-                </div>
-              </div>
-            </div>
-          )}
-          {searchError && <p className="search-error">{searchError}</p>}
         </section>
 
         {/* Tips Section */}
