@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import './CreateGameForm.css';
 import { useAuth } from '../context/AuthContext'; // 1. Import useAuth
+import { backendUrl } from '../utils/api';
 
 const CreateGameForm = ({ onCreate, onCancel }) => {
   const [stockSymbol, setStockSymbol] = useState('');
@@ -20,13 +21,14 @@ const CreateGameForm = ({ onCreate, onCancel }) => {
     }
 
     try {
-      const response = await fetch('http://localhost:8080/api/games', {
+      const response = await fetch(backendUrl('/api/match/create'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           stockSymbol: stockSymbol,
           durationMinutes: duration,
-          creatorId: user.id // 4. Use the real user ID from context
+          creatorId: user.id,
+          startingBalance: 1000000
         })
       });
 

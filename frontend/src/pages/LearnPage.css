@@ -107,6 +107,12 @@
   cursor: not-allowed;
 }
 
+.search-error {
+  color: #e74c3c;
+  text-align: center;
+  margin-top: 10px;
+}
+
 /* Stock Card */
 .stock-card {
   background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);

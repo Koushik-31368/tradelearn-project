@@ -1,22 +1,25 @@
 import React, { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 import "./RegisterPage.css";
-
-const API_URL = process.env.REACT_APP_API_URL;
+import { backendUrl } from '../utils/api';
 
 export default function RegisterPage() {
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const navigate = useNavigate();
 
   const handleRegister = async (e) => {
     e.preventDefault();
     setError("");
+    setSuccess("");
 
     try {
       await axios.post(
-        `${API_URL}/api/auth/register`,
+        backendUrl('/api/auth/register'),
         {
           email,
           username,
@@ -29,8 +32,8 @@ export default function RegisterPage() {
         }
       );
 
-      alert("Registration successful!");
-      window.location.href = "/login";
+      setSuccess("Registration successful! Redirecting to login…");
+      setTimeout(() => navigate("/login"), 1500);
 
     } catch (err) {
       setError(
@@ -72,9 +75,10 @@ export default function RegisterPage() {
       </form>
 
       {error && <p className="error-text">{error}</p>}
+      {success && <p className="success-text" style={{ color: '#27ae60', textAlign: 'center' }}>{success}</p>}
 
       <p className="login-link">
-        Already have an account? <a href="/login">Login</a>
+        Already have an account? <Link to="/login">Login</Link>
       </p>
     </div>
   );

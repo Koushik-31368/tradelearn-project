@@ -1,17 +1,20 @@
 // src/main/java/com/tradelearn/server/controller/StrategyController.java
 package com.tradelearn.server.controller;
 
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.tradelearn.server.dto.BacktestRequest;
 import com.tradelearn.server.dto.BacktestResult;
 import com.tradelearn.server.dto.BatchBacktestRequest;
 import com.tradelearn.server.dto.BatchBacktestResult;
 import com.tradelearn.server.service.BacktestService;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/strategy")
-@CrossOrigin(origins = {"http://localhost:3000", "https://tradelearn-project.vercel.app"}, allowCredentials = "true")
 public class StrategyController {
 
     private final BacktestService backtestService;

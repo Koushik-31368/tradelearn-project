@@ -2,17 +2,25 @@
 import React, { useEffect, useRef } from 'react';
 import { createChart } from 'lightweight-charts';
 
+/**
+ * Candlestick chart driven entirely by server candle data.
+ *
+ * Props:
+ *   data  – array of { time, open, high, low, close }
+ *           `time` must be a date-string ("2024-01-15") or UNIX timestamp.
+ *           New candles are appended in real-time via `.update()`.
+ */
 const StockChart = ({ data }) => {
-  // Create a ref for the chart container div element
-  const chartContainerRef = useRef(null);
-  
-  // This useEffect hook handles the creation and destruction of the chart
-  useEffect(() => {
-    // Exit if the container isn't mounted yet
-    if (!chartContainerRef.current) return;
+  const containerRef = useRef(null);
+  const chartRef     = useRef(null);
+  const seriesRef    = useRef(null);
+  const prevLenRef   = useRef(0);
 
-    // Create the chart instance
-    const chart = createChart(chartContainerRef.current, {
+  // Create chart once on mount
+  useEffect(() => {
+    if (!containerRef.current) return;
+
+    const chart = createChart(containerRef.current, {
       layout: {
         background: { color: '#1f2937' },
         textColor: '#d1d5db',
@@ -21,40 +29,66 @@ const StockChart = ({ data }) => {
         vertLines: { color: '#374151' },
         horzLines: { color: '#374151' },
       },
-      width: chartContainerRef.current.clientWidth,
-      height: 400,
+      width: containerRef.current.clientWidth,
+      height: 350,
+      crosshair: { mode: 0 },
+      timeScale: { timeVisible: false, borderColor: '#374151' },
+      rightPriceScale: { borderColor: '#374151' },
     });
 
-    // Add a candlestick series to the chart
-    const candlestickSeries = chart.addCandlestickSeries({
-      upColor: '#10B981',
-      downColor: '#EF4444',
+    const series = chart.addCandlestickSeries({
+      upColor:         '#10B981',
+      downColor:       '#EF4444',
       borderDownColor: '#EF4444',
-      borderUpColor: '#10B981',
-      wickDownColor: '#EF4444',
-      wickUpColor: '#10B981',
+      borderUpColor:   '#10B981',
+      wickDownColor:   '#EF4444',
+      wickUpColor:     '#10B981',
     });
 
-    // Set the data for the series
-    candlestickSeries.setData(data);
+    chartRef.current  = chart;
+    seriesRef.current = series;
 
-    // Adjust the visible range to fit the data
-    chart.timeScale().fitContent();
-
-    // Resize chart on window resize
     const handleResize = () => {
-      chart.applyOptions({ width: chartContainerRef.current.clientWidth });
+      if (containerRef.current) {
+        chart.applyOptions({ width: containerRef.current.clientWidth });
+      }
     };
     window.addEventListener('resize', handleResize);
 
-    // This is the cleanup function that runs when the component is unmounted
     return () => {
       window.removeEventListener('resize', handleResize);
       chart.remove();
+      chartRef.current  = null;
+      seriesRef.current = null;
+      prevLenRef.current = 0;
     };
-  }, [data]); // Re-run this effect if the data prop changes
+  }, []); // mount-only
 
-  return <div ref={chartContainerRef} style={{ position: 'relative', width: '100%', height: '400px' }} />;
+  // React to data changes — append new candles incrementally
+  useEffect(() => {
+    if (!seriesRef.current || !data || data.length === 0) return;
+
+    if (prevLenRef.current === 0) {
+      // First load — set full dataset
+      seriesRef.current.setData(data);
+      chartRef.current?.timeScale().fitContent();
+    } else if (data.length > prevLenRef.current) {
+      // Append only the newest candle(s)
+      for (let i = prevLenRef.current; i < data.length; i++) {
+        seriesRef.current.update(data[i]);
+      }
+      chartRef.current?.timeScale().scrollToRealTime();
+    }
+
+    prevLenRef.current = data.length;
+  }, [data]);
+
+  return (
+    <div
+      ref={containerRef}
+      style={{ position: 'relative', width: '100%', height: '350px' }}
+    />
+  );
 };
 
 export default StockChart;

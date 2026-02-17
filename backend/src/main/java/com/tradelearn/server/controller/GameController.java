@@ -1,10 +1,10 @@
 package com.tradelearn.server.controller;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -21,14 +21,6 @@ import com.tradelearn.server.repository.UserRepository;
 
 @RestController
 @RequestMapping("/api/games")
-@CrossOrigin(
-    origins = {
-        "http://localhost:3000",
-        "https://tradelearn-project.vercel.app",
-        "https://tradelearn-project-kethans-projects-3fb29448.vercel.app"
-    },
-    allowCredentials = "true"
-)
 public class GameController {
 
     private final GameRepository gameRepository;
@@ -44,7 +36,7 @@ public class GameController {
     public ResponseEntity<?> createGame(@RequestBody CreateGameRequest request) {
 
         Optional<User> creator =
-                userRepository.findById(request.getCreatorId());
+                userRepository.findById(Objects.requireNonNull(request.getCreatorId()));
 
         if (creator.isEmpty()) {
             return ResponseEntity.badRequest().body("Creator not found");
@@ -77,7 +69,7 @@ public class GameController {
         }
 
         Optional<User> opponent =
-                userRepository.findById(request.getOpponentId());
+                userRepository.findById(Objects.requireNonNull(request.getOpponentId()));
 
         if (opponent.isEmpty()) {
             return ResponseEntity.badRequest().body("Opponent not found");

@@ -5,28 +5,32 @@ import './LobbyPage.css';
 import Modal from '../components/Modal';
 import CreateGameForm from '../components/CreateGameForm';
 import { useAuth } from '../context/AuthContext'; // 1. Import useAuth
+import { backendUrl } from '../utils/api';
 
 const LobbyPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [openGames, setOpenGames] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
   const { user } = useAuth(); // 2. Get the logged-in user's data
 
   const fetchOpenGames = async () => {
-    // ... (this function remains the same) ...
     setIsLoading(true);
+    setError(null);
     try {
-      const response = await fetch('http://localhost:8080/api/games/open');
+      const response = await fetch(backendUrl('/api/match/open'));
       if (!response.ok) {
         throw new Error('Could not fetch open games.');
       }
       const data = await response.json();
       setOpenGames(data);
-    } catch (error) {
-      console.error(error);
+    } catch (err) {
+      console.error(err);
+      setError(err.message || 'Failed to load games. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
   useEffect(() => {
@@ -36,25 +40,24 @@ const LobbyPage = () => {
   const handleJoinGame = async (gameId) => {
     // 3. Check if user is logged in
     if (!user) {
-      alert("Please log in to join a game.");
+      setError("Please log in to join a game.");
       return;
     }
 
     try {
-      const response = await fetch(`http://localhost:8080/api/games/${gameId}/join`, {
+      const response = await fetch(backendUrl(`/api/match/${gameId}/join?userId=${user.id}`), {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ opponentId: user.id }) // 4. Use the real user ID
+        headers: { 'Content-Type': 'application/json' }
       });
 
       if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(errorText || 'Failed to join game.');
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.error || 'Failed to join game.');
       }
       navigate(`/game/${gameId}`);
-    } catch (error) {
-      alert(error.message);
-      console.error(error);
+    } catch (err) {
+      setError(err.message);
+      console.error(err);
     }
   };
 
@@ -69,16 +72,22 @@ const LobbyPage = () => {
       <div className="lobby-section">
         <h2>Open Games (Waiting for Opponent)</h2>
         <div className="game-list">
-          {/* ... (rest of the render logic remains the same) ... */}
           {isLoading ? (
             <p>Loading games...</p>
+          ) : error ? (
+            <p className="no-games-message" style={{ color: '#e74c3c' }}>
+              {error}{' '}
+              <button onClick={fetchOpenGames} style={{ cursor: 'pointer', textDecoration: 'underline', border: 'none', background: 'none', color: '#3498db' }}>Retry</button>
+            </p>
           ) : openGames.length > 0 ? (
             openGames.map(game => (
               <div key={game.id} className="game-card">
                 <div className="game-details">
                   <p><strong>Stock:</strong> {game.stockSymbol}</p>
-                  <p><strong>Created by:</strong> {game.creator.username}</p>
+                  <p><strong>Created by:</strong> {game.creator?.username}</p>
                   <p><strong>Duration:</strong> {game.durationMinutes} minutes</p>
+                  <p><strong>Balance:</strong> ₹{(game.startingBalance || 1000000).toLocaleString()}</p>
+                  <span className={`status-badge status-${game.status?.toLowerCase()}`}>{game.status}</span>
                 </div>
                 {/* 5. Prevent user from joining their own game */}
                 {user && user.id === game.creator.id ? (

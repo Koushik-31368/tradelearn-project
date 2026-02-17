@@ -1,53 +1,41 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import React, { useState } from 'react';
 import './LearnPage.css';
 
 const LearnPage = () => {
-  const [news, setNews] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [stockData, setStockData] = useState(null);
   const [loading, setLoading] = useState(false);
-
-  // Fetch Indian stock market news on page load
-  useEffect(() => {
-    fetchNews();
-  }, []);
-
-  const fetchNews = async () => {
-    try {
-      const response = await axios.get('https://newsapi.org/v2/top-headlines', {
-        params: {
-          country: 'in',
-          category: 'business',
-          apiKey: 'ed42aa102bf84e61aaf6c1684c4970c6' // Replace with your free NewsAPI key from newsapi.org
-        }
-      });
-      setNews(response.data.articles.slice(0, 10));
-    } catch (error) {
-      console.error('Error fetching news:', error);
-    }
-  };
+  const [searchError, setSearchError] = useState('');
 
   const searchStock = async () => {
     if (!searchQuery.trim()) return;
-    
+
     setLoading(true);
+    setSearchError('');
+    setStockData(null);
     try {
-      // Using Alpha Vantage API for stock data
-      const response = await axios.get('https://www.alphavantage.co/query', {
-        params: {
-          function: 'GLOBAL_QUOTE',
-          symbol: `${searchQuery}.BSE`, // Indian stock format
-          apikey: 'F9HE0WX2CTKBJOGU' // Your existing Alpha Vantage key
-        }
-      });
-      
-      setStockData(response.data['Global Quote']);
+      const apiKey = process.env.REACT_APP_ALPHA_VANTAGE_KEY;
+      if (!apiKey) {
+        setSearchError('Stock search is not configured. Set REACT_APP_ALPHA_VANTAGE_KEY in .env');
+        return;
+      }
+      const res = await fetch(
+        `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${searchQuery}.BSE&apikey=${apiKey}`
+      );
+      if (!res.ok) throw new Error('API request failed');
+      const json = await res.json();
+      const quote = json['Global Quote'];
+      if (!quote || !quote['01. symbol']) {
+        setSearchError('Stock not found. Try a symbol like TCS, INFY, RELIANCE');
+        return;
+      }
+      setStockData(quote);
     } catch (error) {
       console.error('Error fetching stock:', error);
-      alert('Stock not found. Try symbol like TCS, INFY, RELIANCE');
+      setSearchError('Stock lookup failed. Please try again later.');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
@@ -122,34 +110,37 @@ const LearnPage = () => {
               </div>
             </div>
           )}
+          {searchError && <p className="search-error">{searchError}</p>}
         </section>
 
-        {/* News Section */}
+        {/* Tips Section */}
         <section className="news-section">
-          <h2>Latest Indian Stock Market News</h2>
+          <h2>Trading Tips</h2>
           <div className="news-grid">
-            {news.length > 0 ? (
-              news.map((article, index) => (
-                <div key={index} className="news-card">
-                  {article.urlToImage && (
-                    <img src={article.urlToImage} alt={article.title} />
-                  )}
-                  <div className="news-content">
-                    <h3>{article.title}</h3>
-                    <p>{article.description}</p>
-                    <div className="news-meta">
-                      <span className="source">{article.source.name}</span>
-                      <span className="date">{new Date(article.publishedAt).toLocaleDateString()}</span>
-                    </div>
-                    <a href={article.url} target="_blank" rel="noopener noreferrer">
-                      Read More →
-                    </a>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <p className="no-news">Loading news...</p>
-            )}
+            <div className="news-card">
+              <div className="news-content">
+                <h3>💡 Start with Paper Trading</h3>
+                <p>Practice with our simulator before risking real money. Get comfortable with buy, sell, short, and cover orders.</p>
+              </div>
+            </div>
+            <div className="news-card">
+              <div className="news-content">
+                <h3>📊 Read the Candlesticks</h3>
+                <p>Green candles mean the price went up, red means it went down. Learn to spot patterns like doji, hammer, and engulfing.</p>
+              </div>
+            </div>
+            <div className="news-card">
+              <div className="news-content">
+                <h3>🛡️ Manage Your Risk</h3>
+                <p>Never risk more than 2-5% of your portfolio on a single trade. Use stop-losses and position sizing.</p>
+              </div>
+            </div>
+            <div className="news-card">
+              <div className="news-content">
+                <h3>🏆 Compete & Learn</h3>
+                <p>Challenge other traders in 1v1 matches. Analyze your accuracy, drawdown, and hybrid score to improve.</p>
+              </div>
+            </div>
           </div>
         </section>
 

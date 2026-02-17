@@ -3,9 +3,7 @@ import { useParams, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import '../styles/theme.css';
 import { strategyCatalog } from '../data/strategies';
-
-// ✅ ONLY env-based backend URL
-const API_URL = process.env.REACT_APP_API_URL;
+import { backendUrl } from '../utils/api';
 
 // Tiny sample data
 const sampleCandles = [
@@ -72,7 +70,7 @@ export default function TrySimulatorPage() {
       };
 
       const res = await axios.post(
-        `${API_URL}/api/strategy/backtest`,
+        backendUrl('/api/strategy/backtest'),
         body
       );
 

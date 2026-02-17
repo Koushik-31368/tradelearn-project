@@ -1,6 +1,7 @@
 package com.tradelearn.server.service;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 import org.springframework.stereotype.Service;
@@ -42,7 +43,7 @@ public class TradeService {
 
     // Get single trade by ID
     public Optional<Trade> getTradeById(long tradeId) {
-        return tradeRepository.findById(tradeId);
+        return tradeRepository.findById(Objects.requireNonNull(tradeId));
     }
 
     // Get trades by symbol
@@ -53,7 +54,7 @@ public class TradeService {
     // Delete trade
     @Transactional
     public void deleteTrade(long tradeId) {
-        tradeRepository.deleteById(tradeId);
+        tradeRepository.deleteById(Objects.requireNonNull(tradeId));
     }
 
     // Get total trade count for user

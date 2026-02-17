@@ -1,0 +1,233 @@
+/* src/pages/LeaderboardPage.css */
+
+/* ── Page wrapper ── */
+.lb-page {
+  min-height: calc(100vh - 80px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 48px 20px 80px;
+  background: radial-gradient(ellipse at top, #0d1117 0%, #000 100%);
+}
+
+/* ── Loading ── */
+.lb-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  margin-top: 120px;
+  color: #9ca3af;
+}
+.lb-spinner {
+  width: 36px; height: 36px;
+  border: 3px solid #1e2733;
+  border-top-color: #10b981;
+  border-radius: 50%;
+  animation: lb-spin 0.8s linear infinite;
+}
+@keyframes lb-spin { to { transform: rotate(360deg); } }
+
+.lb-error {
+  color: #ef4444;
+  font-size: 1.1rem;
+  margin-top: 80px;
+}
+
+/* ══════════════════════════════════════
+   HEADER
+   ══════════════════════════════════════ */
+.lb-header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+.lb-title {
+  font-size: 2.2rem;
+  font-weight: 900;
+  color: #e5e7eb;
+  letter-spacing: 0.04em;
+  margin: 0 0 6px;
+}
+.lb-icon {
+  font-size: 2rem;
+}
+.lb-subtitle {
+  font-size: 0.85rem;
+  color: #6b7280;
+  letter-spacing: 0.06em;
+  margin: 0;
+}
+
+/* ══════════════════════════════════════
+   TABLE
+   ══════════════════════════════════════ */
+.lb-table-wrapper {
+  width: 100%;
+  max-width: 720px;
+  background: #0d1117;
+  border: 1px solid #1e2733;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.lb-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Header row ── */
+.lb-th {
+  padding: 14px 16px;
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  color: #4b5563;
+  text-transform: uppercase;
+  text-align: left;
+  background: #161b22;
+  border-bottom: 1px solid #1e2733;
+}
+.lb-th-rank { width: 56px; text-align: center; }
+.lb-th-rating,
+.lb-th-matches { text-align: right; }
+
+/* ── Body rows ── */
+.lb-row {
+  transition: background 0.15s ease;
+}
+.lb-row:hover {
+  background: rgba(16, 185, 129, 0.04);
+}
+.lb-row:not(:last-child) .lb-cell {
+  border-bottom: 1px solid #1e2733;
+}
+
+.lb-cell {
+  padding: 12px 16px;
+  font-size: 0.9rem;
+  color: #d1d5db;
+}
+.lb-cell-rank {
+  text-align: center;
+  width: 56px;
+}
+.lb-cell-rating,
+.lb-cell-matches {
+  text-align: right;
+  font-weight: 700;
+}
+
+/* ── Rank badges ── */
+.lb-medal {
+  font-size: 1.4rem;
+}
+.lb-rank-num {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #6b7280;
+}
+
+/* ── Username + YOU tag ── */
+.lb-cell-user {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.lb-username {
+  font-weight: 600;
+  color: #e5e7eb;
+}
+.lb-you-tag {
+  font-size: 0.55rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  text-transform: uppercase;
+}
+
+/* ── Rating value ── */
+.lb-rating-value {
+  color: #10b981;
+  font-weight: 800;
+  font-size: 1rem;
+}
+
+/* ── Matches ── */
+.lb-cell-matches {
+  color: #9ca3af;
+}
+
+/* ══════════════════════════════════════
+   TOP 3 ROW HIGHLIGHTS
+   ══════════════════════════════════════ */
+.lb-top-1 {
+  background: rgba(255, 215, 0, 0.04);
+}
+.lb-top-1 .lb-username {
+  color: #ffd700;
+}
+.lb-top-1 .lb-rating-value {
+  color: #ffd700;
+  text-shadow: 0 0 8px rgba(255, 215, 0, 0.3);
+}
+
+.lb-top-2 {
+  background: rgba(192, 192, 192, 0.03);
+}
+.lb-top-2 .lb-username {
+  color: #c0c0c0;
+}
+.lb-top-2 .lb-rating-value {
+  color: #c0c0c0;
+}
+
+.lb-top-3 {
+  background: rgba(205, 127, 50, 0.03);
+}
+.lb-top-3 .lb-username {
+  color: #cd7f32;
+}
+.lb-top-3 .lb-rating-value {
+  color: #cd7f32;
+}
+
+/* ── Current user highlight ── */
+.lb-row-me {
+  background: rgba(16, 185, 129, 0.08) !important;
+  border-left: 3px solid #10b981;
+}
+.lb-row-me .lb-username {
+  color: #34d399;
+}
+
+/* ── Empty state ── */
+.lb-empty {
+  text-align: center;
+  color: #6b7280;
+  padding: 40px 16px;
+  font-size: 0.95rem;
+}
+
+/* ══════════════════════════════════════
+   RESPONSIVE
+   ══════════════════════════════════════ */
+@media (max-width: 600px) {
+  .lb-page {
+    padding: 32px 12px 60px;
+  }
+  .lb-title {
+    font-size: 1.6rem;
+  }
+  .lb-th,
+  .lb-cell {
+    padding: 10px 10px;
+    font-size: 0.8rem;
+  }
+  .lb-rating-value {
+    font-size: 0.9rem;
+  }
+}

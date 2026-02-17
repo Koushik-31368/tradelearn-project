@@ -1,7 +1,13 @@
 package com.tradelearn.server.model;
 
-import jakarta.persistence.*;
 import java.time.LocalDateTime;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "trades")
@@ -14,6 +20,9 @@ public class Trade {
     @Column(name = "user_id", nullable = false)
     private Long userId;
 
+    @Column(name = "game_id")
+    private Long gameId;
+
     @Column(name = "symbol", nullable = false, length = 20)
     private String symbol;
 
@@ -21,7 +30,7 @@ public class Trade {
     private String name;
 
     @Column(name = "type", nullable = false, length = 10)
-    private String type; // BUY or SELL
+    private String type; // BUY, SELL, SHORT, COVER
 
     @Column(name = "quantity", nullable = false)
     private Integer quantity;
@@ -37,8 +46,9 @@ public class Trade {
         this.timestamp = LocalDateTime.now();
     }
 
-    public Trade(Long userId, String symbol, String name, String type, Integer quantity, Double price) {
+    public Trade(Long userId, Long gameId, String symbol, String name, String type, Integer quantity, Double price) {
         this.userId = userId;
+        this.gameId = gameId;
         this.symbol = symbol;
         this.name = name;
         this.type = type;
@@ -62,6 +72,14 @@ public class Trade {
 
     public void setUserId(Long userId) {
         this.userId = userId;
+    }
+
+    public Long getGameId() {
+        return gameId;
+    }
+
+    public void setGameId(Long gameId) {
+        this.gameId = gameId;
     }
 
     public String getSymbol() {
