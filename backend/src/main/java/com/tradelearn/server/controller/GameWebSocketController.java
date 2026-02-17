@@ -12,31 +12,40 @@ import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 
+import com.tradelearn.server.dto.MatchTradeRequest;
 import com.tradelearn.server.model.Game;
+import com.tradelearn.server.model.Trade;
 import com.tradelearn.server.repository.GameRepository;
+import com.tradelearn.server.service.MatchTradeService;
 
 @Controller
 public class GameWebSocketController {
 
-    // ===== PUBLIC STATIC DTOs (fixes "exporting non-public type") =====
+    // ===== PUBLIC STATIC DTOs =====
 
     public static class TradeAction {
         public String type;
         public int amount;
         public double price;
         public long playerId;
+        public String symbol;
     }
 
-    public static class PlayerState {
-        public double cash = 1_000_000;
-        public int longShares;
-        public int shortShares;
-        public double avgShortPrice;
+    public static class PlayerStateSnapshot {
+        public double cash;
+        public Map<String, Integer> longShares;
+        public Map<String, Integer> shortShares;
+
+        public PlayerStateSnapshot(MatchTradeService.PlayerPosition pos) {
+            this.cash = pos.cash;
+            this.longShares = pos.shares;
+            this.shortShares = pos.shortShares;
+        }
     }
 
-    public static class GameState {
-        public PlayerState player1 = new PlayerState();
-        public PlayerState player2 = new PlayerState();
+    public static class GameStateSnapshot {
+        public PlayerStateSnapshot player1;
+        public PlayerStateSnapshot player2;
     }
 
     private static class GameReadiness {
@@ -49,15 +58,17 @@ public class GameWebSocketController {
 
     private final SimpMessagingTemplate messagingTemplate;
     private final GameRepository gameRepository;
+    private final MatchTradeService matchTradeService;
 
     public GameWebSocketController(SimpMessagingTemplate messagingTemplate,
-                                   GameRepository gameRepository) {
+                                   GameRepository gameRepository,
+                                   MatchTradeService matchTradeService) {
         this.messagingTemplate = messagingTemplate;
         this.gameRepository = gameRepository;
+        this.matchTradeService = matchTradeService;
     }
 
     private final Map<Long, GameReadiness> readinessMap = new ConcurrentHashMap<>();
-    private final Map<Long, GameState> stateMap = new ConcurrentHashMap<>();
 
     // ===== READY HANDLER =====
 
@@ -75,68 +86,109 @@ public class GameWebSocketController {
         }
     }
 
-    // ===== TRADE HANDLER =====
+    // ===== TRADE HANDLER (now persists via MatchTradeService) =====
 
+    @SuppressWarnings("null")
     @MessageMapping("/game/{gameId}/trade")
     public void handleTrade(
             @DestinationVariable long gameId,
             @Payload TradeAction trade
     ) {
+        @SuppressWarnings("null")
         Optional<Game> gameOpt = gameRepository.findById(gameId);
         if (gameOpt.isEmpty()) return;
 
         Game game = gameOpt.get();
-        GameState state =
-                stateMap.computeIfAbsent(gameId, k -> new GameState());
+        if (!"ACTIVE".equals(game.getStatus())) return;
 
-        PlayerState player;
-        if (trade.playerId == game.getCreator().getId()) {
-            player = state.player1;
-        } else if (game.getOpponent() != null &&
-                   trade.playerId == game.getOpponent().getId()) {
-            player = state.player2;
-        } else {
+        // Verify participant
+        Long playerId = trade.playerId;
+        if (!game.getCreator().getId().equals(playerId) &&
+            (game.getOpponent() == null || !game.getOpponent().getId().equals(playerId))) {
             return;
         }
 
-        double cost = trade.amount * trade.price;
+        String symbol = (trade.symbol != null && !trade.symbol.isBlank())
+                ? trade.symbol
+                : game.getStockSymbol();
 
-        switch (trade.type.toUpperCase()) {
-            case "BUY" -> {
-                if (player.cash < cost) return;
-                player.cash -= cost;
-                player.longShares += trade.amount;
-            }
-            case "SELL" -> {
-                if (player.longShares < trade.amount) return;
-                player.cash += cost;
-                player.longShares -= trade.amount;
-            }
-            case "SHORT" -> {
-                double total =
-                        (player.avgShortPrice * player.shortShares) + cost;
-                player.shortShares += trade.amount;
-                player.avgShortPrice = total / player.shortShares;
-                player.cash += cost;
-            }
-            case "COVER" -> {
-                if (player.shortShares < trade.amount) return;
-                if (player.cash < cost) return;
-                player.cash -= cost;
-                player.shortShares -= trade.amount;
-                if (player.shortShares == 0) {
-                    player.avgShortPrice = 0.0;
-                }
-            }
-            default -> {
-                return;
-            }
+        // Persist the trade through MatchTradeService
+        try {
+            MatchTradeRequest req = new MatchTradeRequest();
+            req.setGameId(gameId);
+            req.setUserId(playerId);
+            req.setSymbol(symbol);
+            req.setType(trade.type);
+            req.setQuantity(trade.amount);
+
+            Trade saved = matchTradeService.placeTrade(req);
+
+            // Build updated state from DB
+            GameStateSnapshot snapshot = buildGameState(game);
+
+            // Broadcast updated state
+            messagingTemplate.convertAndSend(
+                    "/topic/game/" + gameId + "/state",
+                    snapshot
+            );
+
+            // Also broadcast the individual trade for the activity feed
+            messagingTemplate.convertAndSend(
+                    "/topic/game/" + gameId + "/trade",
+                    saved
+            );
+
+        } catch (IllegalStateException | IllegalArgumentException e) {
+            // Send error back to the specific player
+            messagingTemplate.convertAndSend(
+                    "/topic/game/" + gameId + "/error/" + playerId,
+                    Map.of("error", e.getMessage())
+            );
         }
+    }
+
+    // ===== POSITION QUERY (WebSocket) =====
+
+    @MessageMapping("/game/{gameId}/position")
+    public void getPosition(
+            @DestinationVariable long gameId,
+            @Payload Map<String, Long> payload
+    ) {
+        Long userId = payload.get("userId");
+        if (userId == null) return;
+
+        @SuppressWarnings("null")
+        Optional<Game> gameOpt = gameRepository.findById(gameId);
+        if (gameOpt.isEmpty()) return;
+
+        Game game = gameOpt.get();
+        MatchTradeService.PlayerPosition position =
+                matchTradeService.getPlayerPosition(gameId, userId, game.getStartingBalance());
 
         messagingTemplate.convertAndSend(
-                "/topic/game/" + gameId + "/state",
-                state
+                "/topic/game/" + gameId + "/position/" + userId,
+                new PlayerStateSnapshot(position)
         );
+    }
+
+    // ===== HELPERS =====
+
+    private GameStateSnapshot buildGameState(Game game) {
+        GameStateSnapshot snapshot = new GameStateSnapshot();
+
+        MatchTradeService.PlayerPosition p1 = matchTradeService.getPlayerPosition(
+                game.getId(), game.getCreator().getId(), game.getStartingBalance()
+        );
+        snapshot.player1 = new PlayerStateSnapshot(p1);
+
+        if (game.getOpponent() != null) {
+            MatchTradeService.PlayerPosition p2 = matchTradeService.getPlayerPosition(
+                    game.getId(), game.getOpponent().getId(), game.getStartingBalance()
+            );
+            snapshot.player2 = new PlayerStateSnapshot(p2);
+        }
+
+        return snapshot;
     }
 
     @MessageMapping("/hello")

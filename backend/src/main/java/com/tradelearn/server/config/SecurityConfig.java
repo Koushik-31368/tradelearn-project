@@ -4,7 +4,6 @@ import java.util.List;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -26,12 +25,8 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
-            .cors(cors -> {})
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .authorizeHttpRequests(auth -> auth
-                // ✅ allow CORS preflight
-                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                // ✅ allow all APIs for now
-                .requestMatchers("/**").permitAll()
                 .anyRequest().permitAll()
             );
 
@@ -42,9 +37,10 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
 
-        config.setAllowedOriginPatterns(List.of(
+        config.setAllowedOrigins(List.of(
             "http://localhost:3000",
-            "https://*.vercel.app"
+            "https://tradelearn-project.vercel.app",
+            "https://tradelearn-project-kethans-projects-3fb29448.vercel.app"
         ));
 
         config.setAllowedMethods(List.of(
@@ -52,9 +48,7 @@ public class SecurityConfig {
         ));
 
         config.setAllowedHeaders(List.of("*"));
-
-        // ❗ must be false with wildcard origins
-        config.setAllowCredentials(false);
+        config.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source =
                 new UrlBasedCorsConfigurationSource();

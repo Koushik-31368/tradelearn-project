@@ -13,6 +13,10 @@ import SimulatorPage from './pages/SimulatorPage'; // 1. Import
 import LearnPage from './pages/LearnPage';
 import StrategiesPage from './pages/StrategiesPage';
 import TrySimulatorPage from './pages/TrySimulatorPage';
+import MatchResultPage from './pages/MatchResultPage';
+import LeaderboardPage from './pages/LeaderboardPage';
+import ProfilePage from './pages/ProfilePage';
+import MatchHistoryPage from './pages/MatchHistoryPage';
 function App() {
   return (
     <AuthProvider>
@@ -26,6 +30,10 @@ function App() {
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
             <Route path="/multiplayer" element={<LobbyPage />} />
             <Route path="/game/:gameId" element={<GamePage />} />
+            <Route path="/match/:gameId/result" element={<MatchResultPage />} />
+            <Route path="/leaderboard" element={<LeaderboardPage />} />
+            <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/history" element={<MatchHistoryPage />} />
             <Route path="/learn" element={<LearnPage />} />
             <Route path="/strategies" element={<StrategiesPage />} />
             <Route path="/simulator" element={<SimulatorPage />} /> {/* 2. Add route */}

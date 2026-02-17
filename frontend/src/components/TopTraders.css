@@ -37,3 +37,9 @@
   font-weight: bold;
   color: var(--primary-green);
 }
+
+.trader-card .matches {
+  margin: 5px 0 0;
+  font-size: 0.85rem;
+  color: #888;
+}

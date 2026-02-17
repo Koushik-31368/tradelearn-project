@@ -1,0 +1,201 @@
+/* src/pages/MatchHistoryPage.css */
+
+/* ── Page ── */
+.mh-page {
+  min-height: calc(100vh - 80px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 48px 20px 80px;
+  background: radial-gradient(ellipse at top, #0d1117 0%, #000 100%);
+  gap: 32px;
+}
+
+/* ── Loading ── */
+.mh-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  margin-top: 120px;
+  color: #9ca3af;
+}
+.mh-spinner {
+  width: 36px; height: 36px;
+  border: 3px solid #1e2733;
+  border-top-color: #10b981;
+  border-radius: 50%;
+  animation: mh-spin 0.8s linear infinite;
+}
+@keyframes mh-spin { to { transform: rotate(360deg); } }
+
+.mh-error { color: #ef4444; font-size: 1.1rem; margin-top: 80px; }
+.mh-login-prompt { color: #9ca3af; margin-top: 120px; font-size: 1.1rem; }
+.mh-link { color: #10b981; cursor: pointer; text-decoration: underline; }
+.mh-empty { color: #6b7280; font-size: 0.9rem; }
+
+/* ══════════════════════════════════════
+   HEADER
+   ══════════════════════════════════════ */
+.mh-header {
+  text-align: center;
+}
+.mh-title {
+  font-size: 2rem;
+  font-weight: 900;
+  color: #e5e7eb;
+  margin: 0 0 4px;
+  letter-spacing: 0.04em;
+}
+.mh-subtitle {
+  font-size: 0.85rem;
+  color: #6b7280;
+  margin: 0;
+  letter-spacing: 0.06em;
+}
+
+/* ══════════════════════════════════════
+   SECTIONS
+   ══════════════════════════════════════ */
+.mh-section {
+  width: 100%;
+  max-width: 860px;
+}
+.mh-section-title {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #e5e7eb;
+  margin: 0 0 12px;
+  letter-spacing: 0.04em;
+}
+
+/* ══════════════════════════════════════
+   TABLE
+   ══════════════════════════════════════ */
+.mh-table-wrapper {
+  width: 100%;
+  background: #0d1117;
+  border: 1px solid #1e2733;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.mh-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Header */
+.mh-th {
+  padding: 12px 16px;
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  color: #4b5563;
+  text-transform: uppercase;
+  text-align: left;
+  background: #161b22;
+  border-bottom: 1px solid #1e2733;
+}
+.mh-th-right {
+  text-align: right;
+}
+
+/* Rows */
+.mh-row {
+  transition: background 0.12s ease;
+}
+.mh-row:not(:last-child) .mh-cell {
+  border-bottom: 1px solid #1e2733;
+}
+.mh-row-clickable {
+  cursor: pointer;
+}
+.mh-row-clickable:hover {
+  background: rgba(16, 185, 129, 0.04);
+}
+
+/* Cells */
+.mh-cell {
+  padding: 11px 16px;
+  font-size: 0.88rem;
+  color: #d1d5db;
+}
+.mh-cell-right {
+  text-align: right;
+}
+.mh-cell-symbol {
+  font-weight: 700;
+  color: #e5e7eb;
+}
+.mh-cell-score {
+  color: #3b82f6;
+  font-weight: 700;
+}
+.mh-cell-date {
+  color: #6b7280;
+  font-size: 0.78rem;
+}
+
+/* ══════════════════════════════════════
+   RESULT TAGS
+   ══════════════════════════════════════ */
+.mh-result-cell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.mh-result-icon {
+  font-size: 1rem;
+}
+.mh-tag {
+  display: inline-block;
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  padding: 2px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+.mh-tag-win     { background: rgba(16,185,129,.15); color: #34d399; }
+.mh-tag-loss    { background: rgba(239,68,68,.12);  color: #f87171; }
+.mh-tag-draw    { background: rgba(245,158,11,.12); color: #fbbf24; }
+.mh-tag-active  { background: rgba(59,130,246,.12); color: #60a5fa; }
+.mh-tag-waiting { background: rgba(156,163,175,.1); color: #9ca3af; }
+
+/* ══════════════════════════════════════
+   VALUE COLORS
+   ══════════════════════════════════════ */
+.mh-positive { color: #10b981; font-weight: 700; }
+.mh-negative { color: #ef4444; font-weight: 700; }
+
+/* ══════════════════════════════════════
+   RESPONSIVE
+   ══════════════════════════════════════ */
+@media (max-width: 768px) {
+  .mh-page {
+    padding: 32px 12px 60px;
+  }
+  .mh-title {
+    font-size: 1.5rem;
+  }
+  .mh-th,
+  .mh-cell {
+    padding: 9px 10px;
+    font-size: 0.78rem;
+  }
+  /* Hide score column on small screens */
+  .mh-th:nth-child(5),
+  .mh-cell-score {
+    display: none;
+  }
+}
+
+@media (max-width: 520px) {
+  /* Also hide date on very small */
+  .mh-th:nth-child(7),
+  .mh-cell-date {
+    display: none;
+  }
+}
