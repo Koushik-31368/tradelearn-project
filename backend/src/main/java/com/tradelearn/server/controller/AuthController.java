@@ -50,4 +50,15 @@ public class AuthController {
                 })
                 .orElse(ResponseEntity.badRequest().body("Invalid email"));
     }
+
+    // Temporary endpoint to delete old accounts with plain-text passwords
+    @DeleteMapping("/delete-account/{email}")
+    public ResponseEntity<?> deleteAccount(@PathVariable String email) {
+        return userRepository.findByEmail(email)
+                .map(user -> {
+                    userRepository.delete(user);
+                    return ResponseEntity.ok("Account deleted: " + email);
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
 }
