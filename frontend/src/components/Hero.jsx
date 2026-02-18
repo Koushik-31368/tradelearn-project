@@ -1,5 +1,6 @@
 // src/components/Hero.jsx
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import './Hero.css';
 
 // IMPORT YOUR IMAGE HERE
@@ -7,6 +8,8 @@ import './Hero.css';
 import BackgroundImage from '../assets/background.jpg';
 
 const Hero = () => {
+  const navigate = useNavigate();
+
   // This style object will be applied directly to the div
   const heroStyle = {
     backgroundImage: `url(${BackgroundImage})`
@@ -18,7 +21,7 @@ const Hero = () => {
       <div className="hero-content">
         <h1>Learn. Trade. Grow with <span className="highlight">Confidence.</span></h1>
         <p>Practice trading with real strategies and virtual money – the smart way to start.</p>
-        <button className="hero-button">Get Started for Free</button>
+        <button className="hero-button" onClick={() => navigate('/register')}>Get Started for Free</button>
       </div>
     </div>
   );
