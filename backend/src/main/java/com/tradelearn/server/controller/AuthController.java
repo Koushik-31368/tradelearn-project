@@ -25,29 +25,45 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody User user) {
+        try {
+            if (user.getEmail() == null || user.getUsername() == null || user.getPassword() == null) {
+                return ResponseEntity.badRequest().body("Email, username, and password are required");
+            }
 
-        if (userRepository.existsByEmail(user.getEmail())) {
-            return ResponseEntity.badRequest().body("Email already exists");
+            if (userRepository.existsByEmail(user.getEmail())) {
+                return ResponseEntity.badRequest().body("Email already exists");
+            }
+
+            if (userRepository.existsByUsername(user.getUsername())) {
+                return ResponseEntity.badRequest().body("Username already taken");
+            }
+
+            user.setPassword(passwordEncoder.encode(user.getPassword()));
+            userRepository.save(user);
+
+            return ResponseEntity.ok("User registered successfully");
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("Registration failed: " + e.getMessage());
         }
-
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-        userRepository.save(user);
-
-        return ResponseEntity.ok("User registered successfully");
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody User loginUser) {
+    public ResponseEntity<?> login(@RequestBody java.util.Map<String, String> loginRequest) {
+        String email = loginRequest.get("email");
+        String password = loginRequest.get("password");
 
-        return userRepository.findByEmail(loginUser.getEmail())
+        return userRepository.findByEmail(email)
                 .map(user -> {
-                    if (!passwordEncoder.matches(
-                            loginUser.getPassword(),
-                            user.getPassword())) {
-                        return ResponseEntity.badRequest().body("Invalid password");
+                    if (!passwordEncoder.matches(password, user.getPassword())) {
+                        return ResponseEntity.badRequest().body((Object) "Invalid password");
                     }
-                    return ResponseEntity.ok(user);
+                    java.util.Map<String, Object> response = new java.util.LinkedHashMap<>();
+                    response.put("id", user.getId());
+                    response.put("username", user.getUsername());
+                    response.put("email", user.getEmail());
+                    response.put("rating", user.getRating());
+                    return ResponseEntity.ok((Object) response);
                 })
-                .orElse(ResponseEntity.badRequest().body("Invalid email"));
+                .orElse(ResponseEntity.badRequest().body((Object) "Invalid email"));
     }
 }
