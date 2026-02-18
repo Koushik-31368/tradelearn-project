@@ -1,9 +1,9 @@
 // src/utils/api.js
-const API_URL = process.env.REACT_APP_API_URL;
+const API_URL = process.env.REACT_APP_API_URL || '';
 
 
 if (!API_URL) {
-console.error("REACT_APP_API_URL is not defined");
+console.warn("REACT_APP_API_URL is not defined – API calls will use relative paths");
 }
 
 
