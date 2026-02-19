@@ -23,6 +23,7 @@ import com.tradelearn.server.repository.MatchStatsRepository;
 import com.tradelearn.server.service.CandleService;
 import com.tradelearn.server.service.MatchService;
 import com.tradelearn.server.service.MatchTradeService;
+import com.tradelearn.server.service.RoomManager;
 
 @RestController
 @RequestMapping("/api/match")
@@ -32,15 +33,18 @@ public class MatchController {
     private final MatchTradeService matchTradeService;
     private final CandleService candleService;
     private final MatchStatsRepository matchStatsRepository;
+    private final RoomManager roomManager;
 
     public MatchController(MatchService matchService,
                            MatchTradeService matchTradeService,
                            CandleService candleService,
-                           MatchStatsRepository matchStatsRepository) {
+                           MatchStatsRepository matchStatsRepository,
+                           RoomManager roomManager) {
         this.matchService = matchService;
         this.matchTradeService = matchTradeService;
         this.candleService = candleService;
         this.matchStatsRepository = matchStatsRepository;
+        this.roomManager = roomManager;
     }
 
     // ==================== MATCH LIFECYCLE ====================
@@ -302,5 +306,35 @@ public class MatchController {
         return matchStatsRepository.findByGameIdAndUserId(gameId, userId)
                 .<ResponseEntity<?>>map(ResponseEntity::ok)
                 .orElse(ResponseEntity.ok(Map.of("message", "No stats available for this player")));
+    }
+
+    // ==================== ROOM DIAGNOSTICS ====================
+
+    /**
+     * GET /api/match/rooms
+     * Returns snapshots of all in-memory rooms from RoomManager.
+     * Useful for debugging active games in production.
+     */
+    @GetMapping("/rooms")
+    public ResponseEntity<?> getRoomSnapshots() {
+        return ResponseEntity.ok(Map.of(
+            "totalRooms",  roomManager.totalRoomCount(),
+            "activeRooms", roomManager.activeRoomCount(),
+            "activeSessions", roomManager.activeSessionCount(),
+            "rooms",       roomManager.allRoomSnapshots()
+        ));
+    }
+
+    /**
+     * GET /api/match/rooms/{gameId}
+     * Returns snapshot of a single room.
+     */
+    @GetMapping("/rooms/{gameId}")
+    public ResponseEntity<?> getRoomSnapshot(@PathVariable long gameId) {
+        RoomManager.Room room = roomManager.getRoom(gameId);
+        if (room == null) {
+            return ResponseEntity.ok(Map.of("message", "No active room for game " + gameId));
+        }
+        return ResponseEntity.ok(room.snapshot());
     }
 }

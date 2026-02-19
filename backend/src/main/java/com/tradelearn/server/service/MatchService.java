@@ -23,6 +23,8 @@ import com.tradelearn.server.util.ScoringUtil;
 @Service
 public class MatchService {
 
+    private static final int MAX_PLAYERS = 2;
+
     private final GameRepository gameRepository;
     private final UserRepository userRepository;
     private final MatchTradeService matchTradeService;
@@ -30,6 +32,7 @@ public class MatchService {
     private final MatchSchedulerService matchSchedulerService;
     private final MatchStatsRepository matchStatsRepository;
     private final SimpMessagingTemplate messagingTemplate;
+    private final RoomManager roomManager;
 
     public MatchService(GameRepository gameRepository,
                         UserRepository userRepository,
@@ -37,7 +40,8 @@ public class MatchService {
                         CandleService candleService,
                         MatchSchedulerService matchSchedulerService,
                         MatchStatsRepository matchStatsRepository,
-                        SimpMessagingTemplate messagingTemplate) {
+                        SimpMessagingTemplate messagingTemplate,
+                        RoomManager roomManager) {
         this.gameRepository = gameRepository;
         this.userRepository = userRepository;
         this.matchTradeService = matchTradeService;
@@ -45,6 +49,7 @@ public class MatchService {
         this.matchSchedulerService = matchSchedulerService;
         this.matchStatsRepository = matchStatsRepository;
         this.messagingTemplate = messagingTemplate;
+        this.roomManager = roomManager;
     }
 
     // ==================== CREATE MATCH ====================
@@ -62,7 +67,12 @@ public class MatchService {
         game.setStartingBalance(balance != null ? balance : 1_000_000.0);
         game.setStatus("WAITING");
 
-        return gameRepository.save(game);
+        Game saved = gameRepository.save(game);
+
+        // Register in-memory room
+        roomManager.createRoom(saved.getId(), creator.getId());
+
+        return saved;
     }
 
     // ==================== JOIN MATCH ====================
@@ -74,6 +84,12 @@ public class MatchService {
     public Game joinMatch(long gameId, long userId) {
         User opponent = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        // ── Fast in-memory guard: check room capacity before hitting DB ──
+        RoomManager.Room room = roomManager.getRoom(gameId);
+        if (room != null && room.isFull()) {
+            throw new IllegalStateException("Room is full — max " + MAX_PLAYERS + " players");
+        }
 
         // ── Phase 1: Atomic compare-and-swap ──
         // UPDATE games SET status='ACTIVE', opponent_id=? WHERE id=? AND status='WAITING'
@@ -96,6 +112,9 @@ public class MatchService {
             gameRepository.save(game);
             throw new IllegalArgumentException("Cannot join your own game");
         }
+
+        // ── Register opponent in RoomManager ──
+        roomManager.joinRoom(gameId, userId);
 
         // ── Auto-start: load candles + begin scheduler immediately ──
         candleService.loadCandles(gameId);
@@ -237,6 +256,9 @@ public class MatchService {
 
         // Free candle cache for this game
         candleService.evict(gameId);
+
+        // Clean up in-memory room state
+        roomManager.endGame(gameId, false);
 
         // Build result DTO
         double startingBalance = game.getStartingBalance();

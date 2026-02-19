@@ -2,7 +2,6 @@ package com.tradelearn.server.config;
 
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,17 +16,16 @@ import com.tradelearn.server.model.Game;
 import com.tradelearn.server.repository.GameRepository;
 import com.tradelearn.server.service.CandleService;
 import com.tradelearn.server.service.MatchSchedulerService;
+import com.tradelearn.server.service.RoomManager;
 
 /**
  * Listens for WebSocket connect/disconnect events.
+ * Delegates all session tracking to {@link RoomManager}.
  *
  * On disconnect:
- *   - If the disconnected user is in an ACTIVE game, mark it ABANDONED
- *   - Stop the candle scheduler
- *   - Notify the remaining player
- *
- * On connect:
- *   - Track the session → userId mapping for disconnect lookups
+ *   - Unregisters session from RoomManager
+ *   - If the disconnected user was in an ACTIVE game, marks it ABANDONED
+ *   - Stops candle scheduler, notifies remaining player
  */
 @Component
 public class WebSocketEventListener {
@@ -38,27 +36,18 @@ public class WebSocketEventListener {
     private final MatchSchedulerService matchSchedulerService;
     private final CandleService candleService;
     private final SimpMessagingTemplate messagingTemplate;
-
-    /**
-     * Maps WebSocket sessionId → userId.
-     * Populated when users subscribe to a game topic (via header or first trade).
-     */
-    private final Map<String, Long> sessionUserMap = new ConcurrentHashMap<>();
-
-    /**
-     * Maps WebSocket sessionId → gameId.
-     * Populated when users subscribe to a game topic.
-     */
-    private final Map<String, Long> sessionGameMap = new ConcurrentHashMap<>();
+    private final RoomManager roomManager;
 
     public WebSocketEventListener(GameRepository gameRepository,
                                   MatchSchedulerService matchSchedulerService,
                                   CandleService candleService,
-                                  SimpMessagingTemplate messagingTemplate) {
+                                  SimpMessagingTemplate messagingTemplate,
+                                  RoomManager roomManager) {
         this.gameRepository = gameRepository;
         this.matchSchedulerService = matchSchedulerService;
         this.candleService = candleService;
         this.messagingTemplate = messagingTemplate;
+        this.roomManager = roomManager;
     }
 
     // ==================== PUBLIC: REGISTER SESSION ====================
@@ -66,11 +55,10 @@ public class WebSocketEventListener {
     /**
      * Called by GameWebSocketController when a trade or position request
      * arrives, so we know which session belongs to which user/game.
+     * Delegates to RoomManager.
      */
     public void registerSession(String sessionId, long userId, long gameId) {
-        sessionUserMap.put(sessionId, userId);
-        sessionGameMap.put(sessionId, gameId);
-        log.info("[WS] Registered session {} → user {} in game {}", sessionId, userId, gameId);
+        roomManager.registerSession(sessionId, userId, gameId);
     }
 
     // ==================== CONNECT ====================
@@ -104,16 +92,19 @@ public class WebSocketEventListener {
         StompHeaderAccessor accessor = StompHeaderAccessor.wrap(event.getMessage());
         String sessionId = accessor.getSessionId();
 
-        Long userId = sessionUserMap.remove(sessionId);
-        Long gameId = sessionGameMap.remove(sessionId);
+        // Delegate to RoomManager — returns disconnect info or null
+        RoomManager.DisconnectInfo info = roomManager.unregisterSession(sessionId);
 
-        log.info("[WS] Disconnect: sessionId={}, userId={}, gameId={}",
-                sessionId, userId, gameId);
-
-        if (userId == null || gameId == null) {
+        if (info == null) {
             log.debug("[WS] Disconnect from untracked session {}", sessionId);
             return;
         }
+
+        long userId = info.userId();
+        long gameId = info.gameId();
+
+        log.info("[WS] Disconnect: sessionId={}, userId={}, gameId={}, remainingPlayers={}",
+                sessionId, userId, gameId, info.remainingPlayers());
 
         // Look up the game
         Game game = gameRepository.findById(gameId).orElse(null);
@@ -140,12 +131,15 @@ public class WebSocketEventListener {
         // Stop candle progression
         matchSchedulerService.stopProgression(gameId);
 
-        // Mark game as abandoned
+        // Mark game as abandoned in DB
         game.setStatus("ABANDONED");
         gameRepository.save(game);
 
         // Free candle cache
         candleService.evict(gameId);
+
+        // Clean up room (sets phase ABANDONED, cancels scheduler, removes room)
+        roomManager.endGame(gameId, true);
 
         // Determine the remaining player
         Long remainingPlayerId = isCreator
@@ -176,10 +170,6 @@ public class WebSocketEventListener {
     // ==================== DIAGNOSTICS ====================
 
     public int getActiveSessionCount() {
-        return sessionUserMap.size();
-    }
-
-    public Map<String, Long> getSessionUserMap() {
-        return Map.copyOf(sessionUserMap);
+        return roomManager.activeSessionCount();
     }
 }

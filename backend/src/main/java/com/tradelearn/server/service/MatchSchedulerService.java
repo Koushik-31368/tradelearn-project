@@ -51,6 +51,7 @@ public class MatchSchedulerService {
     private final SimpMessagingTemplate messagingTemplate;
     private final MatchStatsRepository matchStatsRepository;
     private final UserRepository userRepository;
+    private final RoomManager roomManager;
 
     /** ScheduledFuture per game — the ONLY in-memory per-game state */
     private final Map<Long, ScheduledFuture<?>> runningTasks = new ConcurrentHashMap<>();
@@ -61,7 +62,8 @@ public class MatchSchedulerService {
                                  CandleService candleService,
                                  SimpMessagingTemplate messagingTemplate,
                                  MatchStatsRepository matchStatsRepository,
-                                 UserRepository userRepository) {
+                                 UserRepository userRepository,
+                                 RoomManager roomManager) {
         this.taskScheduler = taskScheduler;
         this.gameRepository = gameRepository;
         this.tradeRepository = tradeRepository;
@@ -69,6 +71,7 @@ public class MatchSchedulerService {
         this.messagingTemplate = messagingTemplate;
         this.matchStatsRepository = matchStatsRepository;
         this.userRepository = userRepository;
+        this.roomManager = roomManager;
     }
 
     // ==================== START / STOP ====================
@@ -89,10 +92,15 @@ public class MatchSchedulerService {
             // Broadcast the first candle immediately so players don't wait 5s
             broadcastCurrentCandle(id);
 
-            return taskScheduler.scheduleAtFixedRate(
+            ScheduledFuture<?> future = taskScheduler.scheduleAtFixedRate(
                     () -> tick(id),
                     TICK_INTERVAL
             );
+
+            // Register the scheduler handle in RoomManager
+            roomManager.startGame(id, future);
+
+            return future;
         });
     }
 
@@ -296,6 +304,9 @@ public class MatchSchedulerService {
             messagingTemplate.convertAndSend(
                     "/topic/game/" + gameId + "/finished", payload
             );
+
+            // Clean up in-memory room state
+            roomManager.endGame(gameId, false);
 
             log.info("Game {} auto-finished. Creator: {}, Opponent: {}",
                     gameId, String.format("%.2f", creatorBal), String.format("%.2f", opponentBal));
