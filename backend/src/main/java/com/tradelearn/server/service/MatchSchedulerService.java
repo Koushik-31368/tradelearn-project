@@ -76,24 +76,24 @@ public class MatchSchedulerService {
     /**
      * Begin candle progression for a game that just became ACTIVE.
      * Immediately broadcasts the first candle, then ticks every 5s.
+     *
+     * Uses ConcurrentHashMap.computeIfAbsent to guarantee that at most
+     * ONE scheduler is ever created per game — even if two threads call
+     * this method simultaneously (e.g. from a double-join race).
      */
     public void startProgression(long gameId) {
-        if (runningTasks.containsKey(gameId)) {
-            log.warn("Progression already running for game {}", gameId);
-            return;
-        }
+        runningTasks.computeIfAbsent(gameId, id -> {
+            log.info("Starting candle progression for game {} (every {} s)",
+                    id, TICK_INTERVAL.getSeconds());
 
-        log.info("Starting candle progression for game {} (every {} s)",
-                gameId, TICK_INTERVAL.getSeconds());
+            // Broadcast the first candle immediately so players don't wait 5s
+            broadcastCurrentCandle(id);
 
-        // Broadcast the first candle immediately so players don't wait 5s
-        broadcastCurrentCandle(gameId);
-
-        ScheduledFuture<?> future = taskScheduler.scheduleAtFixedRate(
-                () -> tick(gameId),
-                TICK_INTERVAL
-        );
-        runningTasks.put(gameId, future);
+            return taskScheduler.scheduleAtFixedRate(
+                    () -> tick(id),
+                    TICK_INTERVAL
+            );
+        });
     }
 
     /**
@@ -142,6 +142,9 @@ public class MatchSchedulerService {
     @SuppressWarnings("null")
     private void tick(long gameId) {
         try {
+            // Note: tick() is NOT @Transactional (called from scheduler thread).
+            // advanceCandle() opens its own transaction with a pessimistic lock,
+            // so overlapping ticks are safely serialised at the DB level.
             Game game = gameRepository.findById(gameId).orElse(null);
             if (game == null || !"ACTIVE".equals(game.getStatus())) {
                 stopProgression(gameId);
@@ -189,8 +192,9 @@ public class MatchSchedulerService {
     @Transactional
     public void autoFinishGame(long gameId) {
         try {
+            // Pessimistic lock prevents race with MatchService.endMatch()
             @SuppressWarnings("null")
-            Game game = gameRepository.findById(gameId).orElse(null);
+            Game game = gameRepository.findByIdForUpdate(gameId).orElse(null);
             if (game == null || !"ACTIVE".equals(game.getStatus())) return;
 
             double finalPrice = candleService.getCurrentPrice(gameId);
