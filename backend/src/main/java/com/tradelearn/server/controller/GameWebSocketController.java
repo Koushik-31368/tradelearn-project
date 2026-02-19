@@ -2,8 +2,6 @@ package com.tradelearn.server.controller;
 
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,6 +19,7 @@ import com.tradelearn.server.model.Game;
 import com.tradelearn.server.model.Trade;
 import com.tradelearn.server.repository.GameRepository;
 import com.tradelearn.server.service.MatchTradeService;
+import com.tradelearn.server.service.RoomManager;
 
 @Controller
 public class GameWebSocketController {
@@ -52,12 +51,6 @@ public class GameWebSocketController {
         public PlayerStateSnapshot player2;
     }
 
-    private static class GameReadiness {
-        private final AtomicInteger readyCount = new AtomicInteger(0);
-        int incrementAndGet() { return readyCount.incrementAndGet(); }
-        void reset() { readyCount.set(0); }
-    }
-
     // ===== DEPENDENCIES =====
 
     private static final Logger log = LoggerFactory.getLogger(GameWebSocketController.class);
@@ -66,28 +59,27 @@ public class GameWebSocketController {
     private final GameRepository gameRepository;
     private final MatchTradeService matchTradeService;
     private final WebSocketEventListener wsEventListener;
+    private final RoomManager roomManager;
 
     public GameWebSocketController(SimpMessagingTemplate messagingTemplate,
                                    GameRepository gameRepository,
                                    MatchTradeService matchTradeService,
-                                   WebSocketEventListener wsEventListener) {
+                                   WebSocketEventListener wsEventListener,
+                                   RoomManager roomManager) {
         this.messagingTemplate = messagingTemplate;
         this.gameRepository = gameRepository;
         this.matchTradeService = matchTradeService;
         this.wsEventListener = wsEventListener;
+        this.roomManager = roomManager;
     }
-
-    private final Map<Long, GameReadiness> readinessMap = new ConcurrentHashMap<>();
 
     // ===== READY HANDLER =====
 
     @MessageMapping("/game/{gameId}/ready")
     public void playerReady(@DestinationVariable long gameId) {
-        GameReadiness readiness =
-                readinessMap.computeIfAbsent(gameId, k -> new GameReadiness());
+        boolean allReady = roomManager.markReady(gameId);
 
-        if (readiness.incrementAndGet() >= 2) {
-            readiness.reset();
+        if (allReady) {
             messagingTemplate.convertAndSend(
                     "/topic/game/" + gameId + "/nextRound",
                     "NEXT_ROUND"
