@@ -14,6 +14,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import com.tradelearn.server.util.GameLogger;
+
 /**
  * Centralised in-memory state for every active multiplayer room.
  *
@@ -134,8 +136,15 @@ public class RoomManager {
      */
     public Room createRoom(long gameId, long creatorId) {
         Room room = rooms.computeIfAbsent(gameId, id -> {
-            log.info("[Room {}] Created by user {}", id, creatorId);
-            return new Room(id, creatorId);
+            Room newRoom = new Room(id, creatorId);
+            GameLogger.logRoomCreated(log, id, creatorId);
+            GameLogger.logDiagnosticSnapshot(log, "Room Created", Map.of(
+                "gameId", id,
+                "creatorId", creatorId,
+                "totalRooms", rooms.size() + 1,
+                "activeSessions", activeSessionCount()
+            ));
+            return newRoom;
         });
 
         if (room.getCreatorId() != creatorId) {
@@ -156,15 +165,36 @@ public class RoomManager {
     public Room joinRoom(long gameId, long userId) {
         Room room = getRequiredRoom(gameId);
 
-        if (room.connectedPlayers.size() >= MAX_PLAYERS) {
+        int currentSize = room.connectedPlayers.size();
+        
+        if (currentSize >= MAX_PLAYERS) {
+            GameLogger.logGameCannotStart(log, gameId, "Room is full", Map.of(
+                "currentPlayers", currentSize,
+                "maxPlayers", MAX_PLAYERS,
+                "attemptingUserId", userId
+            ));
             throw new IllegalStateException("Room " + gameId + " is full (max " + MAX_PLAYERS + " players)");
         }
 
         room.connectedPlayers.add(userId);
+        RoomPhase oldPhase = room.phase.get();
         room.phase.compareAndSet(RoomPhase.WAITING, RoomPhase.STARTING);
+        RoomPhase newPhase = room.phase.get();
 
-        log.info("[Room {}] Player {} joined ({}/{})",
-                 gameId, userId, room.connectedPlayers.size(), MAX_PLAYERS);
+        GameLogger.logPlayerJoined(log, gameId, userId, room.connectedPlayers.size(), newPhase.name());
+        
+        if (oldPhase != newPhase) {
+            GameLogger.logGameStateTransition(log, gameId, oldPhase.name(), newPhase.name(), room.connectedPlayers.size());
+        }
+        
+        GameLogger.logDiagnosticSnapshot(log, "After Player Join", Map.of(
+            "gameId", gameId,
+            "userId", userId,
+            "roomSize", room.connectedPlayers.size(),
+            "playerIds", room.connectedPlayers,
+            "phase", newPhase.name(),
+            "isFull", room.isFull()
+        ));
 
         return room;
     }
@@ -179,10 +209,21 @@ public class RoomManager {
     public void startGame(long gameId, ScheduledFuture<?> scheduler) {
         Room room = getRequiredRoom(gameId);
 
+        RoomPhase oldPhase = room.phase.get();
         room.schedulerHandle = scheduler;
         room.phase.set(RoomPhase.ACTIVE);
 
-        log.info("[Room {}] Game started. Phase → ACTIVE, scheduler registered", gameId);
+        GameLogger.logGameStateTransition(log, gameId, oldPhase.name(), "ACTIVE", room.connectedPlayers.size());
+        GameLogger.logIntervalCreated(log, gameId, 5);
+        
+        GameLogger.logDiagnosticSnapshot(log, "Game Started", Map.of(
+            "gameId", gameId,
+            "playerIds", room.connectedPlayers,
+            "roomSize", room.connectedPlayers.size(),
+            "phase", "ACTIVE",
+            "hasScheduler", true,
+            "schedulerCancelled", scheduler.isCancelled()
+        ));
     }
 
     /**
@@ -198,18 +239,27 @@ public class RoomManager {
             return;
         }
 
+        RoomPhase oldPhase = room.phase.get();
         RoomPhase terminal = abandoned ? RoomPhase.ABANDONED : RoomPhase.FINISHED;
         room.phase.set(terminal);
+
+        GameLogger.logGameStateTransition(log, gameId, oldPhase.name(), terminal.name(), room.connectedPlayers.size());
 
         // Cancel the scheduler if running
         ScheduledFuture<?> scheduler = room.schedulerHandle;
         if (scheduler != null && !scheduler.isCancelled()) {
             scheduler.cancel(false);
             room.schedulerHandle = null;
-            log.info("[Room {}] Scheduler cancelled", gameId);
+            GameLogger.logIntervalDeleted(log, gameId, abandoned ? "player_disconnect" : "game_finished");
         }
 
-        log.info("[Room {}] Game ended → {}", gameId, terminal);
+        GameLogger.logDiagnosticSnapshot(log, "Game Ended", Map.of(
+            "gameId", gameId,
+            "finalPhase", terminal.name(),
+            "abandoned", abandoned,
+            "remainingPlayers", room.connectedPlayers.size(),
+            "playerIds", room.connectedPlayers
+        ));
 
         // Auto-cleanup: disconnect all sessions, then remove room
         cleanupRoomSessions(gameId);
@@ -226,9 +276,16 @@ public class RoomManager {
             ScheduledFuture<?> s = room.schedulerHandle;
             if (s != null && !s.isCancelled()) {
                 s.cancel(false);
+                GameLogger.logIntervalDeleted(log, gameId, "room_cleanup");
             }
             cleanupRoomSessions(gameId);
-            log.info("[Room {}] Removed from RoomManager", gameId);
+            GameLogger.logRoomRemoved(log, gameId, "cleanup_after_end");
+            
+            GameLogger.logDiagnosticSnapshot(log, "Room Removed", Map.of(
+                "gameId", gameId,
+                "totalRoomsRemaining", rooms.size(),
+                "activeSessionsRemaining", activeSessionCount()
+            ));
         }
         return room;
     }
@@ -249,7 +306,18 @@ public class RoomManager {
         sessionToGame.put(sessionId, gameId);
         sessionToUser.put(sessionId, userId);
 
-        log.debug("[Room {}] Session {} registered for user {}", gameId, sessionId, userId);
+        GameLogger.logWebSocketConnected(log, sessionId, userId, gameId);
+        
+        if (room != null) {
+            GameLogger.logDiagnosticSnapshot(log, "Session Registered", Map.of(
+                "gameId", gameId,
+                "userId", userId,
+                "sessionId", sessionId,
+                "roomSize", room.connectedPlayers.size(),
+                "phase", room.phase.get().name(),
+                "totalSessions", room.sessions.size()
+            ));
+        }
     }
 
     /**
@@ -269,10 +337,22 @@ public class RoomManager {
         room.sessions.remove(sessionId);
         room.connectedPlayers.remove(userId);
 
-        log.info("[Room {}] Session {} disconnected (user {}). {} players remaining",
-                 gameId, sessionId, userId, room.connectedPlayers.size());
+        int remainingPlayers = room.connectedPlayers.size();
+        
+        GameLogger.logWebSocketDisconnected(log, sessionId, userId, gameId, remainingPlayers);
+        GameLogger.logPlayerLeft(log, gameId, userId, remainingPlayers, "websocket_disconnect");
+        
+        GameLogger.logDiagnosticSnapshot(log, "Session Disconnected", Map.of(
+            "gameId", gameId,
+            "userId", userId,
+            "sessionId", sessionId,
+            "remainingPlayers", remainingPlayers,
+            "remainingPlayerIds", room.connectedPlayers,
+            "phase", room.phase.get().name(),
+            "shouldAbandon", remainingPlayers == 0
+        ));
 
-        return new DisconnectInfo(gameId, userId, room.connectedPlayers.size());
+        return new DisconnectInfo(gameId, userId, remainingPlayers);
     }
 
     /**

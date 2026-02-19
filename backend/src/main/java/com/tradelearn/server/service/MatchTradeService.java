@@ -4,17 +4,24 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.tradelearn.server.dto.MatchTradeRequest;
+import com.tradelearn.server.exception.InvalidGameStateException;
+import com.tradelearn.server.exception.TradeValidationException;
 import com.tradelearn.server.model.Game;
 import com.tradelearn.server.model.Trade;
 import com.tradelearn.server.repository.GameRepository;
 import com.tradelearn.server.repository.TradeRepository;
+import com.tradelearn.server.util.GameLogger;
 
 @Service
 public class MatchTradeService {
+
+    private static final Logger log = LoggerFactory.getLogger(MatchTradeService.class);
 
     private final TradeRepository tradeRepository;
     private final GameRepository gameRepository;
@@ -36,97 +43,128 @@ public class MatchTradeService {
 
     @Transactional
     public Trade placeTrade(MatchTradeRequest request) {
-        Game game = gameRepository.findByIdForUpdate(request.getGameId())
-                .orElseThrow(() -> new IllegalArgumentException("Game not found"));
+        GameLogger.setGameContext(request.getGameId());
+        GameLogger.setUserContext(request.getUserId());
+        
+        try {
+            Game game = gameRepository.findByIdForUpdate(request.getGameId())
+                    .orElseThrow(() -> new IllegalArgumentException("Game not found"));
 
-        // ---- Guard: game must be ACTIVE ----
-        if (!"ACTIVE".equals(game.getStatus())) {
-            throw new IllegalStateException("Game is not active");
-        }
+            // ---- Guard: game must be ACTIVE ----
+            if (!"ACTIVE".equals(game.getStatus())) {
+                GameLogger.logTradeRejected(log, request.getGameId(), request.getUserId(), 
+                    request.getType(), request.getQuantity(), "Game is not active");
+                throw new InvalidGameStateException(request.getGameId(), game.getStatus(), "ACTIVE");
+            }
 
-        // ---- Guard: candles must not be exhausted ----
-        if (game.getCurrentCandleIndex() >= game.getTotalCandles()) {
-            throw new IllegalStateException("No more candles — game should be ended");
-        }
+            // ---- Guard: candles must not be exhausted ----
+            if (game.getCurrentCandleIndex() >= game.getTotalCandles()) {
+                GameLogger.logTradeRejected(log, request.getGameId(), request.getUserId(), 
+                    request.getType(), request.getQuantity(), "No more candles");
+                throw new IllegalStateException("No more candles — game should be ended");
+            }
 
-        // ---- Verify the user is a participant ----
-        Long userId = request.getUserId();
-        if (!game.getCreator().getId().equals(userId) &&
-            (game.getOpponent() == null || !game.getOpponent().getId().equals(userId))) {
-            throw new IllegalArgumentException("User is not a participant in this game");
-        }
+            // ---- Verify the user is a participant ----
+            Long userId = request.getUserId();
+            if (!game.getCreator().getId().equals(userId) &&
+                (game.getOpponent() == null || !game.getOpponent().getId().equals(userId))) {
+                GameLogger.logTradeRejected(log, request.getGameId(), userId, 
+                    request.getType(), request.getQuantity(), "User is not a participant");
+                throw new IllegalArgumentException("User is not a participant in this game");
+            }
 
-        // ---- Validate trade type ----
-        String type = request.getType().toUpperCase();
-        if (!List.of("BUY", "SELL", "SHORT", "COVER").contains(type)) {
-            throw new IllegalArgumentException("Invalid trade type: " + type);
-        }
+            // ---- Validate trade type ----
+            String type = request.getType().toUpperCase();
+            if (!List.of("BUY", "SELL", "SHORT", "COVER").contains(type)) {
+                GameLogger.logTradeRejected(log, request.getGameId(), userId, 
+                    type, request.getQuantity(), "Invalid trade type");
+                throw new IllegalArgumentException("Invalid trade type: " + type);
+            }
 
-        if (request.getQuantity() <= 0) {
-            throw new IllegalArgumentException("Quantity must be positive");
-        }
+            if (request.getQuantity() <= 0) {
+                GameLogger.logTradeRejected(log, request.getGameId(), userId, 
+                    type, request.getQuantity(), "Quantity must be positive");
+                throw new IllegalArgumentException("Quantity must be positive");
+            }
 
-        // ---- Server-authoritative price from CandleService ----
-        double price = candleService.getCurrentPrice(request.getGameId());
+            // ---- Server-authoritative price from CandleService ----
+            double price = candleService.getCurrentPrice(request.getGameId());
 
-        // ---- Validate against player's current position ----
-        PlayerPosition position = calculatePosition(
-                request.getGameId(), userId, game.getStartingBalance()
-        );
+            // ---- Validate against player's current position ----
+            PlayerPosition position = calculatePosition(
+                    request.getGameId(), userId, game.getStartingBalance()
+            );
 
-        double cost = request.getQuantity() * price;
+            double cost = request.getQuantity() * price;
 
-        switch (type) {
-            case "BUY" -> {
-                if (position.cash < cost) {
-                    throw new IllegalStateException(
-                            String.format("Insufficient funds. Have: %.2f, Need: %.2f", position.cash, cost)
-                    );
+            switch (type) {
+                case "BUY" -> {
+                    if (position.cash < cost) {
+                        String reason = String.format("Insufficient funds. Have: %.2f, Need: %.2f", position.cash, cost);
+                        GameLogger.logTradeRejected(log, request.getGameId(), userId, type, request.getQuantity(), reason);
+                        throw new TradeValidationException(request.getGameId(), userId, type, request.getQuantity(), reason);
+                    }
+                }
+                case "SELL" -> {
+                    int longShares = position.shares.getOrDefault(request.getSymbol(), 0);
+                    if (longShares < request.getQuantity()) {
+                        String reason = String.format("Insufficient shares. Have: %d, Trying to sell: %d", longShares, request.getQuantity());
+                        GameLogger.logTradeRejected(log, request.getGameId(), userId, type, request.getQuantity(), reason);
+                        throw new TradeValidationException(request.getGameId(), userId, type, request.getQuantity(), reason);
+                    }
+                }
+                case "SHORT" -> {
+                    // Short selling: receive cash upfront, no cash requirement check needed
+                }
+                case "COVER" -> {
+                    int shortShares = position.shortShares.getOrDefault(request.getSymbol(), 0);
+                    if (shortShares < request.getQuantity()) {
+                        String reason = String.format("Insufficient short position. Short: %d, Trying to cover: %d", shortShares, request.getQuantity());
+                        GameLogger.logTradeRejected(log, request.getGameId(), userId, type, request.getQuantity(), reason);
+                        throw new TradeValidationException(request.getGameId(), userId, type, request.getQuantity(), reason);
+                    }
+                    if (position.cash < cost) {
+                        String reason = String.format("Insufficient funds to cover. Have: %.2f, Need: %.2f", position.cash, cost);
+                        GameLogger.logTradeRejected(log, request.getGameId(), userId, type, request.getQuantity(), reason);
+                        throw new TradeValidationException(request.getGameId(), userId, type, request.getQuantity(), reason);
+                    }
                 }
             }
-            case "SELL" -> {
-                int longShares = position.shares.getOrDefault(request.getSymbol(), 0);
-                if (longShares < request.getQuantity()) {
-                    throw new IllegalStateException(
-                            String.format("Insufficient shares. Have: %d, Trying to sell: %d", longShares, request.getQuantity())
-                    );
-                }
+
+            // ---- Record the trade with server-side price ----
+            Trade trade = new Trade();
+            trade.setGameId(request.getGameId());
+            trade.setUserId(userId);
+            trade.setSymbol(request.getSymbol());
+            trade.setName(request.getSymbol()); // use symbol as name for match trades
+            trade.setType(type);
+            trade.setQuantity(request.getQuantity());
+            trade.setPrice(price); // server-authoritative
+
+            Trade saved = tradeRepository.save(trade);
+
+            GameLogger.logTradePlaced(log, request.getGameId(), userId, type, 
+                request.getQuantity(), request.getSymbol(), price);
+
+            // Recalculate position + stats (peak equity, drawdown, trade counts)
+            // Stats are tracked in-memory via PlayerPosition and persisted at match end
+            calculatePosition(request.getGameId(), request.getUserId(), game.getStartingBalance());
+
+            return saved;
+            
+        } catch (Exception e) {
+            if (!(e instanceof TradeValidationException)) {
+                GameLogger.logError(log, "placeTrade", request.getGameId(), e, Map.of(
+                    "userId", request.getUserId(),
+                    "type", request.getType(),
+                    "quantity", request.getQuantity(),
+                    "symbol", request.getSymbol()
+                ));
             }
-            case "SHORT" -> {
-                // Short selling: receive cash upfront, no cash requirement check needed
-            }
-            case "COVER" -> {
-                int shortShares = position.shortShares.getOrDefault(request.getSymbol(), 0);
-                if (shortShares < request.getQuantity()) {
-                    throw new IllegalStateException(
-                            String.format("Insufficient short position. Short: %d, Trying to cover: %d", shortShares, request.getQuantity())
-                    );
-                }
-                if (position.cash < cost) {
-                    throw new IllegalStateException(
-                            String.format("Insufficient funds to cover. Have: %.2f, Need: %.2f", position.cash, cost)
-                    );
-                }
-            }
+            throw e;
+        } finally {
+            GameLogger.clearContext();
         }
-
-        // ---- Record the trade with server-side price ----
-        Trade trade = new Trade();
-        trade.setGameId(request.getGameId());
-        trade.setUserId(userId);
-        trade.setSymbol(request.getSymbol());
-        trade.setName(request.getSymbol()); // use symbol as name for match trades
-        trade.setType(type);
-        trade.setQuantity(request.getQuantity());
-        trade.setPrice(price); // server-authoritative
-
-        Trade saved = tradeRepository.save(trade);
-
-        // Recalculate position + stats (peak equity, drawdown, trade counts)
-        // Stats are tracked in-memory via PlayerPosition and persisted at match end
-        calculatePosition(request.getGameId(), request.getUserId(), game.getStartingBalance());
-
-        return saved;
     }
 
     // ==================== POSITION TRACKING ====================

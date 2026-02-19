@@ -10,7 +10,6 @@ import java.util.concurrent.ScheduledFuture;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,7 +22,9 @@ import com.tradelearn.server.repository.GameRepository;
 import com.tradelearn.server.repository.MatchStatsRepository;
 import com.tradelearn.server.repository.TradeRepository;
 import com.tradelearn.server.repository.UserRepository;
+import com.tradelearn.server.socket.GameBroadcaster;
 import com.tradelearn.server.util.EloUtil;
+import com.tradelearn.server.util.GameLogger;
 import com.tradelearn.server.util.ScoringUtil;
 
 /**
@@ -48,7 +49,7 @@ public class MatchSchedulerService {
     private final GameRepository gameRepository;
     private final TradeRepository tradeRepository;
     private final CandleService candleService;
-    private final SimpMessagingTemplate messagingTemplate;
+    private final GameBroadcaster broadcaster;
     private final MatchStatsRepository matchStatsRepository;
     private final UserRepository userRepository;
     private final RoomManager roomManager;
@@ -60,7 +61,7 @@ public class MatchSchedulerService {
                                  GameRepository gameRepository,
                                  TradeRepository tradeRepository,
                                  CandleService candleService,
-                                 SimpMessagingTemplate messagingTemplate,
+                                 GameBroadcaster broadcaster,
                                  MatchStatsRepository matchStatsRepository,
                                  UserRepository userRepository,
                                  RoomManager roomManager) {
@@ -68,7 +69,7 @@ public class MatchSchedulerService {
         this.gameRepository = gameRepository;
         this.tradeRepository = tradeRepository;
         this.candleService = candleService;
-        this.messagingTemplate = messagingTemplate;
+        this.broadcaster = broadcaster;
         this.matchStatsRepository = matchStatsRepository;
         this.userRepository = userRepository;
         this.roomManager = roomManager;
@@ -86,8 +87,13 @@ public class MatchSchedulerService {
      */
     public void startProgression(long gameId) {
         runningTasks.computeIfAbsent(gameId, id -> {
-            log.info("Starting candle progression for game {} (every {} s)",
-                    id, TICK_INTERVAL.getSeconds());
+            GameLogger.logIntervalCreated(log, id, (int) TICK_INTERVAL.getSeconds());
+            
+            GameLogger.logDiagnosticSnapshot(log, "Starting Progression", Map.of(
+                "gameId", id,
+                "intervalSeconds", TICK_INTERVAL.getSeconds(),
+                "activeGames", activeGameCount()
+            ));
 
             // Broadcast the first candle immediately so players don't wait 5s
             broadcastCurrentCandle(id);
@@ -111,14 +117,17 @@ public class MatchSchedulerService {
     private void broadcastCurrentCandle(long gameId) {
         try {
             Game game = gameRepository.findById(gameId).orElse(null);
-            if (game == null) return;
+            if (game == null) {
+                GameLogger.logError(log, "broadcastCurrentCandle", gameId, 
+                    new IllegalStateException("Game not found"), null);
+                return;
+            }
 
             CandleService.Candle candle = candleService.getCurrentCandle(gameId);
             int index = game.getCurrentCandleIndex();
             int remaining = game.getTotalCandles() - index - 1;
 
-            messagingTemplate.convertAndSend(
-                    "/topic/game/" + gameId + "/candle",
+            broadcaster.sendToGame(gameId, "candle",
                     Map.of(
                             "candle", candle,
                             "index", index,
@@ -126,11 +135,11 @@ public class MatchSchedulerService {
                             "price", candle.getClose()
                     )
             );
-            log.info("Game {} → broadcast initial candle {} ({} remaining)",
-                    gameId, index, remaining);
+            
+            GameLogger.logIntervalTick(log, gameId, index, game.getTotalCandles(), candle.getClose());
+            
         } catch (Exception e) {
-            log.error("Failed to broadcast initial candle for game {}: {}",
-                    gameId, e.getMessage());
+            GameLogger.logError(log, "broadcastCurrentCandle", gameId, e, null);
         }
     }
 
@@ -141,7 +150,12 @@ public class MatchSchedulerService {
         ScheduledFuture<?> future = runningTasks.remove(gameId);
         if (future != null) {
             future.cancel(false);
-            log.info("Stopped candle progression for game {}", gameId);
+            GameLogger.logIntervalDeleted(log, gameId, "stop_progression_called");
+            
+            GameLogger.logDiagnosticSnapshot(log, "Progression Stopped", Map.of(
+                "gameId", gameId,
+                "remainingActiveGames", activeGameCount()
+            ));
         }
     }
 
@@ -149,12 +163,25 @@ public class MatchSchedulerService {
 
     @SuppressWarnings("null")
     private void tick(long gameId) {
+        GameLogger.setGameContext(gameId);
+        
         try {
             // Note: tick() is NOT @Transactional (called from scheduler thread).
             // advanceCandle() opens its own transaction with a pessimistic lock,
             // so overlapping ticks are safely serialised at the DB level.
             Game game = gameRepository.findById(gameId).orElse(null);
-            if (game == null || !"ACTIVE".equals(game.getStatus())) {
+            if (game == null) {
+                GameLogger.logError(log, "tick", gameId, 
+                    new IllegalStateException("Game not found during tick"), null);
+                stopProgression(gameId);
+                return;
+            }
+            
+            if (!"ACTIVE".equals(game.getStatus())) {
+                GameLogger.logDiagnosticSnapshot(log, "Stopping Tick - Not Active", Map.of(
+                    "gameId", gameId,
+                    "status", game.getStatus()
+                ));
                 stopProgression(gameId);
                 return;
             }
@@ -164,7 +191,10 @@ public class MatchSchedulerService {
 
             if (nextCandle == null) {
                 // All candles consumed → auto-finish
-                log.info("Game {} exhausted all candles — auto-finishing", gameId);
+                GameLogger.logDiagnosticSnapshot(log, "Candles Exhausted", Map.of(
+                    "gameId", gameId,
+                    "action", "auto_finishing"
+                ));
                 autoFinishGame(gameId);
                 stopProgression(gameId);
                 return;
@@ -178,8 +208,7 @@ public class MatchSchedulerService {
             int remaining = game.getTotalCandles() - index - 1;
 
             // Broadcast new candle to subscribers
-            messagingTemplate.convertAndSend(
-                    "/topic/game/" + gameId + "/candle",
+            broadcaster.sendToGame(gameId, "candle",
                     Map.of(
                             "candle", nextCandle,
                             "index", index,
@@ -188,10 +217,12 @@ public class MatchSchedulerService {
                     )
             );
 
-            log.debug("Game {} → candle {} ({} remaining)", gameId, index, remaining);
+            GameLogger.logIntervalTick(log, gameId, index, game.getTotalCandles(), nextCandle.getClose());
 
         } catch (Exception e) {
-            log.error("Candle tick error for game {}: {}", gameId, e.getMessage(), e);
+            GameLogger.logError(log, "tick", gameId, e, null);
+        } finally {
+            GameLogger.clearContext();
         }
     }
 
@@ -301,9 +332,7 @@ public class MatchSchedulerService {
             payload.put("opponentNewRating", opponentNewRating);
             payload.put("winnerId", winnerId);
 
-            messagingTemplate.convertAndSend(
-                    "/topic/game/" + gameId + "/finished", payload
-            );
+            broadcaster.sendToGame(gameId, "finished", payload);
 
             // Clean up in-memory room state
             roomManager.endGame(gameId, false);
