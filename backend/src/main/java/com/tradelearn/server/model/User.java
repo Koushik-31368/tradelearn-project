@@ -25,7 +25,7 @@ public class User {
     @Column(nullable = false)
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
-    @Column(nullable = false)
+    @Column(columnDefinition = "INT DEFAULT 1000")
     private int rating = 1000;
 
     @Column(name = "created_at", updatable = false)
