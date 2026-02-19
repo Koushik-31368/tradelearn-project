@@ -75,6 +75,7 @@ public class MatchSchedulerService {
 
     /**
      * Begin candle progression for a game that just became ACTIVE.
+     * Immediately broadcasts the first candle, then ticks every 5s.
      */
     public void startProgression(long gameId) {
         if (runningTasks.containsKey(gameId)) {
@@ -85,11 +86,44 @@ public class MatchSchedulerService {
         log.info("Starting candle progression for game {} (every {} s)",
                 gameId, TICK_INTERVAL.getSeconds());
 
+        // Broadcast the first candle immediately so players don't wait 5s
+        broadcastCurrentCandle(gameId);
+
         ScheduledFuture<?> future = taskScheduler.scheduleAtFixedRate(
                 () -> tick(gameId),
                 TICK_INTERVAL
         );
         runningTasks.put(gameId, future);
+    }
+
+    /**
+     * Broadcast the current candle (index 0 at match start) so both
+     * players see data immediately without waiting for the first tick.
+     */
+    private void broadcastCurrentCandle(long gameId) {
+        try {
+            Game game = gameRepository.findById(gameId).orElse(null);
+            if (game == null) return;
+
+            CandleService.Candle candle = candleService.getCurrentCandle(gameId);
+            int index = game.getCurrentCandleIndex();
+            int remaining = game.getTotalCandles() - index - 1;
+
+            messagingTemplate.convertAndSend(
+                    "/topic/game/" + gameId + "/candle",
+                    Map.of(
+                            "candle", candle,
+                            "index", index,
+                            "remaining", remaining,
+                            "price", candle.getClose()
+                    )
+            );
+            log.info("Game {} → broadcast initial candle {} ({} remaining)",
+                    gameId, index, remaining);
+        } catch (Exception e) {
+            log.error("Failed to broadcast initial candle for game {}: {}",
+                    gameId, e.getMessage());
+        }
     }
 
     /**
