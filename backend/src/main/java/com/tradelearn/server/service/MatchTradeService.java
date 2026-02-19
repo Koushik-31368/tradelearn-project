@@ -29,10 +29,14 @@ public class MatchTradeService {
     }
 
     // ==================== PLACE TRADE IN A MATCH ====================
+    // Uses PESSIMISTIC_WRITE lock on the Game row to prevent the
+    // ghost-trade race: a trade arriving during the exact instant
+    // the game transitions to FINISHED will block until the finish
+    // commits, then the status check rejects it cleanly.
 
     @Transactional
     public Trade placeTrade(MatchTradeRequest request) {
-        Game game = gameRepository.findById(request.getGameId())
+        Game game = gameRepository.findByIdForUpdate(request.getGameId())
                 .orElseThrow(() -> new IllegalArgumentException("Game not found"));
 
         // ---- Guard: game must be ACTIVE ----

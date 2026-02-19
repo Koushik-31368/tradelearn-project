@@ -11,6 +11,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 
 @Entity
 @Table(name = "games")
@@ -19,6 +20,14 @@ public class Game {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    // Optimistic lock: Hibernate auto-increments on every UPDATE.
+    // If two transactions read the same version and both try to write,
+    // the second one gets an OptimisticLockException → safe retry or fail.
+    // columnDefinition ensures existing rows get DEFAULT 0 (not NULL).
+    @Version
+    @Column(name = "version", nullable = false, columnDefinition = "BIGINT DEFAULT 0")
+    private Long version = 0L;
 
     @Column(name = "stock_symbol", nullable = false)
     private String stockSymbol;
@@ -134,4 +143,7 @@ public class Game {
 
     public Timestamp getCreatedAt() { return createdAt; }
     public void setCreatedAt(Timestamp createdAt) { this.createdAt = createdAt; }
+
+    public Long getVersion() { return version; }
+    public void setVersion(Long version) { this.version = version; }
 }

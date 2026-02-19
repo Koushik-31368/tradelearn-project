@@ -66,28 +66,36 @@ public class MatchService {
     }
 
     // ==================== JOIN MATCH ====================
+    // Uses a two-phase approach to prevent the double-join race:
+    //   Phase 1: Atomic CAS UPDATE (status=WAITING → ACTIVE) — only one thread wins
+    //   Phase 2: Pessimistic-locked re-read for business logic (candle load, scheduler)
 
     @Transactional
     public Game joinMatch(long gameId, long userId) {
-        Game game = gameRepository.findById(gameId)
-                .orElseThrow(() -> new IllegalArgumentException("Game not found"));
-
-        if (!"WAITING".equals(game.getStatus())) {
-            throw new IllegalStateException("Game is not open for joining");
-        }
-
         User opponent = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-        if (game.getCreator().getId().equals(opponent.getId())) {
-            throw new IllegalArgumentException("Cannot join your own game");
+        // ── Phase 1: Atomic compare-and-swap ──
+        // UPDATE games SET status='ACTIVE', opponent_id=? WHERE id=? AND status='WAITING'
+        // Returns 0 if someone else already joined (status is no longer WAITING).
+        int updated = gameRepository.atomicJoin(gameId, opponent);
+        if (updated == 0) {
+            throw new IllegalStateException("Game is not open for joining (already taken or not found)");
         }
 
-        game.setOpponent(opponent);
-        game.setStatus("ACTIVE");
-        game.setStartTime(LocalDateTime.now());
+        // ── Phase 2: Re-read with pessimistic lock for validation + side-effects ──
+        Game game = gameRepository.findByIdForUpdate(gameId)
+                .orElseThrow(() -> new IllegalArgumentException("Game not found after join"));
 
-        Game saved = gameRepository.save(game);
+        // Guard: can't join your own game
+        if (game.getCreator().getId().equals(opponent.getId())) {
+            // Roll back — reset to WAITING
+            game.setStatus("WAITING");
+            game.setOpponent(null);
+            game.setStartTime(null);
+            gameRepository.save(game);
+            throw new IllegalArgumentException("Cannot join your own game");
+        }
 
         // ── Auto-start: load candles + begin scheduler immediately ──
         candleService.loadCandles(gameId);
@@ -104,7 +112,7 @@ public class MatchService {
                 )
         );
 
-        return saved;
+        return game;
     }
 
     // ==================== START MATCH ====================
@@ -136,10 +144,12 @@ public class MatchService {
     }
 
     // ==================== END MATCH & CALCULATE WINNER ====================
+    // Uses PESSIMISTIC_WRITE lock to prevent race between
+    // manual /end call and scheduler's autoFinishGame().
 
     @Transactional
     public MatchResult endMatch(long gameId) {
-        Game game = gameRepository.findById(gameId)
+        Game game = gameRepository.findByIdForUpdate(gameId)
                 .orElseThrow(() -> new IllegalArgumentException("Game not found"));
 
         if (!"ACTIVE".equals(game.getStatus())) {

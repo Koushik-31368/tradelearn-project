@@ -73,11 +73,23 @@ public class CandleService {
      * load per-symbol files (e.g. candles/{stockSymbol}.json).
      *
      * Also initialises totalCandles on the Game entity.
+     *
+     * Idempotent: if candles are already cached, returns immediately.
+     * This prevents the double-load race where a second call would
+     * reset currentCandleIndex to 0 mid-game.
      */
     @Transactional
     public List<Candle> loadCandles(long gameId) {
-        Game game = gameRepository.findById(gameId)
+        // Fast path: already loaded — do NOT re-read from disk / reset index
+        List<Candle> cached = candleCache.get(gameId);
+        if (cached != null) return cached;
+
+        Game game = gameRepository.findByIdForUpdate(gameId)
                 .orElseThrow(() -> new IllegalArgumentException("Game not found"));
+
+        // Double-check after acquiring lock
+        cached = candleCache.get(gameId);
+        if (cached != null) return cached;
 
         // Determine which file to load (fall back to sample.json)
         String symbol = game.getStockSymbol().toUpperCase().trim();
@@ -166,10 +178,14 @@ public class CandleService {
     /**
      * Advances to the next candle. Returns the new Candle,
      * or null if the game has exhausted all candles.
+     *
+     * Uses PESSIMISTIC_WRITE lock to prevent the candle-skip race:
+     * if two ticks overlap, the second blocks until the first commits,
+     * then reads the already-incremented index — no candle is skipped.
      */
     @Transactional
     public Candle advanceCandle(long gameId) {
-        Game game = gameRepository.findById(gameId)
+        Game game = gameRepository.findByIdForUpdate(gameId)
                 .orElseThrow(() -> new IllegalArgumentException("Game not found"));
 
         List<Candle> candles = getCandles(gameId);
