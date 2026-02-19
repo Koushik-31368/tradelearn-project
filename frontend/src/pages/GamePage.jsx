@@ -134,6 +134,14 @@ const GamePage = () => {
                     navigate(`/match/${gameId}/result`);
                 });
 
+                // ── Player disconnected — opponent left ──
+                client.subscribe(`/topic/game/${gameId}/player-disconnected`, (msg) => {
+                    const data = JSON.parse(msg.body);
+                    setGameOver(true);
+                    setWsMessage(`${data.disconnectedUsername || 'Opponent'} disconnected. Game abandoned.`);
+                    setTimeout(() => navigate('/multiplayer'), 3000);
+                });
+
                 // ── Per-player error channel ──
                 client.subscribe(`/topic/game/${gameId}/error/${user.id}`, (msg) => {
                     const data = JSON.parse(msg.body);
