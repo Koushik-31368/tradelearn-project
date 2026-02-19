@@ -6,7 +6,6 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.event.EventListener;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.messaging.SessionConnectEvent;
@@ -17,6 +16,7 @@ import com.tradelearn.server.repository.GameRepository;
 import com.tradelearn.server.service.CandleService;
 import com.tradelearn.server.service.MatchSchedulerService;
 import com.tradelearn.server.service.RoomManager;
+import com.tradelearn.server.socket.GameBroadcaster;
 
 /**
  * Listens for WebSocket connect/disconnect events.
@@ -35,18 +35,18 @@ public class WebSocketEventListener {
     private final GameRepository gameRepository;
     private final MatchSchedulerService matchSchedulerService;
     private final CandleService candleService;
-    private final SimpMessagingTemplate messagingTemplate;
+    private final GameBroadcaster broadcaster;
     private final RoomManager roomManager;
 
     public WebSocketEventListener(GameRepository gameRepository,
                                   MatchSchedulerService matchSchedulerService,
                                   CandleService candleService,
-                                  SimpMessagingTemplate messagingTemplate,
+                                  GameBroadcaster broadcaster,
                                   RoomManager roomManager) {
         this.gameRepository = gameRepository;
         this.matchSchedulerService = matchSchedulerService;
         this.candleService = candleService;
-        this.messagingTemplate = messagingTemplate;
+        this.broadcaster = broadcaster;
         this.roomManager = roomManager;
     }
 
@@ -151,8 +151,7 @@ public class WebSocketEventListener {
                 : (game.getOpponent() != null ? game.getOpponent().getUsername() : "Unknown");
 
         // Notify remaining player
-        messagingTemplate.convertAndSend(
-                "/topic/game/" + gameId + "/player-disconnected",
+        broadcaster.sendToGame(gameId, "player-disconnected",
                 Map.of(
                         "gameId", gameId,
                         "disconnectedUserId", userId,

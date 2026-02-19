@@ -25,6 +25,28 @@ import com.tradelearn.server.service.MatchService;
 import com.tradelearn.server.service.MatchTradeService;
 import com.tradelearn.server.service.RoomManager;
 
+import jakarta.validation.Valid;
+
+/**
+ * REST controller for the 1v1 match lifecycle.
+ *
+ * Endpoints:
+ *   POST /api/match/create        — Create a new match (WAITING)
+ *   POST /api/match/{id}/join     — Join an open match (WAITING → ACTIVE)
+ *   POST /api/match/{id}/start    — Explicitly start (if not auto-started)
+ *   POST /api/match/end           — End match, calculate results
+ *   POST /api/match/trade         — Place a trade in an active match
+ *   GET  /api/match/open          — List WAITING matches
+ *   GET  /api/match/active        — List ACTIVE matches
+ *   GET  /api/match/finished      — List FINISHED matches
+ *   GET  /api/match/{id}          — Get a specific match
+ *   GET  /api/match/{id}/trades   — Get all trades in a match
+ *   GET  /api/match/{id}/stats    — Get match stats
+ *   GET  /api/match/rooms         — Room diagnostics
+ *
+ * All request bodies validated with Jakarta Validation (@Valid).
+ * Exceptions caught by GlobalExceptionHandler → structured JSON errors.
+ */
 @RestController
 @RequestMapping("/api/match")
 public class MatchController {
@@ -54,7 +76,7 @@ public class MatchController {
      * Create a new 1v1 match (status: WAITING)
      */
     @PostMapping("/create")
-    public ResponseEntity<?> createMatch(@RequestBody CreateMatchRequest request) {
+    public ResponseEntity<?> createMatch(@Valid @RequestBody CreateMatchRequest request) {
         try {
             Game game = matchService.createMatch(request);
             return ResponseEntity.ok(game);
@@ -115,7 +137,7 @@ public class MatchController {
      * Place a trade within an active match
      */
     @PostMapping("/trade")
-    public ResponseEntity<?> placeTrade(@RequestBody MatchTradeRequest request) {
+    public ResponseEntity<?> placeTrade(@Valid @RequestBody MatchTradeRequest request) {
         try {
             Trade trade = matchTradeService.placeTrade(request);
             return ResponseEntity.ok(trade);

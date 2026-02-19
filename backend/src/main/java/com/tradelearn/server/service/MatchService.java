@@ -5,24 +5,31 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.tradelearn.server.dto.CreateMatchRequest;
 import com.tradelearn.server.dto.MatchResult;
+import com.tradelearn.server.exception.GameNotFoundException;
+import com.tradelearn.server.exception.InvalidGameStateException;
+import com.tradelearn.server.exception.RoomFullException;
 import com.tradelearn.server.model.Game;
 import com.tradelearn.server.model.MatchStats;
 import com.tradelearn.server.model.User;
 import com.tradelearn.server.repository.GameRepository;
 import com.tradelearn.server.repository.MatchStatsRepository;
 import com.tradelearn.server.repository.UserRepository;
+import com.tradelearn.server.socket.GameBroadcaster;
 import com.tradelearn.server.util.EloUtil;
+import com.tradelearn.server.util.GameLogger;
 import com.tradelearn.server.util.ScoringUtil;
 
 @Service
 public class MatchService {
 
+    private static final Logger log = LoggerFactory.getLogger(MatchService.class);
     private static final int MAX_PLAYERS = 2;
 
     private final GameRepository gameRepository;
@@ -31,7 +38,7 @@ public class MatchService {
     private final CandleService candleService;
     private final MatchSchedulerService matchSchedulerService;
     private final MatchStatsRepository matchStatsRepository;
-    private final SimpMessagingTemplate messagingTemplate;
+    private final GameBroadcaster broadcaster;
     private final RoomManager roomManager;
 
     public MatchService(GameRepository gameRepository,
@@ -40,7 +47,7 @@ public class MatchService {
                         CandleService candleService,
                         MatchSchedulerService matchSchedulerService,
                         MatchStatsRepository matchStatsRepository,
-                        SimpMessagingTemplate messagingTemplate,
+                        GameBroadcaster broadcaster,
                         RoomManager roomManager) {
         this.gameRepository = gameRepository;
         this.userRepository = userRepository;
@@ -48,7 +55,7 @@ public class MatchService {
         this.candleService = candleService;
         this.matchSchedulerService = matchSchedulerService;
         this.matchStatsRepository = matchStatsRepository;
-        this.messagingTemplate = messagingTemplate;
+        this.broadcaster = broadcaster;
         this.roomManager = roomManager;
     }
 
@@ -72,6 +79,16 @@ public class MatchService {
         // Register in-memory room
         roomManager.createRoom(saved.getId(), creator.getId());
 
+        GameLogger.logDiagnosticSnapshot(log, "Match Created", Map.of(
+            "gameId", saved.getId(),
+            "creatorId", creator.getId(),
+            "creatorUsername", creator.getUsername(),
+            "stockSymbol", game.getStockSymbol(),
+            "startingBalance", game.getStartingBalance(),
+            "status", "WAITING",
+            "durationMinutes", request.getDurationMinutes()
+        ));
+
         return saved;
     }
 
@@ -82,84 +99,176 @@ public class MatchService {
 
     @Transactional
     public Game joinMatch(long gameId, long userId) {
-        User opponent = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        GameLogger.setGameContext(gameId);
+        GameLogger.setUserContext(userId);
+        
+        try {
+            User opponent = userRepository.findById(userId)
+                    .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-        // ── Fast in-memory guard: check room capacity before hitting DB ──
-        RoomManager.Room room = roomManager.getRoom(gameId);
-        if (room != null && room.isFull()) {
-            throw new IllegalStateException("Room is full — max " + MAX_PLAYERS + " players");
+            // ── Fast in-memory guard: check room capacity before hitting DB ──
+            RoomManager.Room room = roomManager.getRoom(gameId);
+            if (room != null && room.isFull()) {
+                GameLogger.logGameCannotStart(log, gameId, "Room is full", Map.of(
+                    "currentPlayers", room.getPlayerCount(),
+                    "maxPlayers", MAX_PLAYERS,
+                    "attemptingUserId", userId
+                ));
+                throw new RoomFullException(gameId, room.getPlayerCount(), MAX_PLAYERS);
+            }
+
+            GameLogger.logDiagnosticSnapshot(log, "Attempting Join", Map.of(
+                "gameId", gameId,
+                "userId", userId,
+                "username", opponent.getUsername(),
+                "roomExists", room != null,
+                "roomSize", room != null ? room.getPlayerCount() : 0,
+                "roomPhase", room != null ? room.getPhase().name() : "NO_ROOM"
+            ));
+
+            // ── Phase 1: Atomic compare-and-swap ──
+            // UPDATE games SET status='ACTIVE', opponent_id=? WHERE id=? AND status='WAITING'
+            // Returns 0 if someone else already joined (status is no longer WAITING).
+            int updated = gameRepository.atomicJoin(gameId, opponent);
+            if (updated == 0) {
+                GameLogger.logGameCannotStart(log, gameId, "Game is not open for joining", Map.of(
+                    "reason", "atomicJoin returned 0 - either already taken or not found",
+                    "userId", userId
+                ));
+                throw new InvalidGameStateException(gameId, "UNKNOWN", "WAITING", 
+                    "Game is not open for joining (already taken or not found)");
+            }
+
+            // ── Phase 2: Re-read with pessimistic lock for validation + side-effects ──
+            Game game = gameRepository.findByIdForUpdate(gameId)
+                    .orElseThrow(() -> new GameNotFoundException(gameId, "Game not found after join"));
+
+            // Guard: can't join your own game
+            if (game.getCreator().getId().equals(opponent.getId())) {
+                GameLogger.logGameCannotStart(log, gameId, "Cannot join your own game", Map.of(
+                    "creatorId", game.getCreator().getId(),
+                    "attemptingUserId", userId
+                ));
+                
+                // Roll back — reset to WAITING
+                game.setStatus("WAITING");
+                game.setOpponent(null);
+                game.setStartTime(null);
+                gameRepository.save(game);
+                throw new IllegalArgumentException("Cannot join your own game");
+            }
+
+            // ── Register opponent in RoomManager ──
+            roomManager.joinRoom(gameId, userId);
+
+            GameLogger.logDiagnosticSnapshot(log, "Before Auto-Start", Map.of(
+                "gameId", gameId,
+                "creatorId", game.getCreator().getId(),
+                "opponentId", opponent.getId(),
+                "status", game.getStatus(),
+                "stockSymbol", game.getStockSymbol(),
+                "totalCandles", game.getTotalCandles()
+            ));
+
+            // ── Auto-start: load candles + begin scheduler immediately ──
+            candleService.loadCandles(gameId);
+            matchSchedulerService.startProgression(gameId);
+
+            GameLogger.logGameStarted(log, gameId, game.getCreator().getId(), opponent.getId());
+
+            // Notify the creator (already on GamePage) that the match has started
+            broadcaster.sendToGame(gameId, "started",
+                    Map.of(
+                            "gameId", gameId,
+                            "status", "ACTIVE",
+                            "opponentId", opponent.getId(),
+                            "opponentUsername", opponent.getUsername()
+                    )
+            );
+
+            GameLogger.logDiagnosticSnapshot(log, "Join Complete", Map.of(
+                "gameId", gameId,
+                "creatorId", game.getCreator().getId(),
+                "opponentId", opponent.getId(),
+                "status", "ACTIVE",
+                "candlesLoaded", true,
+                "schedulerStarted", true
+            ));
+
+            return game;
+            
+        } catch (Exception e) {
+            GameLogger.logError(log, "joinMatch", gameId, e, Map.of(
+                "userId", userId
+            ));
+            throw e;
+        } finally {
+            GameLogger.clearContext();
         }
-
-        // ── Phase 1: Atomic compare-and-swap ──
-        // UPDATE games SET status='ACTIVE', opponent_id=? WHERE id=? AND status='WAITING'
-        // Returns 0 if someone else already joined (status is no longer WAITING).
-        int updated = gameRepository.atomicJoin(gameId, opponent);
-        if (updated == 0) {
-            throw new IllegalStateException("Game is not open for joining (already taken or not found)");
-        }
-
-        // ── Phase 2: Re-read with pessimistic lock for validation + side-effects ──
-        Game game = gameRepository.findByIdForUpdate(gameId)
-                .orElseThrow(() -> new IllegalArgumentException("Game not found after join"));
-
-        // Guard: can't join your own game
-        if (game.getCreator().getId().equals(opponent.getId())) {
-            // Roll back — reset to WAITING
-            game.setStatus("WAITING");
-            game.setOpponent(null);
-            game.setStartTime(null);
-            gameRepository.save(game);
-            throw new IllegalArgumentException("Cannot join your own game");
-        }
-
-        // ── Register opponent in RoomManager ──
-        roomManager.joinRoom(gameId, userId);
-
-        // ── Auto-start: load candles + begin scheduler immediately ──
-        candleService.loadCandles(gameId);
-        matchSchedulerService.startProgression(gameId);
-
-        // Notify the creator (already on GamePage) that the match has started
-        messagingTemplate.convertAndSend(
-                "/topic/game/" + gameId + "/started",
-                Map.of(
-                        "gameId", gameId,
-                        "status", "ACTIVE",
-                        "opponentId", opponent.getId(),
-                        "opponentUsername", opponent.getUsername()
-                )
-        );
-
-        return game;
     }
 
     // ==================== START MATCH ====================
 
     @Transactional
     public Game startMatch(long gameId) {
-        Game game = gameRepository.findById(gameId)
-                .orElseThrow(() -> new IllegalArgumentException("Game not found"));
+        GameLogger.setGameContext(gameId);
+        
+        try {
+            Game game = gameRepository.findById(gameId)
+                    .orElseThrow(() -> new GameNotFoundException(gameId));
 
-        if (!"ACTIVE".equals(game.getStatus())) {
-            throw new IllegalStateException("Game must be ACTIVE to start");
+            User opponent = game.getOpponent();
+            User creator = game.getCreator();
+            
+            GameLogger.logGameStartAttempt(log, gameId, 
+                creator != null ? creator.getId() : -1,
+                opponent != null ? opponent.getId() : null,
+                game.getStatus());
+
+            if (!"ACTIVE".equals(game.getStatus())) {
+                GameLogger.logGameCannotStart(log, gameId, "Game is not ACTIVE", Map.of(
+                    "currentStatus", game.getStatus(),
+                    "expectedStatus", "ACTIVE"
+                ));
+                throw new InvalidGameStateException(gameId, game.getStatus(), "ACTIVE");
+            }
+
+            if (opponent == null) {
+                GameLogger.logGameCannotStart(log, gameId, "No opponent", Map.of(
+                    "creatorId", creator.getId(),
+                    "hasOpponent", false
+                ));
+                throw new IllegalStateException("Game needs two players to start");
+            }
+
+            game.setStartTime(LocalDateTime.now());
+
+            // Load candle data so the game has server-authoritative prices
+            candleService.loadCandles(gameId);
+
+            Game saved = gameRepository.save(game);
+
+            // Begin automatic candle progression (every 5 seconds)
+            matchSchedulerService.startProgression(gameId);
+
+            GameLogger.logGameStarted(log, gameId, creator.getId(), opponent.getId());
+            GameLogger.logDiagnosticSnapshot(log, "Match Started", Map.of(
+                "gameId", gameId,
+                "creatorId", creator.getId(),
+                "opponentId", opponent.getId(),
+                "status", "ACTIVE",
+                "startTime", game.getStartTime().toString(),
+                "candlesLoaded", true
+            ));
+
+            return saved;
+            
+        } catch (Exception e) {
+            GameLogger.logError(log, "startMatch", gameId, e, null);
+            throw e;
+        } finally {
+            GameLogger.clearContext();
         }
-
-        if (game.getOpponent() == null) {
-            throw new IllegalStateException("Game needs two players to start");
-        }
-
-        game.setStartTime(LocalDateTime.now());
-
-        // Load candle data so the game has server-authoritative prices
-        candleService.loadCandles(gameId);
-
-        Game saved = gameRepository.save(game);
-
-        // Begin automatic candle progression (every 5 seconds)
-        matchSchedulerService.startProgression(gameId);
-
-        return saved;
     }
 
     // ==================== END MATCH & CALCULATE WINNER ====================

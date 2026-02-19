@@ -1,19 +1,50 @@
 package com.tradelearn.server.dto;
 
+import com.tradelearn.server.validation.ValidTradeType;
+
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+
+/**
+ * Request DTO for placing a trade within an active match.
+ *
+ * Price is intentionally excluded — resolved server-side by CandleService
+ * to guarantee server-authoritative pricing. This prevents all client-side
+ * price manipulation attacks.
+ */
 public class MatchTradeRequest {
 
-    private long gameId;
-    private long userId;
+    @NotNull(message = "Game ID is required")
+    @Positive(message = "Game ID must be positive")
+    private Long gameId;
+
+    @NotNull(message = "User ID is required")
+    @Positive(message = "User ID must be positive")
+    private Long userId;
+
+    @NotBlank(message = "Symbol is required")
     private String symbol;
-    private String type; // BUY, SELL, SHORT, COVER
+
+    @NotBlank(message = "Trade type is required")
+    @ValidTradeType
+    private String type;
+
+    @Positive(message = "Quantity must be a positive integer")
     private int quantity;
 
     // Price is intentionally excluded — resolved server-side by CandleService.
 
-    public long getGameId() { return gameId; }
+    public Long getGameId() { return gameId; }
+    public void setGameId(Long gameId) { this.gameId = gameId; }
+
+    // Backward-compatible overload
     public void setGameId(long gameId) { this.gameId = gameId; }
 
-    public long getUserId() { return userId; }
+    public Long getUserId() { return userId; }
+    public void setUserId(Long userId) { this.userId = userId; }
+
+    // Backward-compatible overload
     public void setUserId(long userId) { this.userId = userId; }
 
     public String getSymbol() { return symbol; }
