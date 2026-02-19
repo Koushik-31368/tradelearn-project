@@ -101,6 +101,12 @@ const GamePage = () => {
             onConnect: () => {
                 setWsMessage('Connected');
 
+                // ── Game started (opponent joined — creator gets notified) ──
+                client.subscribe(`/topic/game/${gameId}/started`, () => {
+                    setWsMessage('Opponent joined! Game starting…');
+                    fetchGameData();        // re-fetch game + first candle
+                });
+
                 // ── Candle progression (server pushes every ~5 s) ──
                 client.subscribe(`/topic/game/${gameId}/candle`, (msg) => {
                     const { candle, index, remaining: rem, price } = JSON.parse(msg.body);
