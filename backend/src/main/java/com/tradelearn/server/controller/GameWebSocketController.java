@@ -5,13 +5,17 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.SendTo;
+import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 
+import com.tradelearn.server.config.WebSocketEventListener;
 import com.tradelearn.server.dto.MatchTradeRequest;
 import com.tradelearn.server.model.Game;
 import com.tradelearn.server.model.Trade;
@@ -56,16 +60,21 @@ public class GameWebSocketController {
 
     // ===== DEPENDENCIES =====
 
+    private static final Logger log = LoggerFactory.getLogger(GameWebSocketController.class);
+
     private final SimpMessagingTemplate messagingTemplate;
     private final GameRepository gameRepository;
     private final MatchTradeService matchTradeService;
+    private final WebSocketEventListener wsEventListener;
 
     public GameWebSocketController(SimpMessagingTemplate messagingTemplate,
                                    GameRepository gameRepository,
-                                   MatchTradeService matchTradeService) {
+                                   MatchTradeService matchTradeService,
+                                   WebSocketEventListener wsEventListener) {
         this.messagingTemplate = messagingTemplate;
         this.gameRepository = gameRepository;
         this.matchTradeService = matchTradeService;
+        this.wsEventListener = wsEventListener;
     }
 
     private final Map<Long, GameReadiness> readinessMap = new ConcurrentHashMap<>();
@@ -92,8 +101,18 @@ public class GameWebSocketController {
     @MessageMapping("/game/{gameId}/trade")
     public void handleTrade(
             @DestinationVariable long gameId,
-            @Payload TradeAction trade
+            @Payload TradeAction trade,
+            SimpMessageHeaderAccessor headerAccessor
     ) {
+        // Register this session for disconnect tracking
+        String sessionId = headerAccessor.getSessionId();
+        if (sessionId != null && trade.playerId > 0) {
+            wsEventListener.registerSession(sessionId, trade.playerId, gameId);
+        }
+
+        log.info("[TRADE] Game {} | Player {} | {} {} shares of {}",
+                gameId, trade.playerId, trade.type, trade.amount, trade.symbol);
+
         @SuppressWarnings("null")
         Optional<Game> gameOpt = gameRepository.findById(gameId);
         if (gameOpt.isEmpty()) return;

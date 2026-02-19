@@ -35,7 +35,8 @@ const CreateGameForm = ({ onCreate, onCancel }) => {
       if (!response.ok) {
         throw new Error('Failed to create game. Please try again.');
       }
-      onCreate();
+      const game = await response.json();
+      onCreate(game);
     } catch (err) {
       setError(err.message);
     }

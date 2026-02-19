@@ -89,9 +89,9 @@ const LobbyPage = () => {
                   <p><strong>Balance:</strong> ₹{(game.startingBalance || 1000000).toLocaleString()}</p>
                   <span className={`status-badge status-${game.status?.toLowerCase()}`}>{game.status}</span>
                 </div>
-                {/* 5. Prevent user from joining their own game */}
+                {/* Creator sees 'Enter Game', others see 'Join Game' */}
                 {user && user.id === game.creator.id ? (
-                  <button className="join-btn" disabled>Your Game</button>
+                  <button className="join-btn" onClick={() => navigate(`/game/${game.id}`)}>Enter Game</button>
                 ) : (
                   <button className="join-btn" onClick={() => handleJoinGame(game.id)}>Join Game</button>
                 )}
@@ -105,9 +105,13 @@ const LobbyPage = () => {
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
         <CreateGameForm 
           onCancel={() => setIsModalOpen(false)}
-          onCreate={() => {
+          onCreate={(game) => {
             setIsModalOpen(false);
-            fetchOpenGames();
+            if (game?.id) {
+              navigate(`/game/${game.id}`);
+            } else {
+              fetchOpenGames();
+            }
           }}
         />
       </Modal>
