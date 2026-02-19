@@ -61,19 +61,24 @@ const GamePage = () => {
 
             if (data.status === 'ACTIVE') {
                 // Seed with current candle from server
-                const [candleRes, remainRes] = await Promise.all([
-                    fetch(backendUrl(`/api/match/${gameId}/candle`)),
-                    fetch(backendUrl(`/api/match/${gameId}/candle/remaining`)),
-                ]);
+                try {
+                    const [candleRes, remainRes] = await Promise.all([
+                        fetch(backendUrl(`/api/match/${gameId}/candle`)),
+                        fetch(backendUrl(`/api/match/${gameId}/candle/remaining`)),
+                    ]);
 
-                if (candleRes.ok) {
-                    const c = await candleRes.json();
-                    setCurrentCandle(c);
-                    setCandleHistory([c]);
-                }
-                if (remainRes.ok) {
-                    const r = await remainRes.json();
-                    setRemaining(r.remaining ?? r);
+                    if (candleRes.ok) {
+                        const c = await candleRes.json();
+                        setCurrentCandle(c);
+                        setCandleHistory([c]);
+                    }
+                    if (remainRes.ok) {
+                        const r = await remainRes.json();
+                        setRemaining(r.remaining ?? r);
+                    }
+                } catch (candleErr) {
+                    // Not fatal — WebSocket will deliver first candle within seconds
+                    console.warn('Initial candle fetch failed, waiting for WS:', candleErr);
                 }
 
             }
