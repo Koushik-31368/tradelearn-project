@@ -1,27 +1,21 @@
 // src/pages/GamePage.jsx
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import SockJS from 'sockjs-client';
-import { Client } from '@stomp/stompjs';
 import './GamePage.css';
 import { useAuth } from '../context/AuthContext';
-import { backendUrl, wsBase } from '../utils/api';
+import { backendUrl } from '../utils/api';
 import StockChart from '../components/StockChart';
 import LiveScoreboard from '../components/LiveScoreboard';
+import useGameSocket, { GamePhase, SocketState } from '../hooks/useGameSocket';
 
 const GamePage = () => {
-    const stompClientRef = useRef(null);
     const { gameId } = useParams();
     const navigate = useNavigate();
     const { user } = useAuth();
 
-    // ── Server-driven candle state ──
+    // ── Game metadata (from REST) ──
     const [game, setGame] = useState(null);
-    const [currentCandle, setCurrentCandle] = useState(null);
-    const [candleHistory, setCandleHistory] = useState([]);
-    const [candleIndex, setCandleIndex] = useState(0);
     const [totalCandles, setTotalCandles] = useState(0);
-    const [remaining, setRemaining] = useState(0);
 
     // ── Trade controls ──
     const [tradeAmount, setTradeAmount] = useState(1);
@@ -36,9 +30,28 @@ const GamePage = () => {
     // ── UI state ──
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [gameOver, setGameOver] = useState(false);
-    const [wsMessage, setWsMessage] = useState('');
-    const [tradeLog, setTradeLog] = useState([]);
+
+    // ── Central socket hook ──
+    const {
+        socketState,
+        isConnected,
+        gamePhase,
+        syncPhaseFromRest,
+        currentCandle,
+        candleHistory,
+        candleIndex,
+        remaining,
+        seedCandle,
+        tradeLog,
+        emitTrade,
+        statusMessage,
+        lastError: socketError,
+        disconnectInfo,
+    } = useGameSocket({
+        gameId,
+        userId:  user?.id,
+        enabled: !!game && !!user && game.status !== 'FINISHED',
+    });
 
     // ─────────────────────────────────────────────
     // Fetch match + initial candle from REST
@@ -52,35 +65,23 @@ const GamePage = () => {
             const data = await res.json();
             setGame(data);
             setTotalCandles(data.totalCandles || 0);
-            setCandleIndex(data.currentCandleIndex || 0);
+            syncPhaseFromRest(data.status);          // sync hook phase
 
-            if (data.status === 'FINISHED') {
-                setGameOver(true);
-                return;               // skip candle / position fetch
-            }
+            if (data.status === 'FINISHED') return;
 
             if (data.status === 'ACTIVE') {
-                // Seed with current candle from server
                 try {
                     const [candleRes, remainRes] = await Promise.all([
                         fetch(backendUrl(`/api/match/${gameId}/candle`)),
                         fetch(backendUrl(`/api/match/${gameId}/candle/remaining`)),
                     ]);
-
-                    if (candleRes.ok) {
-                        const c = await candleRes.json();
-                        setCurrentCandle(c);
-                        setCandleHistory([c]);
-                    }
-                    if (remainRes.ok) {
-                        const r = await remainRes.json();
-                        setRemaining(r.remaining ?? r);
-                    }
+                    let c = null, rem = null;
+                    if (candleRes.ok) c = await candleRes.json();
+                    if (remainRes.ok) rem = await remainRes.json();
+                    seedCandle(c, data.currentCandleIndex || 0, rem?.remaining ?? rem);
                 } catch (candleErr) {
-                    // Not fatal — WebSocket will deliver first candle within seconds
                     console.warn('Initial candle fetch failed, waiting for WS:', candleErr);
                 }
-
             }
         } catch (err) {
             console.error('Fetch game error:', err);
@@ -89,99 +90,64 @@ const GamePage = () => {
         } finally {
             setIsLoading(false);
         }
-    }, [gameId, navigate, user]);
+    }, [gameId, navigate, syncPhaseFromRest, seedCandle]);
 
     useEffect(() => { fetchGameData(); }, [fetchGameData]);
 
     // ─────────────────────────────────────────────
-    // WebSocket — all price / candle data from server
+    // Re-fetch when hook tells us game just started
     // ─────────────────────────────────────────────
     useEffect(() => {
-        if (!game || !user || game.status === 'FINISHED') return;
+        if (gamePhase === GamePhase.STARTING) {
+            fetchGameData();
+        }
+    }, [gamePhase, fetchGameData]);
 
-        const client = new Client({
-            webSocketFactory: () => new SockJS(`${wsBase()}/ws`),
-            reconnectDelay: 5000,
-            debug: () => {},                      // silent in prod
-            onConnect: () => {
-                setWsMessage('Connected');
+    // ─────────────────────────────────────────────
+    // Handle disconnect — redirect after 3 s
+    // ─────────────────────────────────────────────
+    useEffect(() => {
+        if (gamePhase !== GamePhase.ABANDONED) return;
+        const t = setTimeout(() => navigate('/multiplayer'), 3000);
+        return () => clearTimeout(t);
+    }, [gamePhase, navigate]);
 
-                // ── Game started (opponent joined — creator gets notified) ──
-                client.subscribe(`/topic/game/${gameId}/started`, () => {
-                    setWsMessage('Opponent joined! Game starting…');
-                    fetchGameData();        // re-fetch game + first candle
-                });
+    // ─────────────────────────────────────────────
+    // Handle finish — redirect to result page
+    // ─────────────────────────────────────────────
+    useEffect(() => {
+        if (gamePhase === GamePhase.FINISHED) {
+            navigate(`/match/${gameId}/result`);
+        }
+    }, [gamePhase, gameId, navigate]);
 
-                // ── Candle progression (server pushes every ~5 s) ──
-                client.subscribe(`/topic/game/${gameId}/candle`, (msg) => {
-                    const { candle, index, remaining: rem, price } = JSON.parse(msg.body);
-                    setCurrentCandle(candle);
-                    setCandleIndex(index);
-                    setRemaining(rem);
-                    setCandleCountdown(CANDLE_INTERVAL_S);   // reset countdown
-                    setCandleHistory(prev => {
-                        // Deduplicate by index
-                        if (prev.length > index) return prev;
-                        return [...prev, candle];
-                    });
-                });
-
-                // ── Trade feed ──
-                client.subscribe(`/topic/game/${gameId}/trade`, (msg) => {
-                    const trade = JSON.parse(msg.body);
-                    setTradeLog(prev => [trade, ...prev].slice(0, 30));
-                });
-
-                // ── Game finished ──
-                client.subscribe(`/topic/game/${gameId}/finished`, (msg) => {
-                    setGameOver(true);
-                    setWsMessage('Game finished!');
-                    navigate(`/match/${gameId}/result`);
-                });
-
-                // ── Player disconnected — opponent left ──
-                client.subscribe(`/topic/game/${gameId}/player-disconnected`, (msg) => {
-                    const data = JSON.parse(msg.body);
-                    setGameOver(true);
-                    setWsMessage(`${data.disconnectedUsername || 'Opponent'} disconnected. Game abandoned.`);
-                    setTimeout(() => navigate('/multiplayer'), 3000);
-                });
-
-                // ── Per-player error channel ──
-                client.subscribe(`/topic/game/${gameId}/error/${user.id}`, (msg) => {
-                    const data = JSON.parse(msg.body);
-                    setWsMessage(`⚠ ${data.error || 'Trade error'}`);
-                });
-            },
-            onStompError: (frame) => { setWsMessage('WS Error'); console.error('STOMP Error:', frame); },
-            onWebSocketError: () => setWsMessage('WS Failed'),
-            onDisconnect: () => setWsMessage('Disconnected'),
-        });
-
-        client.activate();
-        stompClientRef.current = client;
-        return () => { if (stompClientRef.current) stompClientRef.current.deactivate(); };
-    }, [gameId, game, user]);
+    // ─────────────────────────────────────────────
+    // Reset candle countdown on each new candle
+    // ─────────────────────────────────────────────
+    useEffect(() => {
+        setCandleCountdown(CANDLE_INTERVAL_S);
+    }, [candleIndex]);
 
     // ─────────────────────────────────────────────
     // Countdown timer — ticks once per second
     // ─────────────────────────────────────────────
     useEffect(() => {
-        if (gameOver || !game || game.status !== 'ACTIVE') return;
+        if (gamePhase !== GamePhase.ACTIVE || !game) return;
         countdownRef.current = setInterval(() => {
             setCandleCountdown(prev => (prev > 0 ? prev - 1 : 0));
         }, 1000);
         return () => clearInterval(countdownRef.current);
-    }, [gameOver, game]);
+    }, [gamePhase, game]);
 
     // ─────────────────────────────────────────────
     // Trading — price is NEVER sent from frontend
     // ─────────────────────────────────────────────
     const TRADE_COOLDOWN_MS = 800;
+    const gameOver = gamePhase === GamePhase.FINISHED || gamePhase === GamePhase.ABANDONED;
 
     const handleTrade = (type) => {
-        if (gameOver || !tradeAmount || tradeAmount <= 0 || !stompClientRef.current?.connected || !user) return;
-        if (game?.status !== 'ACTIVE' || remaining <= 0) return;
+        if (gameOver || !tradeAmount || tradeAmount <= 0 || !isConnected || !user) return;
+        if (gamePhase !== GamePhase.ACTIVE || remaining <= 0) return;
 
         // ── Rapid-click guard ──
         const now = Date.now();
@@ -190,16 +156,12 @@ const GamePage = () => {
         setTradeCooldown(true);
         setTimeout(() => setTradeCooldown(false), TRADE_COOLDOWN_MS);
 
-        stompClientRef.current.publish({
-            destination: `/app/game/${gameId}/trade`,
-            body: JSON.stringify({
-                type,
-                amount: tradeAmount,
-                playerId: user.id,
-                symbol: game.stockSymbol,
-            }),
+        emitTrade({
+            type,
+            amount: tradeAmount,
+            playerId: user.id,
+            symbol: game.stockSymbol,
         });
-        setWsMessage(`Sent ${type} order…`);
     };
 
     // ─────────────────────────────────────────────
@@ -225,12 +187,15 @@ const GamePage = () => {
     if (!game)     return <div>Waiting for match data…</div>;
 
     // ── WAITING screen ──
-    if (game.status === 'WAITING') {
+    if (gamePhase === GamePhase.WAITING || game.status === 'WAITING') {
         return (
             <div className="game-page-grid">
                 <header className="game-header">
                     <h2>Waiting for Opponent</h2>
-                    <div className="ws-status">Stock: {game.stockSymbol}</div>
+                    <div className="ws-status">
+                        {socketState === SocketState.CONNECTED ? '🟢 Connected' : '🔴 ' + statusMessage}
+                        {' · Stock: '}{game.stockSymbol}
+                    </div>
                 </header>
                 <main className="chart-container">
                     <div className="price-display">
@@ -243,9 +208,8 @@ const GamePage = () => {
         );
     }
 
-    // ── FINISHED — redirect to dedicated results page ──
+    // ── FINISHED / ABANDONED — redirect to results ──
     if (gameOver) {
-        navigate(`/match/${gameId}/result`);
         return <div className="game-page-grid"><p>Loading results…</p></div>;
     }
 
@@ -264,7 +228,7 @@ const GamePage = () => {
                     <span className="candle-badge">Candle {candleIndex + 1}/{totalCandles}</span>
                     {' '}{currentCandle?.date || ''}
                 </h2>
-                <div className="ws-status">{wsMessage}</div>
+                <div className="ws-status">{statusMessage}{socketError && ` · ⚠ ${socketError}`}</div>
                 <div className="candle-remaining">
                     {remaining} remaining
                     {remaining > 0 && (
@@ -349,7 +313,7 @@ const GamePage = () => {
             {/* ── Trade panel ── */}
             <footer className="trade-panel">
                 {(() => {
-                    const tradesDisabled = gameOver || game?.status !== 'ACTIVE' || remaining <= 0 || tradeCooldown;
+                    const tradesDisabled = gameOver || gamePhase !== GamePhase.ACTIVE || remaining <= 0 || tradeCooldown || !isConnected;
                     return (
                         <>
                             <div className="trade-input-group">
