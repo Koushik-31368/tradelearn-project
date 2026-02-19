@@ -2,8 +2,10 @@ package com.tradelearn.server.service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,19 +29,22 @@ public class MatchService {
     private final CandleService candleService;
     private final MatchSchedulerService matchSchedulerService;
     private final MatchStatsRepository matchStatsRepository;
+    private final SimpMessagingTemplate messagingTemplate;
 
     public MatchService(GameRepository gameRepository,
                         UserRepository userRepository,
                         MatchTradeService matchTradeService,
                         CandleService candleService,
                         MatchSchedulerService matchSchedulerService,
-                        MatchStatsRepository matchStatsRepository) {
+                        MatchStatsRepository matchStatsRepository,
+                        SimpMessagingTemplate messagingTemplate) {
         this.gameRepository = gameRepository;
         this.userRepository = userRepository;
         this.matchTradeService = matchTradeService;
         this.candleService = candleService;
         this.matchSchedulerService = matchSchedulerService;
         this.matchStatsRepository = matchStatsRepository;
+        this.messagingTemplate = messagingTemplate;
     }
 
     // ==================== CREATE MATCH ====================
@@ -82,7 +87,24 @@ public class MatchService {
         game.setStatus("ACTIVE");
         game.setStartTime(LocalDateTime.now());
 
-        return gameRepository.save(game);
+        Game saved = gameRepository.save(game);
+
+        // ── Auto-start: load candles + begin scheduler immediately ──
+        candleService.loadCandles(gameId);
+        matchSchedulerService.startProgression(gameId);
+
+        // Notify the creator (already on GamePage) that the match has started
+        messagingTemplate.convertAndSend(
+                "/topic/game/" + gameId + "/started",
+                Map.of(
+                        "gameId", gameId,
+                        "status", "ACTIVE",
+                        "opponentId", opponent.getId(),
+                        "opponentUsername", opponent.getUsername()
+                )
+        );
+
+        return saved;
     }
 
     // ==================== START MATCH ====================
