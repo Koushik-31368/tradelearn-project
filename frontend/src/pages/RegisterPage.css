@@ -1,98 +1,15 @@
-/* RegisterPage.css */
+/* RegisterPage.css — now uses shared AuthForm.css classes
+   This file only holds register-specific overrides if any */
 
-
-.register-container {
-  max-width: 420px;
-  margin: 80px auto;
-  padding: 32px;
-  background: #1e293b !important; /* dark blue - solid, not transparent */
-  border: 1px solid #334155;
-  border-radius: 14px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
-  color: #ffffff !important;
-  min-height: 380px;
-  position: relative;
-  z-index: 1;
-}
-
-
-.register-container h2 {
-  margin-bottom: 24px;
-  font-size: 26px;
-  font-weight: 600;
-  color: #ffffff !important;
-}
-
-
-.register-container form {
-  display: flex;
-  flex-direction: column;
-}
-
-
-.register-container input {
+/* password strength meter (optional future enhancement) */
+.password-strength {
+  height: 3px;
+  border-radius: 2px;
+  margin-top: -14px;
   margin-bottom: 14px;
-  padding: 12px 14px !important;
-  border-radius: 8px;
-  border: 1px solid #4b5563 !important;
-  outline: none;
-  font-size: 15px;
-  background: #374151 !important;
-  color: #ffffff !important;
+  transition: width .3s, background .3s;
 }
 
-
-.register-container input::placeholder {
-  color: #9ca3af !important;
-}
-
-
-.register-container input:focus {
-  box-shadow: 0 0 0 2px #22c55e !important;
-  border-color: #22c55e !important;
-}
-
-
-.register-container button {
-  margin-top: 8px;
-  padding: 12px;
-  background: linear-gradient(135deg, #22c55e, #16a34a) !important;
-  border: none !important;
-  border-radius: 8px;
-  color: #ffffff !important;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
-}
-
-
-.register-container button:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(34, 197, 94, 0.4) !important;
-}
-
-
-.error-text {
-  margin-top: 14px;
-  color: #f87171 !important;
-  font-size: 14px;
-}
-
-
-.login-link {
-  margin-top: 18px;
-  font-size: 14px;
-  color: #9ca3af !important;
-}
-
-
-.login-link a {
-  color: #38bdf8 !important;
-  text-decoration: none;
-}
-
-
-.login-link a:hover {
-  text-decoration: underline;
-}
+.password-strength.weak   { width: 33%; background: #ef4444; }
+.password-strength.medium { width: 66%; background: #f59e0b; }
+.password-strength.strong { width: 100%; background: #10b981; }

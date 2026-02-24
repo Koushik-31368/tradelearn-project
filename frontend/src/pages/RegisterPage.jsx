@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
+import "./AuthForm.css";
 import "./RegisterPage.css";
 import { backendUrl } from '../utils/api';
 
@@ -43,43 +44,88 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="register-container">
-      <h2>Create Account</h2>
+    <div className="auth-page">
+      {/* ── branded left panel ── */}
+      <div className="auth-brand">
+        <div className="auth-brand-inner">
+          <div className="auth-brand-logo">Trade<span>Learn</span></div>
+          <p className="auth-brand-tagline">
+            Start your trading journey today. Practice with virtual money,
+            learn from the best, and build confidence before going live.
+          </p>
 
-      <form onSubmit={handleRegister}>
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          required
-          onChange={(e) => setEmail(e.target.value)}
-        />
+          {/* CSS-only candlestick chart */}
+          <div className="auth-candles">
+            <div className="auth-candle green" style={{ height: 40, animationDelay: '0s' }} />
+            <div className="auth-candle green" style={{ height: 60, animationDelay: '.25s' }} />
+            <div className="auth-candle red"   style={{ height: 34, animationDelay: '.5s' }} />
+            <div className="auth-candle green" style={{ height: 78, animationDelay: '.75s' }} />
+            <div className="auth-candle red"   style={{ height: 26, animationDelay: '1s' }} />
+            <div className="auth-candle green" style={{ height: 90, animationDelay: '1.25s' }} />
+            <div className="auth-candle green" style={{ height: 70, animationDelay: '1.5s' }} />
+            <div className="auth-candle red"   style={{ height: 44, animationDelay: '1.75s' }} />
+          </div>
+          <div className="auth-price-line" />
 
-        <input
-          type="text"
-          placeholder="Username"
-          value={username}
-          required
-          onChange={(e) => setUsername(e.target.value)}
-        />
+          <ul className="auth-features">
+            <li><span className="feat-icon">🚀</span> Zero-risk paper trading simulator</li>
+            <li><span className="feat-icon">⚔️</span> Head-to-head multiplayer matches</li>
+            <li><span className="feat-icon">📊</span> Track your performance over time</li>
+          </ul>
+        </div>
+      </div>
 
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          required
-          onChange={(e) => setPassword(e.target.value)}
-        />
+      {/* ── form panel ── */}
+      <div className="auth-form-panel">
+        <div className="auth-card">
+          <h2>Create Account</h2>
+          <p className="auth-subtitle">Join thousands of aspiring traders</p>
 
-        <button type="submit">Create Account</button>
-      </form>
+          <form onSubmit={handleRegister}>
+            <div className="auth-field">
+              <span className="field-icon">✉</span>
+              <input
+                type="email"
+                placeholder="Email address"
+                value={email}
+                required
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </div>
 
-      {error && <p className="error-text">{error}</p>}
-      {success && <p className="success-text" style={{ color: '#27ae60', textAlign: 'center' }}>{success}</p>}
+            <div className="auth-field">
+              <span className="field-icon">👤</span>
+              <input
+                type="text"
+                placeholder="Username"
+                value={username}
+                required
+                onChange={(e) => setUsername(e.target.value)}
+              />
+            </div>
 
-      <p className="login-link">
-        Already have an account? <Link to="/login">Login</Link>
-      </p>
+            <div className="auth-field">
+              <span className="field-icon">🔒</span>
+              <input
+                type="password"
+                placeholder="Password"
+                value={password}
+                required
+                onChange={(e) => setPassword(e.target.value)}
+              />
+            </div>
+
+            <button type="submit" className="auth-btn">Create Account</button>
+          </form>
+
+          {error && <p className="auth-msg error">{error}</p>}
+          {success && <p className="auth-msg success">{success}</p>}
+
+          <p className="auth-footer">
+            Already have an account? <Link to="/login">Sign in</Link>
+          </p>
+        </div>
+      </div>
     </div>
   );
 }
