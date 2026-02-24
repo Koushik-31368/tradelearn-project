@@ -50,28 +50,18 @@ export default function RegisterPage() {
         <div className="auth-brand-inner">
           <div className="auth-brand-logo">Trade<span>Learn</span></div>
           <p className="auth-brand-tagline">
-            Start your trading journey today. Practice with virtual money,
-            learn from the best, and build confidence before going live.
+            Zero-risk trading. Real strategies. Multiplayer competition.
           </p>
 
-          {/* CSS-only candlestick chart */}
           <div className="auth-candles">
-            <div className="auth-candle green" style={{ height: 40, animationDelay: '0s' }} />
-            <div className="auth-candle green" style={{ height: 60, animationDelay: '.25s' }} />
-            <div className="auth-candle red"   style={{ height: 34, animationDelay: '.5s' }} />
-            <div className="auth-candle green" style={{ height: 78, animationDelay: '.75s' }} />
-            <div className="auth-candle red"   style={{ height: 26, animationDelay: '1s' }} />
-            <div className="auth-candle green" style={{ height: 90, animationDelay: '1.25s' }} />
-            <div className="auth-candle green" style={{ height: 70, animationDelay: '1.5s' }} />
-            <div className="auth-candle red"   style={{ height: 44, animationDelay: '1.75s' }} />
+            <div className="auth-candle green" style={{ height: 24, animationDelay: '0s' }} />
+            <div className="auth-candle green" style={{ height: 38, animationDelay: '.35s' }} />
+            <div className="auth-candle red"   style={{ height: 20, animationDelay: '.7s' }} />
+            <div className="auth-candle green" style={{ height: 50, animationDelay: '1.05s' }} />
+            <div className="auth-candle red"   style={{ height: 16, animationDelay: '1.4s' }} />
+            <div className="auth-candle green" style={{ height: 56, animationDelay: '1.75s' }} />
           </div>
           <div className="auth-price-line" />
-
-          <ul className="auth-features">
-            <li><span className="feat-icon">🚀</span> Zero-risk paper trading simulator</li>
-            <li><span className="feat-icon">⚔️</span> Head-to-head multiplayer matches</li>
-            <li><span className="feat-icon">📊</span> Track your performance over time</li>
-          </ul>
         </div>
       </div>
 
