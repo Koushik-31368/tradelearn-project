@@ -20,23 +20,17 @@ const ForgotPasswordPage = () => {
         <div className="auth-brand-inner">
           <div className="auth-brand-logo">Trade<span>Learn</span></div>
           <p className="auth-brand-tagline">
-            Don't worry — we'll help you get back into your account in no time.
+            We'll help you get back into your account.
           </p>
 
           <div className="auth-candles">
-            <div className="auth-candle green" style={{ height: 52, animationDelay: '0s' }} />
-            <div className="auth-candle red"   style={{ height: 30, animationDelay: '.4s' }} />
-            <div className="auth-candle green" style={{ height: 68, animationDelay: '.8s' }} />
-            <div className="auth-candle green" style={{ height: 44, animationDelay: '1.2s' }} />
-            <div className="auth-candle red"   style={{ height: 36, animationDelay: '1.6s' }} />
-            <div className="auth-candle green" style={{ height: 80, animationDelay: '2s' }} />
+            <div className="auth-candle green" style={{ height: 30, animationDelay: '0s' }} />
+            <div className="auth-candle red"   style={{ height: 18, animationDelay: '.5s' }} />
+            <div className="auth-candle green" style={{ height: 42, animationDelay: '1s' }} />
+            <div className="auth-candle green" style={{ height: 34, animationDelay: '1.5s' }} />
+            <div className="auth-candle red"   style={{ height: 20, animationDelay: '2s' }} />
           </div>
           <div className="auth-price-line" />
-
-          <ul className="auth-features">
-            <li><span className="feat-icon">🔐</span> Secure password reset via email</li>
-            <li><span className="feat-icon">⚡</span> Back to trading in seconds</li>
-          </ul>
         </div>
       </div>
 

@@ -45,28 +45,18 @@ const LoginPage = () => {
         <div className="auth-brand-inner">
           <div className="auth-brand-logo">Trade<span>Learn</span></div>
           <p className="auth-brand-tagline">
-            Master the markets without the risk. Compete with friends, learn
-            real strategies, and climb the leaderboard.
+            Practice trading. Compete with friends. Learn real strategies.
           </p>
 
-          {/* CSS-only candlestick chart */}
           <div className="auth-candles">
-            <div className="auth-candle green" style={{ height: 48, animationDelay: '0s' }} />
-            <div className="auth-candle red"   style={{ height: 32, animationDelay: '.3s' }} />
-            <div className="auth-candle green" style={{ height: 72, animationDelay: '.6s' }} />
-            <div className="auth-candle green" style={{ height: 56, animationDelay: '.9s' }} />
-            <div className="auth-candle red"   style={{ height: 38, animationDelay: '1.2s' }} />
-            <div className="auth-candle green" style={{ height: 84, animationDelay: '1.5s' }} />
-            <div className="auth-candle red"   style={{ height: 28, animationDelay: '1.8s' }} />
-            <div className="auth-candle green" style={{ height: 64, animationDelay: '2.1s' }} />
+            <div className="auth-candle green" style={{ height: 28, animationDelay: '0s' }} />
+            <div className="auth-candle red"   style={{ height: 18, animationDelay: '.4s' }} />
+            <div className="auth-candle green" style={{ height: 44, animationDelay: '.8s' }} />
+            <div className="auth-candle green" style={{ height: 36, animationDelay: '1.2s' }} />
+            <div className="auth-candle red"   style={{ height: 22, animationDelay: '1.6s' }} />
+            <div className="auth-candle green" style={{ height: 52, animationDelay: '2s' }} />
           </div>
           <div className="auth-price-line" />
-
-          <ul className="auth-features">
-            <li><span className="feat-icon">📈</span> Real-time multiplayer trading games</li>
-            <li><span className="feat-icon">🏆</span> Compete on live leaderboards</li>
-            <li><span className="feat-icon">🎓</span> Learn proven trading strategies</li>
-          </ul>
         </div>
       </div>
 
@@ -74,7 +64,7 @@ const LoginPage = () => {
       <div className="auth-form-panel">
         <div className="auth-card">
           <h2>Welcome Back</h2>
-          <p className="auth-subtitle">Sign in to continue trading</p>
+          <p className="auth-subtitle">Sign in to continue your trading journey</p>
 
           <form onSubmit={handleSubmit}>
             <div className="auth-field">
