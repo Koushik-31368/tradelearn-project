@@ -53,13 +53,34 @@ export default function RegisterPage() {
             Zero-risk trading. Real strategies. Multiplayer competition.
           </p>
 
-          <div className="auth-candles">
-            <div className="auth-candle green" style={{ height: 24, animationDelay: '0s' }} />
-            <div className="auth-candle green" style={{ height: 38, animationDelay: '.35s' }} />
-            <div className="auth-candle red"   style={{ height: 20, animationDelay: '.7s' }} />
-            <div className="auth-candle green" style={{ height: 50, animationDelay: '1.05s' }} />
-            <div className="auth-candle red"   style={{ height: 16, animationDelay: '1.4s' }} />
-            <div className="auth-candle green" style={{ height: 56, animationDelay: '1.75s' }} />
+          <div className="auth-candles-track">
+            <div className="auth-candles">
+              <div className="auth-candle green" style={{ height: 24 }} />
+              <div className="auth-candle green" style={{ height: 38 }} />
+              <div className="auth-candle red"   style={{ height: 20 }} />
+              <div className="auth-candle green" style={{ height: 50 }} />
+              <div className="auth-candle red"   style={{ height: 16 }} />
+              <div className="auth-candle green" style={{ height: 56 }} />
+              <div className="auth-candle green" style={{ height: 32 }} />
+              <div className="auth-candle red"   style={{ height: 22 }} />
+              <div className="auth-candle green" style={{ height: 44 }} />
+              <div className="auth-candle green" style={{ height: 28 }} />
+              <div className="auth-candle red"   style={{ height: 18 }} />
+              <div className="auth-candle green" style={{ height: 48 }} />
+              {/* duplicate for seamless loop */}
+              <div className="auth-candle green" style={{ height: 24 }} />
+              <div className="auth-candle green" style={{ height: 38 }} />
+              <div className="auth-candle red"   style={{ height: 20 }} />
+              <div className="auth-candle green" style={{ height: 50 }} />
+              <div className="auth-candle red"   style={{ height: 16 }} />
+              <div className="auth-candle green" style={{ height: 56 }} />
+              <div className="auth-candle green" style={{ height: 32 }} />
+              <div className="auth-candle red"   style={{ height: 22 }} />
+              <div className="auth-candle green" style={{ height: 44 }} />
+              <div className="auth-candle green" style={{ height: 28 }} />
+              <div className="auth-candle red"   style={{ height: 18 }} />
+              <div className="auth-candle green" style={{ height: 48 }} />
+            </div>
           </div>
           <div className="auth-price-line" />
         </div>
