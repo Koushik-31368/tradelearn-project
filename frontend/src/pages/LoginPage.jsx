@@ -39,36 +39,82 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="auth-container">
-      <form className="auth-form" onSubmit={handleSubmit}>
-        <h2>Sign In</h2>
+    <div className="auth-page">
+      {/* ── branded left panel ── */}
+      <div className="auth-brand">
+        <div className="auth-brand-inner">
+          <div className="auth-brand-logo">Trade<span>Learn</span></div>
+          <p className="auth-brand-tagline">
+            Master the markets without the risk. Compete with friends, learn
+            real strategies, and climb the leaderboard.
+          </p>
 
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
+          {/* CSS-only candlestick chart */}
+          <div className="auth-candles">
+            <div className="auth-candle green" style={{ height: 48, animationDelay: '0s' }} />
+            <div className="auth-candle red"   style={{ height: 32, animationDelay: '.3s' }} />
+            <div className="auth-candle green" style={{ height: 72, animationDelay: '.6s' }} />
+            <div className="auth-candle green" style={{ height: 56, animationDelay: '.9s' }} />
+            <div className="auth-candle red"   style={{ height: 38, animationDelay: '1.2s' }} />
+            <div className="auth-candle green" style={{ height: 84, animationDelay: '1.5s' }} />
+            <div className="auth-candle red"   style={{ height: 28, animationDelay: '1.8s' }} />
+            <div className="auth-candle green" style={{ height: 64, animationDelay: '2.1s' }} />
+          </div>
+          <div className="auth-price-line" />
 
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
+          <ul className="auth-features">
+            <li><span className="feat-icon">📈</span> Real-time multiplayer trading games</li>
+            <li><span className="feat-icon">🏆</span> Compete on live leaderboards</li>
+            <li><span className="feat-icon">🎓</span> Learn proven trading strategies</li>
+          </ul>
+        </div>
+      </div>
 
-        <button type="submit">Sign In</button>
+      {/* ── form panel ── */}
+      <div className="auth-form-panel">
+        <div className="auth-card">
+          <h2>Welcome Back</h2>
+          <p className="auth-subtitle">Sign in to continue trading</p>
 
-        {message && (
-          <p className={isError ? 'error' : 'success'}>{message}</p>
-        )}
+          <form onSubmit={handleSubmit}>
+            <div className="auth-field">
+              <span className="field-icon">✉</span>
+              <input
+                type="email"
+                placeholder="Email address"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </div>
 
-        <p>
-          New user? <Link to="/register">Create account</Link>
-        </p>
-      </form>
+            <div className="auth-field">
+              <span className="field-icon">🔒</span>
+              <input
+                type="password"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+            </div>
+
+            <div className="auth-forgot">
+              <Link to="/forgot-password">Forgot password?</Link>
+            </div>
+
+            <button type="submit" className="auth-btn">Sign In</button>
+          </form>
+
+          {message && (
+            <p className={`auth-msg ${isError ? 'error' : 'success'}`}>{message}</p>
+          )}
+
+          <p className="auth-footer">
+            New to TradeLearn? <Link to="/register">Create an account</Link>
+          </p>
+        </div>
+      </div>
     </div>
   );
 };
