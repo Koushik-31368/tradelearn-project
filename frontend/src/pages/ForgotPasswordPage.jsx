@@ -23,12 +23,30 @@ const ForgotPasswordPage = () => {
             We'll help you get back into your account.
           </p>
 
-          <div className="auth-candles">
-            <div className="auth-candle green" style={{ height: 30, animationDelay: '0s' }} />
-            <div className="auth-candle red"   style={{ height: 18, animationDelay: '.5s' }} />
-            <div className="auth-candle green" style={{ height: 42, animationDelay: '1s' }} />
-            <div className="auth-candle green" style={{ height: 34, animationDelay: '1.5s' }} />
-            <div className="auth-candle red"   style={{ height: 20, animationDelay: '2s' }} />
+          <div className="auth-candles-track">
+            <div className="auth-candles">
+              <div className="auth-candle green" style={{ height: 30 }} />
+              <div className="auth-candle red"   style={{ height: 18 }} />
+              <div className="auth-candle green" style={{ height: 42 }} />
+              <div className="auth-candle green" style={{ height: 34 }} />
+              <div className="auth-candle red"   style={{ height: 20 }} />
+              <div className="auth-candle green" style={{ height: 48 }} />
+              <div className="auth-candle red"   style={{ height: 24 }} />
+              <div className="auth-candle green" style={{ height: 38 }} />
+              <div className="auth-candle green" style={{ height: 28 }} />
+              <div className="auth-candle red"   style={{ height: 16 }} />
+              {/* duplicate for seamless loop */}
+              <div className="auth-candle green" style={{ height: 30 }} />
+              <div className="auth-candle red"   style={{ height: 18 }} />
+              <div className="auth-candle green" style={{ height: 42 }} />
+              <div className="auth-candle green" style={{ height: 34 }} />
+              <div className="auth-candle red"   style={{ height: 20 }} />
+              <div className="auth-candle green" style={{ height: 48 }} />
+              <div className="auth-candle red"   style={{ height: 24 }} />
+              <div className="auth-candle green" style={{ height: 38 }} />
+              <div className="auth-candle green" style={{ height: 28 }} />
+              <div className="auth-candle red"   style={{ height: 16 }} />
+            </div>
           </div>
           <div className="auth-price-line" />
         </div>
