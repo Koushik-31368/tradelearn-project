@@ -1,146 +1,74 @@
 import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import axios from "axios";
-import "./AuthForm.css";
-import "./RegisterPage.css";
-import { backendUrl } from '../utils/api';
-import { useAuth } from '../context/AuthContext';
+import { useNavigate } from "react-router-dom";
 
-export default function RegisterPage() {
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
   const navigate = useNavigate();
-  const { login } = useAuth();
 
-  const handleRegister = async (e) => {
+  const BASE_URL = "https://tradelearn-project-1.onrender.com";
+
+  const register = async (e) => {
     e.preventDefault();
     setError("");
-    setSuccess("");
 
     try {
-      const response = await axios.post(
-        backendUrl('/api/auth/register'),
-        {
-          email,
-          username,
-          password,
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      const response = await fetch(`${BASE_URL}/api/auth/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, username, password }),
+      });
 
-      // Auto-login: response now includes { token, id, username, email, rating }
-      login(response.data);
-      setSuccess("Registration successful! Redirecting…");
-      setTimeout(() => navigate("/multiplayer"), 1000);
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.error || "Registration failed.");
+        return;
+      }
+
+      localStorage.setItem("token", data.token);
+      navigate("/dashboard");
 
     } catch (err) {
-      setError(
-        err.response?.data || "Registration failed. Server might be sleeping."
-      );
+      setError("Network error. Please try again.");
     }
   };
 
   return (
-    <div className="auth-page">
-      {/* ── branded left panel ── */}
-      <div className="auth-brand">
-        <div className="auth-brand-inner">
-          <div className="auth-brand-logo">Trade<span>Learn</span></div>
-          <p className="auth-brand-tagline">
-            Zero-risk trading. Real strategies. Multiplayer competition.
-          </p>
+    <div className="register-page">
+      <h2>Register</h2>
 
-          <div className="auth-candles-track">
-            <div className="auth-candles">
-              <div className="auth-candle green" style={{ height: 24 }} />
-              <div className="auth-candle green" style={{ height: 38 }} />
-              <div className="auth-candle red"   style={{ height: 20 }} />
-              <div className="auth-candle green" style={{ height: 50 }} />
-              <div className="auth-candle red"   style={{ height: 16 }} />
-              <div className="auth-candle green" style={{ height: 56 }} />
-              <div className="auth-candle green" style={{ height: 32 }} />
-              <div className="auth-candle red"   style={{ height: 22 }} />
-              <div className="auth-candle green" style={{ height: 44 }} />
-              <div className="auth-candle green" style={{ height: 28 }} />
-              <div className="auth-candle red"   style={{ height: 18 }} />
-              <div className="auth-candle green" style={{ height: 48 }} />
-              {/* duplicate for seamless loop */}
-              <div className="auth-candle green" style={{ height: 24 }} />
-              <div className="auth-candle green" style={{ height: 38 }} />
-              <div className="auth-candle red"   style={{ height: 20 }} />
-              <div className="auth-candle green" style={{ height: 50 }} />
-              <div className="auth-candle red"   style={{ height: 16 }} />
-              <div className="auth-candle green" style={{ height: 56 }} />
-              <div className="auth-candle green" style={{ height: 32 }} />
-              <div className="auth-candle red"   style={{ height: 22 }} />
-              <div className="auth-candle green" style={{ height: 44 }} />
-              <div className="auth-candle green" style={{ height: 28 }} />
-              <div className="auth-candle red"   style={{ height: 18 }} />
-              <div className="auth-candle green" style={{ height: 48 }} />
-            </div>
-          </div>
-          <div className="auth-price-line" />
-        </div>
-      </div>
+      {error && (
+        <p style={{ color: "red", marginBottom: "10px" }}>
+          {error}
+        </p>
+      )}
 
-      {/* ── form panel ── */}
-      <div className="auth-form-panel">
-        <div className="auth-card">
-          <h2>Create Account</h2>
-          <p className="auth-subtitle">Join thousands of aspiring traders</p>
-
-          <form onSubmit={handleRegister}>
-            <div className="auth-field">
-              <span className="field-icon">✉</span>
-              <input
-                type="email"
-                placeholder="Email address"
-                value={email}
-                required
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </div>
-
-            <div className="auth-field">
-              <span className="field-icon">👤</span>
-              <input
-                type="text"
-                placeholder="Username"
-                value={username}
-                required
-                onChange={(e) => setUsername(e.target.value)}
-              />
-            </div>
-
-            <div className="auth-field">
-              <span className="field-icon">🔒</span>
-              <input
-                type="password"
-                placeholder="Password"
-                value={password}
-                required
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
-
-            <button type="submit" className="auth-btn">Create Account</button>
-          </form>
-
-          {error && <p className="auth-msg error">{error}</p>}
-          {success && <p className="auth-msg success">{success}</p>}
-
-          <p className="auth-footer">
-            Already have an account? <Link to="/login">Sign in</Link>
-          </p>
-        </div>
-      </div>
+      <form onSubmit={register}>
+        <input
+          type="email"
+          placeholder="Email"
+          value={email}
+          onChange={e => setEmail(e.target.value)}
+          required
+        />
+        <input
+          type="text"
+          placeholder="Username"
+          value={username}
+          onChange={e => setUsername(e.target.value)}
+          required
+        />
+        <input
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={e => setPassword(e.target.value)}
+          required
+        />
+        <button type="submit">Register</button>
+      </form>
     </div>
   );
 }
