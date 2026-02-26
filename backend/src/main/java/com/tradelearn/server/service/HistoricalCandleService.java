@@ -1,15 +1,17 @@
 package com.tradelearn.server.service;
 
-import com.tradelearn.server.model.Candle;
-import org.springframework.stereotype.Service;
-
-import javax.annotation.PostConstruct;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+
+import org.springframework.stereotype.Service;
+
+import com.tradelearn.server.model.Candle;
+
+import jakarta.annotation.PostConstruct;
 
 @Service
 public class HistoricalCandleService {
