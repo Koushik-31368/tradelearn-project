@@ -73,6 +73,29 @@ public class GameBroadcaster {
     }
 
     /**
+     * Send a user-targeted event (e.g., match-found notification).
+     * Routes through Redis relay for horizontal scaling.
+     *
+     * @param userId    The target user ID
+     * @param eventType The event type (e.g., "match-found")
+     * @param payload   The data to send
+     */
+    public void sendToUser(long userId, String eventType, Object payload) {
+        String destination = "/topic/user/" + userId + "/" + eventType;
+
+        // Local delivery
+        messagingTemplate.convertAndSend(destination, payload);
+
+        // Cross-instance delivery via Redis
+        try {
+            redisRelay.broadcast(destination, payload);
+        } catch (Exception e) {
+            log.warn("[Broadcaster] Redis relay failed for user {} event {}: {}",
+                    userId, eventType, e.getMessage());
+        }
+    }
+
+    /**
      * Direct send without Redis relay (for instance-local events).
      */
     public void sendLocal(String destination, Object payload) {

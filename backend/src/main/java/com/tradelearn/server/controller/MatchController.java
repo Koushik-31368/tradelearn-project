@@ -1,15 +1,39 @@
+
+    @PostMapping("/{matchId}/rematch")
+    public ResponseEntity<?> rematch(@PathVariable String matchId) {
+        User user = getAuthenticatedUser();
+        Match newMatch = matchService.requestRematch(matchId, user.getId().toString());
+        if (newMatch == null) {
+            return ResponseEntity.ok("Waiting for opponent...");
+        }
+        // Notify both players via WebSocket (if GameBroadcaster available)
+        Match oldMatch = matchService.getMatch(matchId);
+        try {
+            var gameBroadcasterField = matchService.getClass().getDeclaredField("broadcaster");
+            gameBroadcasterField.setAccessible(true);
+            Object broadcaster = gameBroadcasterField.get(matchService);
+            if (broadcaster != null) {
+                broadcaster.getClass().getMethod("sendToUser", String.class, String.class, Object.class)
+                    .invoke(broadcaster, oldMatch.getPlayer1(), "/queue/rematch", newMatch.getMatchId());
+                broadcaster.getClass().getMethod("sendToUser", String.class, String.class, Object.class)
+                    .invoke(broadcaster, oldMatch.getPlayer2(), "/queue/rematch", newMatch.getMatchId());
+            }
+        } catch (Exception ignored) {}
+        return ResponseEntity.ok(newMatch.getMatchId());
+    }
 package com.tradelearn.server.controller;
 
 import java.util.List;
 import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.tradelearn.server.dto.CreateMatchRequest;
@@ -19,6 +43,7 @@ import com.tradelearn.server.dto.MatchTradeRequest;
 import com.tradelearn.server.model.Game;
 import com.tradelearn.server.model.MatchStats;
 import com.tradelearn.server.model.Trade;
+import com.tradelearn.server.model.User;
 import com.tradelearn.server.repository.MatchStatsRepository;
 import com.tradelearn.server.service.CandleService;
 import com.tradelearn.server.service.MatchService;
@@ -29,6 +54,9 @@ import jakarta.validation.Valid;
 
 /**
  * REST controller for the 1v1 match lifecycle.
+ *
+ * All mutating endpoints extract the authenticated user from the JWT token
+ * via SecurityContextHolder — userId is NEVER accepted from the client.
  *
  * Endpoints:
  *   POST /api/match/create        — Create a new match (WAITING)
@@ -43,9 +71,6 @@ import jakarta.validation.Valid;
  *   GET  /api/match/{id}/trades   — Get all trades in a match
  *   GET  /api/match/{id}/stats    — Get match stats
  *   GET  /api/match/rooms         — Room diagnostics
- *
- * All request bodies validated with Jakarta Validation (@Valid).
- * Exceptions caught by GlobalExceptionHandler → structured JSON errors.
  */
 @RestController
 @RequestMapping("/api/match")
@@ -69,15 +94,31 @@ public class MatchController {
         this.roomManager = roomManager;
     }
 
+    // ==================== HELPER ====================
+
+    /**
+     * Extract the authenticated User from the SecurityContext.
+     * The JwtAuthenticationFilter sets the full User entity as the principal.
+     */
+    private User getAuthenticatedUser() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !(auth.getPrincipal() instanceof User)) {
+            throw new IllegalStateException("Not authenticated");
+        }
+        return (User) auth.getPrincipal();
+    }
+
     // ==================== MATCH LIFECYCLE ====================
 
     /**
      * POST /api/match/create
-     * Create a new 1v1 match (status: WAITING)
+     * Create a new 1v1 match. Creator ID extracted from JWT.
      */
     @PostMapping("/create")
     public ResponseEntity<?> createMatch(@Valid @RequestBody CreateMatchRequest request) {
         try {
+            User creator = getAuthenticatedUser();
+            request.setCreatorId(creator.getId());
             Game game = matchService.createMatch(request);
             return ResponseEntity.ok(game);
         } catch (IllegalArgumentException e) {
@@ -86,16 +127,14 @@ public class MatchController {
     }
 
     /**
-     * POST /api/match/{gameId}/join?userId=123
-     * Join an open match (status: WAITING → ACTIVE)
+     * POST /api/match/{gameId}/join
+     * Join an open match. User ID extracted from JWT — no query param needed.
      */
     @PostMapping("/{gameId}/join")
-    public ResponseEntity<?> joinMatch(
-            @PathVariable long gameId,
-            @RequestParam long userId
-    ) {
+    public ResponseEntity<?> joinMatch(@PathVariable long gameId) {
         try {
-            Game game = matchService.joinMatch(gameId, userId);
+            User joiner = getAuthenticatedUser();
+            Game game = matchService.joinMatch(gameId, joiner.getId());
             return ResponseEntity.ok(game);
         } catch (IllegalArgumentException | IllegalStateException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
@@ -104,13 +143,25 @@ public class MatchController {
 
     /**
      * POST /api/match/{gameId}/start
-     * Explicitly start the match timer
+     * Explicitly start the match timer. Only participants can start.
      */
     @PostMapping("/{gameId}/start")
     public ResponseEntity<?> startMatch(@PathVariable long gameId) {
         try {
-            Game game = matchService.startMatch(gameId);
-            return ResponseEntity.ok(game);
+            User user = getAuthenticatedUser();
+            Game game = matchService.getMatch(gameId).orElse(null);
+            if (game == null) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Game not found"));
+            }
+            boolean isParticipant =
+                (game.getCreator() != null && game.getCreator().getId().equals(user.getId())) ||
+                (game.getOpponent() != null && game.getOpponent().getId().equals(user.getId()));
+            if (!isParticipant) {
+                return ResponseEntity.status(403).body(Map.of("error", "You are not a participant in this match"));
+            }
+
+            Game started = matchService.startMatch(gameId);
+            return ResponseEntity.ok(started);
         } catch (IllegalArgumentException | IllegalStateException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
@@ -118,11 +169,25 @@ public class MatchController {
 
     /**
      * POST /api/match/end
-     * End match, calculate profits, determine winner
+     * End match, calculate profits, determine winner.
+     * Only participants of the match can end it.
      */
     @PostMapping("/end")
     public ResponseEntity<?> endMatch(@RequestBody EndMatchRequest request) {
         try {
+            User user = getAuthenticatedUser();
+            // Verify the user is a participant
+            Game game = matchService.getMatch(request.getGameId()).orElse(null);
+            if (game == null) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Game not found"));
+            }
+            boolean isParticipant = 
+                (game.getCreator() != null && game.getCreator().getId().equals(user.getId())) ||
+                (game.getOpponent() != null && game.getOpponent().getId().equals(user.getId()));
+            if (!isParticipant) {
+                return ResponseEntity.status(403).body(Map.of("error", "You are not a participant in this match"));
+            }
+
             MatchResult result = matchService.endMatch(request.getGameId());
             return ResponseEntity.ok(result);
         } catch (IllegalArgumentException | IllegalStateException e) {
@@ -134,11 +199,13 @@ public class MatchController {
 
     /**
      * POST /api/match/trade
-     * Place a trade within an active match
+     * Place a trade. User ID extracted from JWT — never from request body.
      */
     @PostMapping("/trade")
     public ResponseEntity<?> placeTrade(@Valid @RequestBody MatchTradeRequest request) {
         try {
+            User user = getAuthenticatedUser();
+            request.setUserId(user.getId());
             Trade trade = matchTradeService.placeTrade(request);
             return ResponseEntity.ok(trade);
         } catch (IllegalArgumentException | IllegalStateException e) {
@@ -148,37 +215,21 @@ public class MatchController {
 
     // ==================== QUERIES ====================
 
-    /**
-     * GET /api/match/open
-     * List all matches waiting for an opponent
-     */
     @GetMapping("/open")
     public ResponseEntity<List<Game>> getOpenMatches() {
         return ResponseEntity.ok(matchService.getOpenMatches());
     }
 
-    /**
-     * GET /api/match/active
-     * List all currently active matches
-     */
     @GetMapping("/active")
     public ResponseEntity<List<Game>> getActiveMatches() {
         return ResponseEntity.ok(matchService.getActiveMatches());
     }
 
-    /**
-     * GET /api/match/finished
-     * List all completed matches
-     */
     @GetMapping("/finished")
     public ResponseEntity<List<Game>> getFinishedMatches() {
         return ResponseEntity.ok(matchService.getFinishedMatches());
     }
 
-    /**
-     * GET /api/match/{gameId}
-     * Get a specific match
-     */
     @GetMapping("/{gameId}")
     public ResponseEntity<?> getMatch(@PathVariable long gameId) {
         return matchService.getMatch(gameId)
@@ -187,27 +238,39 @@ public class MatchController {
     }
 
     /**
+     * GET /api/match/user/me
+     * Get all matches for the authenticated user.
+     */
+    @GetMapping("/user/me")
+    public ResponseEntity<List<Game>> getMyMatches() {
+        User user = getAuthenticatedUser();
+        return ResponseEntity.ok(matchService.getUserMatches(user.getId()));
+    }
+
+    /**
      * GET /api/match/user/{userId}
-     * Get all matches for a user (as creator or opponent)
+     * Get all matches for a user (public, for profiles).
      */
     @GetMapping("/user/{userId}")
     public ResponseEntity<List<Game>> getUserMatches(@PathVariable long userId) {
         return ResponseEntity.ok(matchService.getUserMatches(userId));
     }
 
-    /**
-     * GET /api/match/{gameId}/trades
-     * Get all trades in a match
-     */
     @GetMapping("/{gameId}/trades")
     public ResponseEntity<List<Trade>> getGameTrades(@PathVariable long gameId) {
         return ResponseEntity.ok(matchTradeService.getGameTrades(gameId));
     }
 
     /**
-     * GET /api/match/{gameId}/trades/{userId}
-     * Get trades for a specific player in a match
+     * GET /api/match/{gameId}/trades/me
+     * Get trades for the authenticated player in a match.
      */
+    @GetMapping("/{gameId}/trades/me")
+    public ResponseEntity<List<Trade>> getMyTrades(@PathVariable long gameId) {
+        User user = getAuthenticatedUser();
+        return ResponseEntity.ok(matchTradeService.getPlayerGameTrades(gameId, user.getId()));
+    }
+
     @GetMapping("/{gameId}/trades/{userId}")
     public ResponseEntity<List<Trade>> getPlayerTrades(
             @PathVariable long gameId,
@@ -217,20 +280,31 @@ public class MatchController {
     }
 
     /**
-     * GET /api/match/{gameId}/position/{userId}
-     * Get current position for a player in a match
+     * GET /api/match/{gameId}/position/me
+     * Get current position for the authenticated player.
      */
+    @GetMapping("/{gameId}/position/me")
+    public ResponseEntity<?> getMyPosition(@PathVariable long gameId) {
+        User user = getAuthenticatedUser();
+        Game game = matchService.getMatch(gameId).orElse(null);
+        if (game == null) {
+            return ResponseEntity.notFound().build();
+        }
+        MatchTradeService.PlayerPosition position = matchTradeService.getPlayerPosition(
+                gameId, user.getId(), game.getStartingBalance()
+        );
+        return ResponseEntity.ok(position);
+    }
+
     @GetMapping("/{gameId}/position/{userId}")
     public ResponseEntity<?> getPlayerPosition(
             @PathVariable long gameId,
             @PathVariable long userId
     ) {
-        Game game = matchService.getMatch(gameId)
-                .orElse(null);
+        Game game = matchService.getMatch(gameId).orElse(null);
         if (game == null) {
             return ResponseEntity.notFound().build();
         }
-
         MatchTradeService.PlayerPosition position = matchTradeService.getPlayerPosition(
                 gameId, userId, game.getStartingBalance()
         );
@@ -239,10 +313,6 @@ public class MatchController {
 
     // ==================== CANDLE DATA ====================
 
-    /**
-     * GET /api/match/{gameId}/candle
-     * Get the current candle (server-authoritative OHLCV)
-     */
     @GetMapping("/{gameId}/candle")
     public ResponseEntity<?> getCurrentCandle(@PathVariable long gameId) {
         try {
@@ -253,10 +323,6 @@ public class MatchController {
         }
     }
 
-    /**
-     * POST /api/match/{gameId}/candle/advance
-     * Advance to the next candle (next trading round)
-     */
     @PostMapping("/{gameId}/candle/advance")
     public ResponseEntity<?> advanceCandle(@PathVariable long gameId) {
         try {
@@ -273,10 +339,6 @@ public class MatchController {
         }
     }
 
-    /**
-     * GET /api/match/{gameId}/candle/price
-     * Get current server-authoritative price
-     */
     @GetMapping("/{gameId}/candle/price")
     public ResponseEntity<?> getCurrentPrice(@PathVariable long gameId) {
         try {
@@ -287,10 +349,6 @@ public class MatchController {
         }
     }
 
-    /**
-     * GET /api/match/{gameId}/candle/remaining
-     * Get how many candles are left
-     */
     @GetMapping("/{gameId}/candle/remaining")
     public ResponseEntity<?> getRemainingCandles(@PathVariable long gameId) {
         try {
@@ -305,10 +363,6 @@ public class MatchController {
 
     // ==================== STATS ====================
 
-    /**
-     * GET /api/match/{gameId}/stats
-     * Get risk/performance stats for all players in a finished game.
-     */
     @GetMapping("/{gameId}/stats")
     public ResponseEntity<?> getMatchStats(@PathVariable long gameId) {
         List<MatchStats> stats = matchStatsRepository.findByGameId(gameId);
@@ -318,10 +372,6 @@ public class MatchController {
         return ResponseEntity.ok(stats);
     }
 
-    /**
-     * GET /api/match/{gameId}/stats/{userId}
-     * Get risk/performance stats for a specific player in a finished game.
-     */
     @GetMapping("/{gameId}/stats/{userId}")
     public ResponseEntity<?> getPlayerStats(@PathVariable long gameId,
                                             @PathVariable long userId) {
@@ -332,11 +382,6 @@ public class MatchController {
 
     // ==================== ROOM DIAGNOSTICS ====================
 
-    /**
-     * GET /api/match/rooms
-     * Returns snapshots of all in-memory rooms from RoomManager.
-     * Useful for debugging active games in production.
-     */
     @GetMapping("/rooms")
     public ResponseEntity<?> getRoomSnapshots() {
         return ResponseEntity.ok(Map.of(
@@ -347,16 +392,12 @@ public class MatchController {
         ));
     }
 
-    /**
-     * GET /api/match/rooms/{gameId}
-     * Returns snapshot of a single room.
-     */
     @GetMapping("/rooms/{gameId}")
     public ResponseEntity<?> getRoomSnapshot(@PathVariable long gameId) {
-        RoomManager.Room room = roomManager.getRoom(gameId);
-        if (room == null) {
+        Map<String, Object> snapshot = roomManager.getRoomSnapshot(gameId);
+        if (snapshot == null) {
             return ResponseEntity.ok(Map.of("message", "No active room for game " + gameId));
         }
-        return ResponseEntity.ok(room.snapshot());
+        return ResponseEntity.ok(snapshot);
     }
 }

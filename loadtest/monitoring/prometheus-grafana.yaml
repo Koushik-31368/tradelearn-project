@@ -1,0 +1,411 @@
+---
+# ============================================================================
+# TradeLearn — Prometheus Monitoring Stack for Load Testing
+# Captures: p95 latency, queue depth, GC pauses, CPU, Redis RTT,
+#           PositionSnapshotStore metrics, thread pool utilization
+# ============================================================================
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+  namespace: loadtest
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 5s       # High-frequency during load test
+      evaluation_interval: 5s
+
+    scrape_configs:
+      # ── Spring Boot Actuator (all pods) ──
+      - job_name: tradelearn-backend
+        kubernetes_sd_configs:
+          - role: pod
+            namespaces:
+              names: [loadtest]
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_pod_label_app]
+            regex: tradelearn-backend
+            action: keep
+          - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_port]
+            target_label: __address__
+            regex: (.+)
+            replacement: ${1}
+            action: replace
+          - source_labels: [__meta_kubernetes_pod_ip]
+            target_label: __address__
+            replacement: $1:8080
+          - target_label: __metrics_path__
+            replacement: /actuator/prometheus
+          - source_labels: [__meta_kubernetes_pod_name]
+            target_label: pod
+
+      # ── Redis Exporter ──
+      - job_name: redis
+        static_configs:
+          - targets: ["redis-exporter:9121"]
+
+      # ── Node Exporter (K8s nodes) ──
+      - job_name: node
+        kubernetes_sd_configs:
+          - role: node
+        relabel_configs:
+          - target_label: __address__
+            replacement: ${1}:9100
+            source_labels: [__meta_kubernetes_node_address_InternalIP]
+
+      # ── kube-state-metrics ──
+      - job_name: kube-state-metrics
+        static_configs:
+          - targets: ["kube-state-metrics:8080"]
+
+    rule_files:
+      - /etc/prometheus/rules/*.yml
+
+  # ── Alerting Rules for Load Test Failure Detection ──
+  tradelearn-alerts.yml: |
+    groups:
+      - name: tradelearn_loadtest
+        interval: 10s
+        rules:
+          # ── P95 Trade Latency Breach ──
+          - alert: TradeLatencyP95High
+            expr: |
+              histogram_quantile(0.95,
+                rate(http_server_requests_seconds_bucket{uri="/api/match/trade"}[1m])
+              ) > 0.2
+            for: 1m
+            labels:
+              severity: critical
+            annotations:
+              summary: "Trade p95 latency > 200ms ({{ $value | humanizeDuration }})"
+
+          # ── Trade Error Rate ──
+          - alert: TradeErrorRateHigh
+            expr: |
+              sum(rate(http_server_requests_seconds_count{uri="/api/match/trade",status=~"5.."}[1m]))
+              /
+              sum(rate(http_server_requests_seconds_count{uri="/api/match/trade"}[1m]))
+              > 0.05
+            for: 30s
+            labels:
+              severity: critical
+            annotations:
+              summary: "Trade 5xx error rate > 5% ({{ $value | humanizePercentage }})"
+
+          # ── WebSocket Session Drops ──
+          - alert: WebSocketSessionDrop
+            expr: |
+              delta(spring_websocket_sessions_active[5m]) < -100
+            for: 1m
+            labels:
+              severity: warning
+            annotations:
+              summary: "Lost {{ $value }} WebSocket sessions in 5 minutes"
+
+          # ── HikariCP Pool Exhaustion ──
+          - alert: DBPoolExhausted
+            expr: |
+              hikaricp_connections_pending{pool="HikariPool-1"} > 10
+            for: 30s
+            labels:
+              severity: critical
+            annotations:
+              summary: "{{ $value }} pending DB connections — pool exhausted"
+
+          # ── PositionSnapshotStore Near Capacity ──
+          - alert: SnapshotStoreNearFull
+            expr: |
+              tradelearn_position_snapshot_count / 20000 > 0.85
+            for: 1m
+            labels:
+              severity: warning
+            annotations:
+              summary: "PositionSnapshotStore at {{ $value | humanizePercentage }}"
+
+          # ── GC Pause > 200ms ──
+          - alert: GCPauseLong
+            expr: |
+              increase(jvm_gc_pause_seconds_sum[1m]) > 1.0
+            for: 30s
+            labels:
+              severity: warning
+            annotations:
+              summary: "Total GC pause time > 1s/min ({{ $value }}s)"
+
+          # ── Heap > 85% ──
+          - alert: HeapPressureHigh
+            expr: |
+              jvm_memory_used_bytes{area="heap"}
+              / jvm_memory_max_bytes{area="heap"}
+              > 0.85
+            for: 1m
+            labels:
+              severity: critical
+            annotations:
+              summary: "JVM heap at {{ $value | humanizePercentage }}"
+
+          # ── Redis Latency Spike ──
+          - alert: RedisLatencyHigh
+            expr: |
+              redis_commands_duration_seconds_total
+              / redis_commands_processed_total
+              > 0.005
+            for: 1m
+            labels:
+              severity: warning
+            annotations:
+              summary: "Redis avg command latency > 5ms"
+
+          # ── Tomcat Thread Pool Exhaustion ──
+          - alert: TomcatThreadsExhausted
+            expr: |
+              tomcat_threads_busy_threads
+              / tomcat_threads_config_max_threads
+              > 0.90
+            for: 30s
+            labels:
+              severity: critical
+            annotations:
+              summary: "Tomcat threads {{ $value | humanizePercentage }} utilized"
+
+---
+# ============================================================================
+# Grafana Dashboard — TradeLearn Load Test
+# ============================================================================
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards
+  namespace: loadtest
+data:
+  tradelearn-loadtest.json: |
+    {
+      "dashboard": {
+        "title": "TradeLearn Load Test",
+        "uid": "tradelearn-lt",
+        "refresh": "5s",
+        "time": { "from": "now-30m", "to": "now" },
+        "panels": [
+          {
+            "title": "Trade p50 / p95 / p99 Latency",
+            "type": "timeseries",
+            "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 },
+            "targets": [
+              {
+                "expr": "histogram_quantile(0.50, rate(http_server_requests_seconds_bucket{uri=\"/api/match/trade\"}[30s]))",
+                "legendFormat": "p50"
+              },
+              {
+                "expr": "histogram_quantile(0.95, rate(http_server_requests_seconds_bucket{uri=\"/api/match/trade\"}[30s]))",
+                "legendFormat": "p95"
+              },
+              {
+                "expr": "histogram_quantile(0.99, rate(http_server_requests_seconds_bucket{uri=\"/api/match/trade\"}[30s]))",
+                "legendFormat": "p99"
+              }
+            ]
+          },
+          {
+            "title": "Trade Throughput (req/s)",
+            "type": "timeseries",
+            "gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 },
+            "targets": [
+              {
+                "expr": "sum(rate(http_server_requests_seconds_count{uri=\"/api/match/trade\"}[30s]))",
+                "legendFormat": "trades/sec"
+              }
+            ]
+          },
+          {
+            "title": "WebSocket Sessions",
+            "type": "stat",
+            "gridPos": { "x": 0, "y": 8, "w": 6, "h": 4 },
+            "targets": [
+              {
+                "expr": "sum(spring_websocket_sessions_active)",
+                "legendFormat": "active"
+              }
+            ]
+          },
+          {
+            "title": "Active Games",
+            "type": "stat",
+            "gridPos": { "x": 6, "y": 8, "w": 6, "h": 4 },
+            "targets": [
+              {
+                "expr": "sum(tradelearn_active_games)",
+                "legendFormat": "games"
+              }
+            ]
+          },
+          {
+            "title": "PositionSnapshotStore Size",
+            "type": "gauge",
+            "gridPos": { "x": 12, "y": 8, "w": 6, "h": 4 },
+            "targets": [
+              {
+                "expr": "tradelearn_position_snapshot_count",
+                "legendFormat": "snapshots"
+              }
+            ],
+            "fieldConfig": {
+              "defaults": {
+                "max": 20000,
+                "thresholds": {
+                  "steps": [
+                    { "color": "green", "value": 0 },
+                    { "color": "yellow", "value": 15000 },
+                    { "color": "red", "value": 18000 }
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "title": "HikariCP Connections",
+            "type": "timeseries",
+            "gridPos": { "x": 18, "y": 8, "w": 6, "h": 4 },
+            "targets": [
+              {
+                "expr": "hikaricp_connections_active{pool=\"HikariPool-1\"}",
+                "legendFormat": "active"
+              },
+              {
+                "expr": "hikaricp_connections_pending{pool=\"HikariPool-1\"}",
+                "legendFormat": "pending"
+              },
+              {
+                "expr": "hikaricp_connections_idle{pool=\"HikariPool-1\"}",
+                "legendFormat": "idle"
+              }
+            ]
+          },
+          {
+            "title": "JVM Heap Usage",
+            "type": "timeseries",
+            "gridPos": { "x": 0, "y": 12, "w": 12, "h": 8 },
+            "targets": [
+              {
+                "expr": "jvm_memory_used_bytes{area=\"heap\"} / 1024 / 1024",
+                "legendFormat": "{{id}} used (MB)"
+              },
+              {
+                "expr": "jvm_memory_max_bytes{area=\"heap\"} / 1024 / 1024",
+                "legendFormat": "max (MB)"
+              }
+            ]
+          },
+          {
+            "title": "GC Pause Duration (per minute)",
+            "type": "timeseries",
+            "gridPos": { "x": 12, "y": 12, "w": 12, "h": 8 },
+            "targets": [
+              {
+                "expr": "rate(jvm_gc_pause_seconds_sum[1m])",
+                "legendFormat": "{{cause}} {{action}}"
+              },
+              {
+                "expr": "rate(jvm_gc_pause_seconds_count[1m])",
+                "legendFormat": "{{cause}} count/s"
+              }
+            ]
+          },
+          {
+            "title": "CPU Usage per Pod",
+            "type": "timeseries",
+            "gridPos": { "x": 0, "y": 20, "w": 12, "h": 8 },
+            "targets": [
+              {
+                "expr": "rate(process_cpu_usage[1m])",
+                "legendFormat": "{{pod}}"
+              },
+              {
+                "expr": "system_cpu_usage",
+                "legendFormat": "system"
+              }
+            ]
+          },
+          {
+            "title": "Redis Command Latency",
+            "type": "timeseries",
+            "gridPos": { "x": 12, "y": 20, "w": 12, "h": 8 },
+            "targets": [
+              {
+                "expr": "rate(redis_commands_duration_seconds_total[30s]) / rate(redis_commands_processed_total[30s])",
+                "legendFormat": "avg latency"
+              },
+              {
+                "expr": "redis_connected_clients",
+                "legendFormat": "connected clients"
+              }
+            ]
+          },
+          {
+            "title": "Tomcat Thread Pool",
+            "type": "timeseries",
+            "gridPos": { "x": 0, "y": 28, "w": 12, "h": 8 },
+            "targets": [
+              {
+                "expr": "tomcat_threads_busy_threads",
+                "legendFormat": "busy"
+              },
+              {
+                "expr": "tomcat_threads_config_max_threads",
+                "legendFormat": "max"
+              },
+              {
+                "expr": "tomcat_threads_current_threads",
+                "legendFormat": "current"
+              }
+            ]
+          },
+          {
+            "title": "STOMP Inbound Channel Queue",
+            "type": "timeseries",
+            "gridPos": { "x": 12, "y": 28, "w": 12, "h": 8 },
+            "targets": [
+              {
+                "expr": "spring_integration_channel_queue_size{name=~\".*inbound.*\"}",
+                "legendFormat": "inbound queue"
+              },
+              {
+                "expr": "spring_integration_channel_queue_size{name=~\".*outbound.*\"}",
+                "legendFormat": "outbound queue"
+              }
+            ]
+          },
+          {
+            "title": "Trade Processing Pipeline Queue Depth",
+            "type": "timeseries",
+            "gridPos": { "x": 0, "y": 36, "w": 12, "h": 8 },
+            "targets": [
+              {
+                "expr": "tradelearn_trade_pipeline_queue_size",
+                "legendFormat": "pipeline queue"
+              },
+              {
+                "expr": "tradelearn_trade_pipeline_rejected_total",
+                "legendFormat": "rejected (backpressure)"
+              }
+            ]
+          },
+          {
+            "title": "Error Rates by Endpoint",
+            "type": "timeseries",
+            "gridPos": { "x": 12, "y": 36, "w": 12, "h": 8 },
+            "targets": [
+              {
+                "expr": "sum by (uri) (rate(http_server_requests_seconds_count{status=~\"5..\"}[1m]))",
+                "legendFormat": "5xx {{uri}}"
+              },
+              {
+                "expr": "sum by (uri) (rate(http_server_requests_seconds_count{status=~\"4..\"}[1m]))",
+                "legendFormat": "4xx {{uri}}"
+              }
+            ]
+          }
+        ]
+      }
+    }

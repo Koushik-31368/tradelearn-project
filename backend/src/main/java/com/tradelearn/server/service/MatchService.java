@@ -1,9 +1,131 @@
+
+    // In-memory rematch votes store
+    private final ConcurrentHashMap<String, java.util.Set<String>> rematchVotes = new ConcurrentHashMap<>();
+
+    /**
+     * Request a rematch for a finished match. Returns new Match if both players agree, else null.
+     */
+    public Match requestRematch(String matchId, String userId) {
+        Match oldMatch = activeMatches.get(matchId);
+        if (oldMatch == null || !oldMatch.isFinished()) {
+            return null;
+        }
+        rematchVotes.putIfAbsent(matchId, java.util.concurrent.ConcurrentHashMap.newKeySet());
+        java.util.Set<String> votes = rematchVotes.get(matchId);
+        votes.add(userId);
+        if (votes.size() < 2) {
+            return null; // waiting for opponent
+        }
+        // Create new match with same players and mode
+        Match newMatch = new Match();
+        newMatch.setPlayer1(oldMatch.getPlayer1());
+        newMatch.setPlayer2(oldMatch.getPlayer2());
+        newMatch.setMode(oldMatch.getMode());
+        // Optionally: assign new matchId, reset state, etc.
+        activeMatches.put(newMatch.getMatchId(), newMatch);
+        // Cleanup old match and votes
+        activeMatches.remove(matchId);
+        rematchVotes.remove(matchId);
+        return newMatch;
+    }
+
+    // === Lean 1v1 Trade Execution ===
+    @Transactional
+    public void executeTrade(Match match, String userId, String type, int quantity, double currentPrice) {
+        if (match.isFinished()) {
+            return;
+        }
+        var position = match.getPosition(userId);
+        if ("BUY".equalsIgnoreCase(type)) {
+            position.buy(quantity, currentPrice);
+        } else if ("SELL".equalsIgnoreCase(type)) {
+            position.sell(quantity, currentPrice);
+        }
+        // If you persist Match, add: matchRepository.save(match);
+    }
+
+    // === Lean 1v1 Match End Logic ===
+    @Transactional
+    public void endMatch(Match match, double finalPrice) {
+        String winnerId = match.decideWinner(finalPrice);
+        String loserId = winnerId.equals(match.getPlayer1()) ? match.getPlayer2() : match.getPlayer1();
+        match.setWinnerId(winnerId);
+        match.setFinished(true);
+        if (match.getMode() == Match.GameMode.RANKED) {
+            updateRatings(winnerId, loserId);
+        }
+        // If you persist Match, add: matchRepository.save(match);
+    }
+
+    // === Lean Ranked Rating Update ===
+    public void updateRatings(String winnerId, String loserId) {
+        User winner = userRepository.findById(Long.parseLong(winnerId)).orElseThrow();
+        User loser = userRepository.findById(Long.parseLong(loserId)).orElseThrow();
+        winner.setRating(winner.getRating() + 25);
+        loser.setRating(Math.max(0, loser.getRating() - 20));
+        winner.setWins(winner.getWins() + 1);
+        winner.setWinStreak(winner.getWinStreak() + 1);
+        loser.setLosses(loser.getLosses() + 1);
+        loser.setWinStreak(0);
+        userRepository.save(winner);
+        userRepository.save(loser);
+    }
+import com.tradelearn.server.model.Candle;
+import com.tradelearn.server.model.Match;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import java.util.concurrent.ConcurrentHashMap;
+    // === 1v1 Candle Replay Engine (Lean, Isolated) ===
+    @Autowired
+    private HistoricalCandleService historicalCandleService;
+    @Autowired
+    private SimpMessagingTemplate messagingTemplate;
+
+    private final ConcurrentHashMap<String, Match> activeMatches = new ConcurrentHashMap<>();
+
+    public void startMatch(String matchId) {
+        List<Candle> replay = historicalCandleService.getRandomSegment(150);
+        Match match = new Match();
+        match.setMatchId(matchId);
+        match.setCandles(replay);
+        match.setCurrentIndex(0);
+        match.setStartTime(System.currentTimeMillis());
+        activeMatches.put(matchId, match);
+    }
+
+    @Scheduled(fixedRate = 2000)
+    public void updateMatches() {
+        for (Match match : activeMatches.values()) {
+            if (match.getCurrentIndex() >= match.getCandles().size()) {
+                endMatch(match.getMatchId());
+                continue;
+            }
+            Candle candle = match.getCandles().get(match.getCurrentIndex());
+            broadcastCandle(match.getMatchId(), candle);
+            match.setCurrentIndex(match.getCurrentIndex() + 1);
+        }
+    }
+
+    private void broadcastCandle(String matchId, Candle candle) {
+        messagingTemplate.convertAndSend("/topic/match/" + matchId, candle);
+    }
+
+    public void endMatch(String matchId) {
+        activeMatches.remove(matchId);
+        // calculate winner, clear snapshots, etc.
+    }
+
+    public Match getMatch(String matchId) {
+        return activeMatches.get(matchId);
+    }
 package com.tradelearn.server.service;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ThreadLocalRandom;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,6 +162,10 @@ public class MatchService {
     private final MatchStatsRepository matchStatsRepository;
     private final GameBroadcaster broadcaster;
     private final RoomManager roomManager;
+    private final PositionSnapshotStore positionStore;
+    private final TradeRateLimiter rateLimiter;
+    private final GameMetricsService metrics;
+    private final GracefulDegradationManager degradationManager;
 
     public MatchService(GameRepository gameRepository,
                         UserRepository userRepository,
@@ -48,7 +174,11 @@ public class MatchService {
                         MatchSchedulerService matchSchedulerService,
                         MatchStatsRepository matchStatsRepository,
                         GameBroadcaster broadcaster,
-                        RoomManager roomManager) {
+                        RoomManager roomManager,
+                        PositionSnapshotStore positionStore,
+                        TradeRateLimiter rateLimiter,
+                        GameMetricsService metrics,
+                        GracefulDegradationManager degradationManager) {
         this.gameRepository = gameRepository;
         this.userRepository = userRepository;
         this.matchTradeService = matchTradeService;
@@ -57,12 +187,22 @@ public class MatchService {
         this.matchStatsRepository = matchStatsRepository;
         this.broadcaster = broadcaster;
         this.roomManager = roomManager;
+        this.positionStore = positionStore;
+        this.rateLimiter = rateLimiter;
+        this.metrics = metrics;
+        this.degradationManager = degradationManager;
     }
 
     // ==================== CREATE MATCH ====================
 
     @Transactional
     public Game createMatch(CreateMatchRequest request) {
+        // ── DR: block game creation during critical failure ──
+        if (degradationManager.isGameCreationBlocked()) {
+            throw new IllegalStateException(
+                    "Game creation temporarily unavailable — system is recovering");
+        }
+
         User creator = userRepository.findById(request.getCreatorId())
                 .orElseThrow(() -> new IllegalArgumentException("Creator not found"));
 
@@ -78,6 +218,8 @@ public class MatchService {
 
         // Register in-memory room
         roomManager.createRoom(saved.getId(), creator.getId());
+
+        metrics.recordMatchCreated();
 
         GameLogger.logDiagnosticSnapshot(log, "Match Created", Map.of(
             "gameId", saved.getId(),
@@ -107,23 +249,27 @@ public class MatchService {
                     .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
             // ── Fast in-memory guard: check room capacity before hitting DB ──
-            RoomManager.Room room = roomManager.getRoom(gameId);
-            if (room != null && room.isFull()) {
+            if (roomManager.hasRoom(gameId) && roomManager.isRoomFull(gameId)) {
+                int count = roomManager.getPlayerCount(gameId);
                 GameLogger.logGameCannotStart(log, gameId, "Room is full", Map.of(
-                    "currentPlayers", room.getPlayerCount(),
+                    "currentPlayers", count,
                     "maxPlayers", MAX_PLAYERS,
                     "attemptingUserId", userId
                 ));
-                throw new RoomFullException(gameId, room.getPlayerCount(), MAX_PLAYERS);
+                throw new RoomFullException(gameId, count, MAX_PLAYERS);
             }
+
+            boolean roomExists = roomManager.hasRoom(gameId);
+            int roomSize = roomExists ? roomManager.getPlayerCount(gameId) : 0;
+            RoomManager.RoomPhase roomPhase = roomExists ? roomManager.getPhase(gameId) : null;
 
             GameLogger.logDiagnosticSnapshot(log, "Attempting Join", Map.of(
                 "gameId", gameId,
                 "userId", userId,
                 "username", opponent.getUsername(),
-                "roomExists", room != null,
-                "roomSize", room != null ? room.getPlayerCount() : 0,
-                "roomPhase", room != null ? room.getPhase().name() : "NO_ROOM"
+                "roomExists", roomExists,
+                "roomSize", roomSize,
+                "roomPhase", roomPhase != null ? roomPhase.name() : "NO_ROOM"
             ));
 
             // ── Phase 1: Atomic compare-and-swap ──
@@ -174,6 +320,10 @@ public class MatchService {
             candleService.loadCandles(gameId);
             matchSchedulerService.startProgression(gameId);
 
+            // ── Initialize position snapshots for both players (O(1) reads henceforth) ──
+            positionStore.initializePosition(gameId, game.getCreator().getId(), game.getStartingBalance());
+            positionStore.initializePosition(gameId, userId, game.getStartingBalance());
+
             GameLogger.logGameStarted(log, gameId, game.getCreator().getId(), opponent.getId());
 
             // Notify the creator (already on GamePage) that the match has started
@@ -205,6 +355,65 @@ public class MatchService {
         } finally {
             GameLogger.clearContext();
         }
+    }
+
+    // ==================== AUTO MATCH (Matchmaking) ====================
+    // Creates a match with both players already set, status ACTIVE,
+    // and auto-starts (candle load + scheduler + position snapshots).
+    // Called by MatchmakingService after pairing two players.
+
+    /** Stock symbols available for random selection in auto-matches. */
+    private static final String[] RANKED_SYMBOLS = {
+        "TCS", "INFY", "RELIANCE", "HDFCBANK", "ICICIBANK",
+        "WIPRO", "SBIN", "BHARTIARTL", "ITC", "KOTAKBANK",
+        "LT", "AXISBANK", "HINDUNILVR", "MARUTI", "TATASTEEL"
+    };
+
+    @Transactional
+    public Game createAutoMatch(long userId1, long userId2) {
+        User player1 = userRepository.findById(userId1)
+                .orElseThrow(() -> new IllegalArgumentException("Player 1 not found: " + userId1));
+        User player2 = userRepository.findById(userId2)
+                .orElseThrow(() -> new IllegalArgumentException("Player 2 not found: " + userId2));
+
+        // Random stock symbol from the ranked pool
+        String symbol = RANKED_SYMBOLS[ThreadLocalRandom.current().nextInt(RANKED_SYMBOLS.length)];
+
+        Game game = new Game();
+        game.setCreator(player1);
+        game.setOpponent(player2);
+        game.setStockSymbol(symbol);
+        game.setDurationMinutes(5);            // Ranked matches are 5 minutes
+        game.setStartingBalance(1_000_000.0);  // Standard ₹10L
+        game.setStatus("ACTIVE");
+        game.setStartTime(LocalDateTime.now());
+
+        Game saved = gameRepository.save(game);
+        long gameId = saved.getId();
+
+        // Register in-memory room with both players
+        roomManager.createRoom(gameId, player1.getId());
+        roomManager.joinRoom(gameId, player2.getId());
+
+        // Load candles + start scheduler
+        candleService.loadCandles(gameId);
+        matchSchedulerService.startProgression(gameId);
+
+        // Initialize position snapshots for both players
+        positionStore.initializePosition(gameId, player1.getId(), saved.getStartingBalance());
+        positionStore.initializePosition(gameId, player2.getId(), saved.getStartingBalance());
+
+        GameLogger.logDiagnosticSnapshot(log, "Auto-Match Created", Map.of(
+            "gameId", gameId,
+            "player1", player1.getUsername() + " (" + player1.getRating() + ")",
+            "player2", player2.getUsername() + " (" + player2.getRating() + ")",
+            "stockSymbol", symbol,
+            "status", "ACTIVE"
+        ));
+
+        metrics.recordMatchCreated();
+
+        return saved;
     }
 
     // ==================== START MATCH ====================
@@ -251,6 +460,10 @@ public class MatchService {
             // Begin automatic candle progression (every 5 seconds)
             matchSchedulerService.startProgression(gameId);
 
+            // Initialize position snapshots for both players
+            positionStore.initializePosition(gameId, creator.getId(), game.getStartingBalance());
+            positionStore.initializePosition(gameId, opponent.getId(), game.getStartingBalance());
+
             GameLogger.logGameStarted(log, gameId, creator.getId(), opponent.getId());
             GameLogger.logDiagnosticSnapshot(log, "Match Started", Map.of(
                 "gameId", gameId,
@@ -290,21 +503,21 @@ public class MatchService {
         // Stop scheduled candle progression
         matchSchedulerService.stopProgression(gameId);
 
-        // Calculate final positions (includes risk stats from trade replay)
-        MatchTradeService.PlayerPosition creatorPos = matchTradeService.calculatePosition(
+        // Update equity stats with final closing price
+        positionStore.updateMarkPrice(gameId, game.getCreator().getId(), currentStockPrice);
+        positionStore.updateMarkPrice(gameId, game.getOpponent().getId(), currentStockPrice);
+
+        // Get final positions from snapshot store (O(1), falls back to replay)
+        MatchTradeService.PlayerPosition creatorPos = matchTradeService.getPlayerPosition(
                 gameId, game.getCreator().getId(), game.getStartingBalance()
         );
-        MatchTradeService.PlayerPosition opponentPos = matchTradeService.calculatePosition(
+        MatchTradeService.PlayerPosition opponentPos = matchTradeService.getPlayerPosition(
                 gameId, game.getOpponent().getId(), game.getStartingBalance()
         );
 
-        // Final balances: cash + longs×price − shorts×price
-        double creatorBalance = matchTradeService.calculateFinalBalance(
-                gameId, game.getCreator().getId(), game.getStartingBalance(), currentStockPrice
-        );
-        double opponentBalance = matchTradeService.calculateFinalBalance(
-                gameId, game.getOpponent().getId(), game.getStartingBalance(), currentStockPrice
-        );
+        // Final balances: equity at closing price
+        double creatorBalance = PositionSnapshotStore.snapshotEquity(creatorPos, currentStockPrice);
+        double opponentBalance = PositionSnapshotStore.snapshotEquity(opponentPos, currentStockPrice);
 
         // Update peak equity with the actual final equity
         if (creatorBalance > creatorPos.peakEquity) creatorPos.peakEquity = creatorBalance;
@@ -365,6 +578,10 @@ public class MatchService {
 
         // Free candle cache for this game
         candleService.evict(gameId);
+
+        // Evict position snapshots and rate limiter buckets
+        positionStore.evictGame(gameId);
+        rateLimiter.evictGame(gameId);
 
         // Clean up in-memory room state
         roomManager.endGame(gameId, false);

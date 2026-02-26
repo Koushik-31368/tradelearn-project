@@ -5,7 +5,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import SockJS from 'sockjs-client';
 import { Client } from '@stomp/stompjs';
-import { wsBase } from '../utils/api';
+import { wsBase, getToken } from '../utils/api';
 
 /* ──────── public enums ──────── */
 export const SocketState = Object.freeze({
@@ -73,6 +73,12 @@ export default function useGameSocket({ gameId, userId, enabled = true, options 
     const [lastError, setLastError]           = useState(null);
     const [disconnectInfo, setDisconnectInfo] = useState(null);
     const [statusMessage, setStatusMessage]   = useState('');
+
+    /* ── scoreboard (WebSocket-pushed positions for both players) ── */
+    const [scoreboard, setScoreboard] = useState(null);
+
+    /* ── reconnection state (opponent temporarily disconnected) ── */
+    const [reconnecting, setReconnecting] = useState(null);
 
     // ─────────────────────────────────────────────────────────
     // SAFE state setter — only updates if component is mounted
@@ -146,7 +152,13 @@ export default function useGameSocket({ gameId, userId, enabled = true, options 
         safeSet(() => setStatusMessage('Connecting…'));
 
         const client = new Client({
-            webSocketFactory: () => new SockJS(`${wsBase()}/ws`),
+            webSocketFactory: () => {
+                const token = getToken();
+                const wsUrl = token
+                    ? `${wsBase()}/ws?token=${encodeURIComponent(token)}`
+                    : `${wsBase()}/ws`;
+                return new SockJS(wsUrl);
+            },
             reconnectDelay: opts.reconnectDelay,
             heartbeatIncoming: opts.heartbeatIn,
             heartbeatOutgoing: opts.heartbeatOut,
@@ -208,8 +220,7 @@ export default function useGameSocket({ gameId, userId, enabled = true, options 
                 });
 
                 // ── 4. GAME FINISHED ──
-                subscribeTo(client, `/topic/game/${gameId}/finished`, (msg) => {
-                    const data = JSON.parse(msg.body);
+                subscribeTo(client, `/topic/game/${gameId}/finished`, () => {
                     safeSet(() => {
                         setGamePhase(GamePhase.FINISHED);
                         setStatusMessage('Game finished!');
@@ -231,6 +242,37 @@ export default function useGameSocket({ gameId, userId, enabled = true, options 
                         setLastError(data.error || 'Trade error');
                         setStatusMessage(`⚠ ${data.error || 'Trade error'}`);
                     });
+                });
+
+                // ── 7. SCOREBOARD (real-time position updates for both players) ──
+                subscribeTo(client, `/topic/game/${gameId}/scoreboard`, (msg) => {
+                    const data = JSON.parse(msg.body);
+                    safeSet(() => setScoreboard(data));
+                });
+
+                // ── 8. PLAYER RECONNECTING (grace period started) ──
+                subscribeTo(client, `/topic/game/${gameId}/player-reconnecting`, (msg) => {
+                    const data = JSON.parse(msg.body);
+                    safeSet(() => {
+                        setReconnecting(data);
+                        setStatusMessage(
+                            `${data.disconnectedUsername || 'Opponent'} disconnected. Waiting for reconnection...`
+                        );
+                    });
+                });
+
+                // ── 9. PLAYER RECONNECTED (grace period ended, player is back) ──
+                subscribeTo(client, `/topic/game/${gameId}/player-reconnected`, (msg) => {
+                    safeSet(() => {
+                        setReconnecting(null);
+                        setStatusMessage('Opponent reconnected!');
+                    });
+                });
+
+                // ── 10. REJOIN: tell server we're (re)joining this game ──
+                client.publish({
+                    destination: `/app/game/${gameId}/rejoin`,
+                    body: JSON.stringify({ userId }),
                 });
             },
 
@@ -314,6 +356,8 @@ export default function useGameSocket({ gameId, userId, enabled = true, options 
         setLastError(null);
         setDisconnectInfo(null);
         setStatusMessage('');
+        setScoreboard(null);
+        setReconnecting(null);
     }, []);
 
     // ─────────────────────────────────────────────────────────
@@ -344,6 +388,12 @@ export default function useGameSocket({ gameId, userId, enabled = true, options 
         statusMessage,
         lastError,
         disconnectInfo,
+
+        /* scoreboard (real-time position data) */
+        scoreboard,
+
+        /* reconnection */
+        reconnecting,
 
         /* utilities */
         publish,

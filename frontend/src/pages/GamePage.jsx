@@ -3,7 +3,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import './GamePage.css';
 import { useAuth } from '../context/AuthContext';
-import { backendUrl } from '../utils/api';
+import { backendUrl, authHeaders } from '../utils/api';
 import StockChart from '../components/StockChart';
 import LiveScoreboard from '../components/LiveScoreboard';
 import useGameSocket, { GamePhase, SocketState } from '../hooks/useGameSocket';
@@ -46,7 +46,8 @@ const GamePage = () => {
         emitTrade,
         statusMessage,
         lastError: socketError,
-        disconnectInfo,
+        scoreboard,
+        reconnecting,
     } = useGameSocket({
         gameId,
         userId:  user?.id,
@@ -71,9 +72,10 @@ const GamePage = () => {
 
             if (data.status === 'ACTIVE') {
                 try {
+                    const hdrs = authHeaders();
                     const [candleRes, remainRes] = await Promise.all([
-                        fetch(backendUrl(`/api/match/${gameId}/candle`)),
-                        fetch(backendUrl(`/api/match/${gameId}/candle/remaining`)),
+                        fetch(backendUrl(`/api/match/${gameId}/candle`), { headers: hdrs }),
+                        fetch(backendUrl(`/api/match/${gameId}/candle/remaining`), { headers: hdrs }),
                     ]);
                     let c = null, rem = null;
                     if (candleRes.ok) c = await candleRes.json();
@@ -220,6 +222,18 @@ const GamePage = () => {
     const opponentId   = isUserCreator ? game.opponent?.id : game.creator?.id;
     const progressPct  = totalCandles > 0 ? ((candleIndex + 1) / totalCandles) * 100 : 0;
 
+    // ── Extract player-specific scoreboard data from WS push ──
+    const myScoreboard = scoreboard
+        ? (scoreboard.player1?.userId === user.id ? scoreboard.player1
+           : scoreboard.player2?.userId === user.id ? scoreboard.player2
+           : null)
+        : null;
+    const oppScoreboard = scoreboard
+        ? (scoreboard.player1?.userId === opponentId ? scoreboard.player1
+           : scoreboard.player2?.userId === opponentId ? scoreboard.player2
+           : null)
+        : null;
+
     return (
         <div className="game-page-grid">
             {/* ── Header with candle index + progress ── */}
@@ -242,6 +256,14 @@ const GamePage = () => {
                 <div className="candle-progress-bar" style={{ width: `${progressPct}%` }} />
             </div>
 
+            {/* ── Reconnection banner ── */}
+            {reconnecting && (
+                <div className="reconnect-banner">
+                    ⚠️ {reconnecting.disconnectedUsername || 'Opponent'} disconnected.
+                    Waiting for reconnection…
+                </div>
+            )}
+
             {/* ── Player dashboard (you) ── */}
             <aside className="player-dashboard player1">
                 <LiveScoreboard
@@ -252,6 +274,7 @@ const GamePage = () => {
                     label={`You — ${myName}`}
                     accent="green"
                     gameOver={gameOver}
+                    positionData={myScoreboard}
                 />
             </aside>
 
@@ -307,6 +330,7 @@ const GamePage = () => {
                     label={`Opponent — ${oppName}`}
                     accent="red"
                     gameOver={gameOver}
+                    positionData={oppScoreboard}
                 />
             </aside>
 

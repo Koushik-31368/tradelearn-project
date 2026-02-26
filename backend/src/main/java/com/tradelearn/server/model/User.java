@@ -25,8 +25,18 @@ public class User {
     @Column(nullable = false)
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
+
     @Column(columnDefinition = "INT DEFAULT 1000")
     private int rating = 1000;
+
+    @Column(columnDefinition = "INT DEFAULT 0")
+    private int wins = 0;
+
+    @Column(columnDefinition = "INT DEFAULT 0")
+    private int losses = 0;
+
+    @Column(columnDefinition = "INT DEFAULT 0")
+    private int winStreak = 0;
 
     @Column(name = "created_at", updatable = false)
     private Timestamp createdAt;
@@ -47,8 +57,15 @@ public class User {
     public void setEmail(String email) { this.email = email; }
     public String getPassword() { return password; }
     public void setPassword(String password) { this.password = password; }
+
     public int getRating() { return rating; }
     public void setRating(int rating) { this.rating = rating; }
+    public int getWins() { return wins; }
+    public void setWins(int wins) { this.wins = wins; }
+    public int getLosses() { return losses; }
+    public void setLosses(int losses) { this.losses = losses; }
+    public int getWinStreak() { return winStreak; }
+    public void setWinStreak(int winStreak) { this.winStreak = winStreak; }
 
     public Timestamp getCreatedAt() { return createdAt; }
     public void setCreatedAt(Timestamp createdAt) { this.createdAt = createdAt; }

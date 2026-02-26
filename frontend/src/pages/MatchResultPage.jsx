@@ -1,8 +1,9 @@
 // src/pages/MatchResultPage.jsx
 import React, { useState, useEffect, useCallback } from 'react';
+import useGameSocket from '../hooks/useGameSocket';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { backendUrl } from '../utils/api';
+import { backendUrl, authHeaders } from '../utils/api';
 import './MatchResultPage.css';
 
 const MatchResultPage = () => {
@@ -15,14 +16,79 @@ const MatchResultPage = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [revealed, setRevealed] = useState(false);
+    // Rematch UX
+    const [waiting, setWaiting] = useState(false);
+    const [countdown, setCountdown] = useState(null);
+    const [pendingMatchId, setPendingMatchId] = useState(null);
+
+    // WebSocket hook
+    const socket = useGameSocket({
+        gameId,
+        userId: user?.id,
+        enabled: !!user && !!gameId,
+    });
+    // Rematch event subscription
+    useEffect(() => {
+        if (!socket.isConnected) return;
+        // Subscribe only once per mount
+        const handler = (msg) => {
+            const newMatchId = msg.body || (msg && msg.body);
+            setPendingMatchId(newMatchId);
+            setCountdown(3);
+        };
+        // Subscribe to rematch event
+        const sub = socket.publish ? socket.publish : null;
+        let subscription;
+        if (socket.clientRef && socket.clientRef.current) {
+            subscription = socket.clientRef.current.subscribe(
+                `/user/queue/rematch`, handler
+            );
+        }
+        return () => {
+            if (subscription) subscription.unsubscribe();
+        };
+    }, [socket.isConnected]);
+
+    // Countdown before redirect
+    useEffect(() => {
+        if (countdown === null || pendingMatchId === null) return;
+        if (countdown === 0) {
+            navigate(`/match/${pendingMatchId}`);
+            setCountdown(null);
+            setPendingMatchId(null);
+            setWaiting(false);
+            return;
+        }
+        const timer = setTimeout(() => {
+            setCountdown((c) => c - 1);
+        }, 1000);
+        return () => clearTimeout(timer);
+    }, [countdown, pendingMatchId, navigate]);
+
+    // Rematch request
+    const requestRematch = async () => {
+        try {
+            setWaiting(true);
+            const res = await fetch(backendUrl(`/api/match/${gameId}/rematch`), {
+                method: 'POST',
+                credentials: 'include',
+                headers: authHeaders(),
+            });
+            if (!res.ok) throw new Error('Rematch failed');
+        } catch (err) {
+            setWaiting(false);
+            alert('Something went wrong. Try again.');
+        }
+    };
 
     // ── Fetch game + stats in parallel ──
     const fetchData = useCallback(async () => {
         setLoading(true);
         try {
+            const hdrs = authHeaders();
             const [gameRes, statsRes] = await Promise.all([
                 fetch(backendUrl(`/api/match/${gameId}`)),
-                fetch(backendUrl(`/api/match/${gameId}/stats`)),
+                fetch(backendUrl(`/api/match/${gameId}/stats`), { headers: hdrs }),
             ]);
 
             if (!gameRes.ok) throw new Error('Failed to load match');
@@ -139,12 +205,16 @@ const MatchResultPage = () => {
 
             {/* ── Actions ── */}
             <div className={`mr-actions ${revealed ? 'mr-revealed' : ''}`}>
-                <button className="mr-btn mr-btn-primary" onClick={() => navigate('/multiplayer')}>
-                    Back to Lobby
+                <button className="mr-btn mr-btn-primary" onClick={requestRematch} disabled={waiting || countdown !== null}>
+                    🔄 Rematch
                 </button>
-                <button className="mr-btn mr-btn-ghost" onClick={() => navigate('/')}>
+                <button className="mr-btn mr-btn-ghost" onClick={() => navigate('/')} disabled={countdown !== null}>
                     Home
                 </button>
+                {waiting && countdown === null && <p>Waiting for opponent...</p>}
+                {countdown !== null && (
+                    <p>Rematch starting in {countdown}...</p>
+                )}
             </div>
         </div>
     );

@@ -1,20 +1,19 @@
 // src/components/CreateGameForm.jsx
 import React, { useState } from 'react';
 import './CreateGameForm.css';
-import { useAuth } from '../context/AuthContext'; // 1. Import useAuth
-import { backendUrl } from '../utils/api';
+import { useAuth } from '../context/AuthContext';
+import { backendUrl, jsonAuthHeaders } from '../utils/api';
 
 const CreateGameForm = ({ onCreate, onCancel }) => {
   const [stockSymbol, setStockSymbol] = useState('');
   const [duration, setDuration] = useState(2);
   const [error, setError] = useState('');
-  const { user } = useAuth(); // 2. Get the logged-in user's data
+  const { user } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
-    // 3. Check if user is logged in
     if (!user) {
       setError("You must be logged in to create a game.");
       return;
@@ -23,12 +22,12 @@ const CreateGameForm = ({ onCreate, onCancel }) => {
     try {
       const response = await fetch(backendUrl('/api/match/create'), {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: jsonAuthHeaders(),
         body: JSON.stringify({
           stockSymbol: stockSymbol,
           durationMinutes: duration,
-          creatorId: user.id,
           startingBalance: 1000000
+          // creatorId is no longer sent — extracted from JWT server-side
         })
       });
 

@@ -5,8 +5,6 @@ import com.tradelearn.server.validation.ValidStockSymbol;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
 
 /**
  * Request DTO for creating a new 1v1 match.
@@ -17,8 +15,10 @@ import jakarta.validation.constraints.Positive;
  */
 public class CreateMatchRequest {
 
-    @NotNull(message = "Creator ID is required")
-    @Positive(message = "Creator ID must be positive")
+    /**
+     * Creator ID — set server-side from JWT token.
+     * Not required in request body (ignored if sent by client).
+     */
     private Long creatorId;
 
     @NotBlank(message = "Stock symbol is required")

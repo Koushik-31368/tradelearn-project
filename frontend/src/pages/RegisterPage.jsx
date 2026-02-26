@@ -4,6 +4,7 @@ import axios from "axios";
 import "./AuthForm.css";
 import "./RegisterPage.css";
 import { backendUrl } from '../utils/api';
+import { useAuth } from '../context/AuthContext';
 
 export default function RegisterPage() {
   const [email, setEmail] = useState("");
@@ -12,6 +13,7 @@ export default function RegisterPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleRegister = async (e) => {
     e.preventDefault();
@@ -19,7 +21,7 @@ export default function RegisterPage() {
     setSuccess("");
 
     try {
-      await axios.post(
+      const response = await axios.post(
         backendUrl('/api/auth/register'),
         {
           email,
@@ -33,8 +35,10 @@ export default function RegisterPage() {
         }
       );
 
-      setSuccess("Registration successful! Redirecting to login…");
-      setTimeout(() => navigate("/login"), 1500);
+      // Auto-login: response now includes { token, id, username, email, rating }
+      login(response.data);
+      setSuccess("Registration successful! Redirecting…");
+      setTimeout(() => navigate("/multiplayer"), 1000);
 
     } catch (err) {
       setError(
