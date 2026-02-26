@@ -33,40 +33,48 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody User user) {
         try {
-            if (user.getEmail() == null || user.getUsername() == null || user.getPassword() == null) {
-                return ResponseEntity.badRequest().body(Map.of("error", "Email, username, and password are required"));
+            if (user.getEmail() == null ||
+                user.getUsername() == null ||
+                user.getPassword() == null) {
+                return ResponseEntity.badRequest()
+                        .body(Map.of("error", "All fields are required"));
             }
 
-            // Password strength validation
-            String passwordError = validatePassword(user.getPassword());
-            if (passwordError != null) {
-                return ResponseEntity.badRequest().body(Map.of("error", passwordError));
+            // Only gmail allowed
+            if (!user.getEmail().endsWith("@gmail.com")) {
+                return ResponseEntity.badRequest()
+                        .body(Map.of("error", "Email must end with @gmail.com"));
             }
 
             if (userRepository.existsByEmail(user.getEmail())) {
-                return ResponseEntity.badRequest().body(Map.of("error", "Email already exists"));
+                return ResponseEntity.badRequest()
+                        .body(Map.of("error", "Email already exists"));
             }
 
             if (userRepository.existsByUsername(user.getUsername())) {
-                return ResponseEntity.badRequest().body(Map.of("error", "Username already taken"));
+                return ResponseEntity.badRequest()
+                        .body(Map.of("error", "Username already taken"));
             }
 
             user.setPassword(passwordEncoder.encode(user.getPassword()));
             User saved = userRepository.save(user);
 
-            // Auto-login: return token on registration too
-            String token = jwtUtil.generateToken(saved.getId(), saved.getEmail(), saved.getUsername());
+            String token = jwtUtil.generateToken(
+                    saved.getId(),
+                    saved.getEmail(),
+                    saved.getUsername()
+            );
 
-            Map<String, Object> response = new LinkedHashMap<>();
-            response.put("token", token);
-            response.put("id", saved.getId());
-            response.put("username", saved.getUsername());
-            response.put("email", saved.getEmail());
-            response.put("rating", saved.getRating());
-
-            return ResponseEntity.ok(response);
+            return ResponseEntity.ok(Map.of(
+                    "token", token,
+                    "id", saved.getId(),
+                    "username", saved.getUsername(),
+                    "email", saved.getEmail(),
+                    "rating", saved.getRating()
+            ));
         } catch (Exception e) {
-            return ResponseEntity.internalServerError().body(Map.of("error", "Registration failed: " + e.getMessage()));
+            return ResponseEntity.internalServerError()
+                    .body(Map.of("error", "Registration failed"));
         }
     }
 
@@ -135,19 +143,5 @@ public class AuthController {
      * Validates password strength.
      * Requirements: min 8 chars, at least one uppercase, one lowercase, one digit.
      */
-    private String validatePassword(String password) {
-        if (password.length() < 8) {
-            return "Password must be at least 8 characters long";
-        }
-        if (!password.matches(".*[A-Z].*")) {
-            return "Password must contain at least one uppercase letter";
-        }
-        if (!password.matches(".*[a-z].*")) {
-            return "Password must contain at least one lowercase letter";
-        }
-        if (!password.matches(".*\\d.*")) {
-            return "Password must contain at least one digit";
-        }
-        return null;
-    }
+    // Password validation removed: any password allowed, only email must end with @gmail.com
 }
