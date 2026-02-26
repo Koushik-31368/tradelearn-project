@@ -8,6 +8,7 @@ import java.util.concurrent.ThreadLocalRandom;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -68,7 +69,7 @@ public class MatchService {
 
     public MatchService(GameRepository gameRepository,
                         UserRepository userRepository,
-                        MatchTradeService matchTradeService,
+                        @Lazy MatchTradeService matchTradeService,
                         CandleService candleService,
                         MatchSchedulerService matchSchedulerService,
                         MatchStatsRepository matchStatsRepository,
