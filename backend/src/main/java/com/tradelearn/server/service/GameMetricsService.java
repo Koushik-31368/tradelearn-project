@@ -44,9 +44,8 @@ public class GameMetricsService {
 
     // ===================== CONSTRUCTION =====================
 
-    public GameMetricsService(MeterRegistry registry,
-                              RoomManager roomManager,
-                              MatchmakingService matchmakingService) {
+        public GameMetricsService(MeterRegistry registry,
+                                                          RoomManager roomManager) {
 
         // ── Counters ──
 
@@ -93,9 +92,7 @@ public class GameMetricsService {
         // ── Gauges (polled lazily — no explicit update needed) ──
 
         registry.gauge("active.games", roomManager, RoomManager::activeRoomCount);
-
-        registry.gauge("matchmaking.queue.size", matchmakingService, MatchmakingService::queueSize);
-    }
+        }
 
     // ===================== RECORDING API =====================
 
