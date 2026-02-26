@@ -60,7 +60,7 @@ import jakarta.annotation.PreDestroy;
  * Designed for 10,000+ concurrent users.
  */
 @Service
-public class MatchmakingService {
+public class MatchmakingService implements QueueSizeProvider {
 
     private static final Logger log = LoggerFactory.getLogger(MatchmakingService.class);
 
@@ -155,6 +155,7 @@ public class MatchmakingService {
     /**
      * Get the current queue size.
      */
+    @Override
     public int queueSize() {
         return ticketIndex.size();
     }
