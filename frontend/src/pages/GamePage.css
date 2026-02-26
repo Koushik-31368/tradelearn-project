@@ -23,6 +23,24 @@
 .player-dashboard.player2 { grid-area: player2; }
 .trade-panel { grid-area: trade; }
 
+/* ── Reconnection banner ── */
+.reconnect-banner {
+  grid-column: 1 / -1;
+  background: linear-gradient(90deg, #f59e0b22, #f59e0b11);
+  border: 1px solid #f59e0b44;
+  border-radius: 8px;
+  padding: 10px 16px;
+  text-align: center;
+  color: #fbbf24;
+  font-weight: 600;
+  font-size: 0.9rem;
+  animation: pulse-reconnect 2s ease-in-out infinite;
+}
+@keyframes pulse-reconnect {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.7; }
+}
+
 /* ── Header ── */
 .game-header h2 {
   margin: 0;

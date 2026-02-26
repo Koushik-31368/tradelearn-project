@@ -1,19 +1,23 @@
 // src/components/LiveScoreboard.jsx
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { backendUrl } from '../utils/api';
+import { backendUrl, authHeaders } from '../utils/api';
 import './LiveScoreboard.css';
 
 /**
- * Esports-style live scoreboard that polls the position endpoint every 3 s.
+ * Esports-style live scoreboard.
+ *
+ * Primary: receives real-time position data via WebSocket (positionData prop).
+ * Fallback: polls the REST endpoint every 3s if no WS data is available.
  *
  * Props:
- *   gameId        – match id
- *   userId        – player to track
- *   currentPrice  – latest candle close (for live equity calc)
+ *   gameId          – match id
+ *   userId          – player to track
+ *   currentPrice    – latest candle close (for live equity calc)
  *   startingBalance – to compute P&L %
- *   label         – display name ("You" / opponent name)
- *   accent        – "green" | "red" (side colour)
- *   gameOver      – stops polling when true
+ *   label           – display name ("You" / opponent name)
+ *   accent          – "green" | "red" (side colour)
+ *   gameOver        – stops polling when true
+ *   positionData    – (optional) real-time position from WebSocket scoreboard
  */
 const LiveScoreboard = ({
     gameId,
@@ -23,27 +27,34 @@ const LiveScoreboard = ({
     label = 'Player',
     accent = 'green',
     gameOver = false,
+    positionData = null,
 }) => {
     const [pos, setPos] = useState(null);
     const intervalRef = useRef(null);
+    const hasWsData = !!positionData;
+
+    // Use WebSocket data when available
+    useEffect(() => {
+        if (positionData) setPos(positionData);
+    }, [positionData]);
 
     const fetchPosition = useCallback(async () => {
         if (!gameId || !userId) return;
         try {
-            const res = await fetch(backendUrl(`/api/match/${gameId}/position/${userId}`));
+            const res = await fetch(backendUrl(`/api/match/${gameId}/position/${userId}`), { headers: authHeaders() });
             if (res.ok) setPos(await res.json());
         } catch {
             /* silent — will retry in 3 s */
         }
     }, [gameId, userId]);
 
-    // Initial fetch + 3-second polling
+    // Poll REST only when no WebSocket data is available
     useEffect(() => {
-        if (gameOver) return;
+        if (gameOver || hasWsData) return;
         fetchPosition();
         intervalRef.current = setInterval(fetchPosition, 3000);
         return () => clearInterval(intervalRef.current);
-    }, [fetchPosition, gameOver]);
+    }, [fetchPosition, gameOver, hasWsData]);
 
     // Stop polling on game over
     useEffect(() => {

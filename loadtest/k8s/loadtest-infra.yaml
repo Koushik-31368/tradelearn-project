@@ -1,0 +1,500 @@
+---
+# ============================================================================
+# TradeLearn — Kubernetes Load Test Infrastructure
+# ============================================================================
+# Deploys:
+#   1. tradelearn-backend (3 replicas, tuned for load test)
+#   2. PostgreSQL (single instance, load-test sized)
+#   3. Redis (single instance + exporter)
+#   4. k6 operator job
+#   5. Prometheus + Grafana stack
+# ============================================================================
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: loadtest
+
+---
+# ── PostgreSQL ──
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+  namespace: loadtest
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16-alpine
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_DB
+              value: tradelearn_loadtest
+            - name: POSTGRES_USER
+              value: tradelearn
+            - name: POSTGRES_PASSWORD
+              value: loadtest_password_change_me
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+          resources:
+            requests:
+              cpu: "2"
+              memory: 4Gi
+            limits:
+              cpu: "4"
+              memory: 8Gi
+          args:
+            - "-c"
+            - "max_connections=300"
+            - "-c"
+            - "shared_buffers=1GB"
+            - "-c"
+            - "effective_cache_size=3GB"
+            - "-c"
+            - "work_mem=16MB"
+            - "-c"
+            - "wal_buffers=64MB"
+            - "-c"
+            - "checkpoint_completion_target=0.9"
+            - "-c"
+            - "random_page_cost=1.1"
+            - "-c"
+            - "log_min_duration_statement=100"
+          volumeMounts:
+            - name: pgdata
+              mountPath: /var/lib/postgresql/data
+      volumes:
+        - name: pgdata
+          emptyDir:
+            sizeLimit: 20Gi
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  namespace: loadtest
+spec:
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+
+---
+# ── Redis ──
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+  namespace: loadtest
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+        - name: redis
+          image: redis:7-alpine
+          ports:
+            - containerPort: 6379
+          command: ["redis-server"]
+          args:
+            - "--maxmemory"
+            - "2gb"
+            - "--maxmemory-policy"
+            - "allkeys-lru"
+            - "--save"
+            - ""
+            - "--appendonly"
+            - "no"
+            - "--tcp-backlog"
+            - "511"
+            - "--timeout"
+            - "0"
+            - "--tcp-keepalive"
+            - "60"
+            - "--latency-tracking"
+            - "yes"
+          resources:
+            requests:
+              cpu: "1"
+              memory: 2Gi
+            limits:
+              cpu: "2"
+              memory: 3Gi
+        - name: redis-exporter
+          image: oliver006/redis_exporter:v1.56.0-alpine
+          ports:
+            - containerPort: 9121
+          env:
+            - name: REDIS_ADDR
+              value: "redis://localhost:6379"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  namespace: loadtest
+spec:
+  selector:
+    app: redis
+  ports:
+    - name: redis
+      port: 6379
+    - name: exporter
+      port: 9121
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-exporter
+  namespace: loadtest
+spec:
+  selector:
+    app: redis
+  ports:
+    - port: 9121
+      targetPort: 9121
+
+---
+# ── TradeLearn Backend ──
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tradelearn-backend
+  namespace: loadtest
+  labels:
+    app: tradelearn-backend
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: tradelearn-backend
+  template:
+    metadata:
+      labels:
+        app: tradelearn-backend
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/actuator/prometheus"
+    spec:
+      containers:
+        - name: backend
+          image: tradelearn-backend:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          env:
+            # ── Database ──
+            - name: DATABASE_URL
+              value: "jdbc:postgresql://postgres:5432/tradelearn_loadtest"
+            - name: DATABASE_USERNAME
+              value: tradelearn
+            - name: DATABASE_PASSWORD
+              value: loadtest_password_change_me
+            - name: SPRING_PROFILES_ACTIVE
+              value: prod
+
+            # ── Redis ──
+            - name: REDIS_HOST
+              value: redis
+            - name: REDIS_PORT
+              value: "6379"
+
+            # ── Tuned for Load Test ──
+            - name: TOMCAT_MAX_THREADS
+              value: "400"
+            - name: DB_POOL_MAX
+              value: "80"
+            - name: DB_POOL_MIN
+              value: "20"
+            - name: SCHEDULER_POOL_SIZE
+              value: "128"
+
+            # ── JWT ──
+            - name: JWT_SECRET
+              value: "loadtest-jwt-secret-not-for-production-use-change-me"
+
+            # ── Disable rate limiting for load test ──
+            - name: TRADELEARN_RATELIMIT_ENABLED
+              value: "false"
+
+            # ── JVM Tuning ──
+            - name: JAVA_OPTS
+              value: >-
+                -Xms4g -Xmx4g
+                -XX:+UseG1GC
+                -XX:MaxGCPauseMillis=100
+                -XX:G1HeapRegionSize=16m
+                -XX:+ParallelRefProcEnabled
+                -XX:+UseStringDeduplication
+                -XX:InitiatingHeapOccupancyPercent=45
+                -XX:+AlwaysPreTouch
+                -XX:+HeapDumpOnOutOfMemoryError
+                -XX:HeapDumpPath=/tmp/heapdump.hprof
+                -Xlog:gc*:file=/tmp/gc.log:time,uptime,level,tags:filecount=5,filesize=50m
+                -Djdk.nio.maxCachedBufferSize=262144
+                -Dspring.jmx.enabled=true
+                -Dcom.sun.management.jmxremote
+                -Dcom.sun.management.jmxremote.port=9010
+                -Dcom.sun.management.jmxremote.local.only=false
+                -Dcom.sun.management.jmxremote.authenticate=false
+                -Dcom.sun.management.jmxremote.ssl=false
+
+            # ── CORS ──
+            - name: CORS_ALLOWED_ORIGINS
+              value: "*"
+
+          resources:
+            requests:
+              cpu: "4"
+              memory: 6Gi
+            limits:
+              cpu: "8"
+              memory: 8Gi
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 8080
+            initialDelaySeconds: 60
+            periodSeconds: 10
+            failureThreshold: 5
+          startupProbe:
+            httpGet:
+              path: /api/health
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 5
+            failureThreshold: 20
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tradelearn-api
+  namespace: loadtest
+spec:
+  selector:
+    app: tradelearn-backend
+  ports:
+    - port: 8080
+      targetPort: 8080
+
+---
+# ── k6 Test Job ──
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: k6-seed
+  namespace: loadtest
+spec:
+  template:
+    spec:
+      containers:
+        - name: k6
+          image: grafana/k6:latest
+          command: ["k6", "run", "--vus", "50", "--iterations", "10000",
+                    "-e", "BASE_URL=http://tradelearn-api:8080",
+                    "/scripts/seed-users.js"]
+          volumeMounts:
+            - name: scripts
+              mountPath: /scripts
+      volumes:
+        - name: scripts
+          configMap:
+            name: k6-scripts
+      restartPolicy: Never
+  backoffLimit: 3
+
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: k6-loadtest
+  namespace: loadtest
+spec:
+  template:
+    spec:
+      containers:
+        - name: k6
+          image: grafana/k6:latest
+          command: ["k6", "run",
+                    "--out", "json=/results/results.json",
+                    "-e", "BASE_URL=http://tradelearn-api:8080",
+                    "-e", "WS_URL=ws://tradelearn-api:8080",
+                    "/scripts/tradelearn-load.js"]
+          resources:
+            requests:
+              cpu: "4"
+              memory: 8Gi
+            limits:
+              cpu: "8"
+              memory: 16Gi
+          volumeMounts:
+            - name: scripts
+              mountPath: /scripts
+            - name: results
+              mountPath: /results
+      volumes:
+        - name: scripts
+          configMap:
+            name: k6-scripts
+        - name: results
+          emptyDir:
+            sizeLimit: 5Gi
+      restartPolicy: Never
+  backoffLimit: 1
+
+---
+# ── Prometheus ──
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prometheus
+  namespace: loadtest
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: prometheus
+  template:
+    metadata:
+      labels:
+        app: prometheus
+    spec:
+      containers:
+        - name: prometheus
+          image: prom/prometheus:v2.48.0
+          ports:
+            - containerPort: 9090
+          args:
+            - "--config.file=/etc/prometheus/prometheus.yml"
+            - "--storage.tsdb.retention.time=7d"
+            - "--storage.tsdb.path=/prometheus"
+          volumeMounts:
+            - name: config
+              mountPath: /etc/prometheus
+            - name: storage
+              mountPath: /prometheus
+          resources:
+            requests:
+              cpu: "1"
+              memory: 2Gi
+            limits:
+              cpu: "2"
+              memory: 4Gi
+      volumes:
+        - name: config
+          configMap:
+            name: prometheus-config
+        - name: storage
+          emptyDir:
+            sizeLimit: 20Gi
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus
+  namespace: loadtest
+spec:
+  selector:
+    app: prometheus
+  ports:
+    - port: 9090
+      targetPort: 9090
+
+---
+# ── Grafana ──
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana
+  namespace: loadtest
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grafana
+  template:
+    metadata:
+      labels:
+        app: grafana
+    spec:
+      containers:
+        - name: grafana
+          image: grafana/grafana:10.2.0
+          ports:
+            - containerPort: 3000
+          env:
+            - name: GF_SECURITY_ADMIN_PASSWORD
+              value: loadtest
+            - name: GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH
+              value: /var/lib/grafana/dashboards/tradelearn-loadtest.json
+          volumeMounts:
+            - name: dashboards
+              mountPath: /var/lib/grafana/dashboards
+            - name: datasources
+              mountPath: /etc/grafana/provisioning/datasources
+      volumes:
+        - name: dashboards
+          configMap:
+            name: grafana-dashboards
+        - name: datasources
+          configMap:
+            name: grafana-datasources
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-datasources
+  namespace: loadtest
+data:
+  datasources.yml: |
+    apiVersion: 1
+    datasources:
+      - name: Prometheus
+        type: prometheus
+        access: proxy
+        url: http://prometheus:9090
+        isDefault: true
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana
+  namespace: loadtest
+spec:
+  selector:
+    app: grafana
+  type: NodePort
+  ports:
+    - port: 3000
+      targetPort: 3000
+      nodePort: 30300

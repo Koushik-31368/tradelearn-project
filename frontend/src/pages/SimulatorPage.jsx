@@ -1,7 +1,7 @@
 // src/pages/SimulatorPage.jsx
 import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
-import { backendUrl } from '../utils/api';
+import { backendUrl, authHeaders, jsonAuthHeaders } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 import { indianStocks, getStockBySymbol } from '../data/indianStocks';
 import './SimulatorPage.css';
@@ -26,7 +26,8 @@ const SimulatorPage = () => {
 
     try {
       const res = await axios.get(
-        backendUrl(`/api/simulator/portfolio?userId=${user.id}`)
+        backendUrl(`/api/simulator/portfolio?userId=${user.id}`),
+        { headers: authHeaders() }
       );
 
       const portfolio = res.data;
@@ -61,7 +62,8 @@ const SimulatorPage = () => {
 
     try {
       const res = await axios.get(
-        backendUrl(`/api/trades/user/${user.id}`)
+        backendUrl(`/api/trades/user/${user.id}`),
+        { headers: authHeaders() }
       );
       setTradeHistory(res.data.reverse());
     } catch (err) {
@@ -109,7 +111,8 @@ const SimulatorPage = () => {
           tradeType: tradeType.toUpperCase(),
           quantity,
           price: selectedStock.price,
-        }
+        },
+        { headers: jsonAuthHeaders() }
       );
 
       setMessage({ text: 'Trade successful!', type: 'success' });

@@ -25,6 +25,7 @@ const LoginPage = () => {
         { email, password }
       );
 
+      // Response now includes { token, id, username, email, rating }
       login(response.data);
       setMessage('Login successful!');
       setTimeout(() => navigate('/multiplayer'), 1000);

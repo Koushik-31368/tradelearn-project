@@ -3,7 +3,7 @@ import { useParams, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import '../styles/theme.css';
 import { strategyCatalog } from '../data/strategies';
-import { backendUrl } from '../utils/api';
+import { backendUrl, jsonAuthHeaders } from '../utils/api';
 
 // Tiny sample data
 const sampleCandles = [
@@ -71,7 +71,8 @@ export default function TrySimulatorPage() {
 
       const res = await axios.post(
         backendUrl('/api/strategy/backtest'),
-        body
+        body,
+        { headers: jsonAuthHeaders() }
       );
 
       setResult(res.data);

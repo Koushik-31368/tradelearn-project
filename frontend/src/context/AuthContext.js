@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
 
 const AuthContext = createContext(null);
 
@@ -12,6 +12,10 @@ export const AuthProvider = ({ children }) => {
     }
   });
 
+  const [token, setToken] = useState(() => {
+    return localStorage.getItem("tradelearn_token") || null;
+  });
+
   useEffect(() => {
     if (user) {
       localStorage.setItem("tradelearn_user", JSON.stringify(user));
@@ -20,17 +24,30 @@ export const AuthProvider = ({ children }) => {
     }
   }, [user]);
 
-  const login = (userObj) => {
-    // Expects { id, username, email } from your AuthController login method
-    setUser(userObj);
-  };
+  useEffect(() => {
+    if (token) {
+      localStorage.setItem("tradelearn_token", token);
+    } else {
+      localStorage.removeItem("tradelearn_token");
+    }
+  }, [token]);
 
-  const logout = () => {
+  /**
+   * Login — expects the full API response: { token, id, username, email, rating }
+   */
+  const login = useCallback((responseData) => {
+    const { token: jwt, ...userObj } = responseData;
+    setToken(jwt);
+    setUser(userObj);
+  }, []);
+
+  const logout = useCallback(() => {
     setUser(null);
-  };
+    setToken(null);
+  }, []);
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated: !!user, login, logout }}>
+    <AuthContext.Provider value={{ user, token, isAuthenticated: !!user && !!token, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

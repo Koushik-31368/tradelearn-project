@@ -1,3 +1,35 @@
+import com.tradelearn.server.dto.LeaderboardDTO;
+import com.tradelearn.server.service.RankService;
+
+    private final RankService rankService;
+
+    public LeaderboardController(UserRepository userRepository,
+                                 GameRepository gameRepository,
+                                 MatchStatsRepository matchStatsRepository,
+                                 RankService rankService) {
+        this.userRepository = userRepository;
+        this.gameRepository = gameRepository;
+        this.matchStatsRepository = matchStatsRepository;
+        this.rankService = rankService;
+    }
+
+    @GetMapping("/leaderboard/top10")
+    public ResponseEntity<List<LeaderboardDTO>> getTop10Leaderboard() {
+        List<User> topUsers = userRepository.findTop10ByOrderByRatingDesc();
+        List<LeaderboardDTO> dtos = topUsers.stream()
+            .map(u -> new LeaderboardDTO(u, rankService.getRankTier(u.getRating())))
+            .collect(Collectors.toList());
+        return ResponseEntity.ok(dtos);
+    }
+
+    @GetMapping("/leaderboard/all")
+    public ResponseEntity<List<LeaderboardDTO>> getAllLeaderboard() {
+        List<User> allUsers = userRepository.findAllByOrderByRatingDesc();
+        List<LeaderboardDTO> dtos = allUsers.stream()
+            .map(u -> new LeaderboardDTO(u, rankService.getRankTier(u.getRating())))
+            .collect(Collectors.toList());
+        return ResponseEntity.ok(dtos);
+    }
 package com.tradelearn.server.controller;
 
 import java.util.ArrayList;

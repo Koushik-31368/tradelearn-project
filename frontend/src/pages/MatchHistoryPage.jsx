@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { backendUrl } from '../utils/api';
+import { backendUrl, authHeaders } from '../utils/api';
 import './MatchHistoryPage.css';
 
 const MatchHistoryPage = () => {
@@ -16,7 +16,7 @@ const MatchHistoryPage = () => {
         if (!user) return;
         (async () => {
             try {
-                const res = await fetch(backendUrl(`/api/match/user/${user.id}`));
+                const res = await fetch(backendUrl(`/api/match/user/${user.id}`), { headers: authHeaders() });
                 if (!res.ok) throw new Error('Failed to load match history');
                 const data = await res.json();
                 // Sort newest first

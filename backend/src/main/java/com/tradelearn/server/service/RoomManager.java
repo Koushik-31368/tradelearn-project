@@ -1,14 +1,10 @@
 package com.tradelearn.server.service;
 
-import java.time.Instant;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,28 +13,38 @@ import org.springframework.stereotype.Service;
 import com.tradelearn.server.util.GameLogger;
 
 /**
- * Centralised in-memory state for every active multiplayer room.
+ * Centralised room state manager — cluster-safe via {@link RedisRoomStore}.
  *
- * This is the SINGLE SOURCE OF TRUTH for per-game runtime state.
- * Database (Game entity) owns persistent state; this class owns
- * ephemeral state that only matters while the game is live:
+ * <h3>Architecture (hybrid local + Redis)</h3>
  *
- *   - Connected players (WebSocket session IDs)
- *   - Candle scheduler handle (ScheduledFuture)
- *   - Game phase (enum, fast reads without DB round-trip)
- *   - Ready-up counter (for pre-game sync)
+ * <b>Redis (shared across all instances):</b>
+ * <ul>
+ *   <li>Room metadata (creator, phase, creation time)</li>
+ *   <li>Connected-player set (who has joined)</li>
+ *   <li>Disconnected-player set (grace period tracking)</li>
+ *   <li>Ready-up counter</li>
+ *   <li>Scheduler ownership (single-instance guarantee)</li>
+ *   <li>Room index (all live game IDs)</li>
+ * </ul>
  *
- * Thread-safety: every field in {@link Room} is either atomic or
- * backed by ConcurrentHashMap. The rooms map itself is a CHM, so
- * all operations are safe under concurrent access from WebSocket
- * threads, scheduler threads, and REST threads simultaneously.
+ * <b>JVM-local (per-instance, not shareable):</b>
+ * <ul>
+ *   <li>WebSocket session maps (sessionId ↔ userId ↔ gameId)</li>
+ *   <li>{@link ScheduledFuture} handles for candle schedulers</li>
+ *   <li>{@link ScheduledFuture} handles for reconnection grace timers</li>
+ * </ul>
  *
- * Lifecycle:
- *   createRoom()  → when a match is created   (MatchService.createMatch)
- *   joinRoom()    → when opponent joins        (MatchService.joinMatch)
- *   startGame()   → when candle scheduler begins (MatchSchedulerService)
- *   endGame()     → when game finishes / abandoned
- *   removeRoom()  → final cleanup (auto after endGame, or manual)
+ * <h3>Thread safety</h3>
+ * Local maps are {@link ConcurrentHashMap}. Redis operations use
+ * Lua scripts for atomicity. No synchronized blocks.
+ *
+ * <h3>Lifecycle</h3>
+ * <pre>
+ *   createRoom()  → match created   (MatchService)
+ *   joinRoom()    → opponent joins   (MatchService)
+ *   startGame()   → scheduler begins (MatchSchedulerService)
+ *   endGame()     → game finishes / abandoned
+ * </pre>
  */
 @Service
 public class RoomManager {
@@ -46,7 +52,7 @@ public class RoomManager {
     private static final Logger log = LoggerFactory.getLogger(RoomManager.class);
     private static final int MAX_PLAYERS = 2;
 
-    // ===================== ROOM STATE =====================
+    // ===================== PHASE ENUM =====================
 
     public enum RoomPhase {
         WAITING,    // created, waiting for opponent
@@ -56,398 +62,393 @@ public class RoomManager {
         ABANDONED   // player disconnected
     }
 
-    /**
-     * Complete in-memory state for one game room.
-     * All fields are thread-safe for concurrent reads/writes.
-     */
-    public static class Room {
-        private final long gameId;
-        private final long creatorId;
-        private final Instant createdAt;
-        private final AtomicReference<RoomPhase> phase;
+    // ===================== DEPENDENCIES =====================
 
-        /** Connected WebSocket session IDs → userId */
-        private final ConcurrentHashMap<String, Long> sessions = new ConcurrentHashMap<>();
+    private final ResilientRedisRoomStore store;
 
-        /** Connected user IDs (derived from sessions, for fast lookup) */
-        private final Set<Long> connectedPlayers = ConcurrentHashMap.newKeySet();
+    // ── JVM-local state (not shareable across instances) ──
 
-        /** The candle scheduler handle — null until game starts */
-        private volatile ScheduledFuture<?> schedulerHandle;
-
-        /** Ready-up counter for pre-game sync */
-        private final AtomicInteger readyCount = new AtomicInteger(0);
-
-        public Room(long gameId, long creatorId) {
-            this.gameId = gameId;
-            this.creatorId = creatorId;
-            this.createdAt = Instant.now();
-            this.phase = new AtomicReference<>(RoomPhase.WAITING);
-        }
-
-        // ── Getters ──
-
-        public long getGameId()                   { return gameId; }
-        public long getCreatorId()                { return creatorId; }
-        public Instant getCreatedAt()             { return createdAt; }
-        public RoomPhase getPhase()               { return phase.get(); }
-        public int getPlayerCount()               { return connectedPlayers.size(); }
-        public Set<Long> getConnectedPlayers()    { return Collections.unmodifiableSet(connectedPlayers); }
-        public ScheduledFuture<?> getScheduler()  { return schedulerHandle; }
-        public boolean isFull()                   { return connectedPlayers.size() >= MAX_PLAYERS; }
-        public boolean isEmpty()                  { return connectedPlayers.isEmpty(); }
-        public boolean hasScheduler()             { return schedulerHandle != null && !schedulerHandle.isCancelled(); }
-
-        /**
-         * Returns a read-only snapshot for diagnostics / REST endpoints.
-         */
-        public Map<String, Object> snapshot() {
-            return Map.of(
-                "gameId",           gameId,
-                "creatorId",        creatorId,
-                "phase",            phase.get().name(),
-                "connectedPlayers", Set.copyOf(connectedPlayers),
-                "playerCount",      connectedPlayers.size(),
-                "hasScheduler",     hasScheduler(),
-                "createdAt",        createdAt.toString()
-            );
-        }
-    }
-
-    // ===================== ROOMS REGISTRY =====================
-
-    /** gameId → Room.  The ONLY map that matters. */
-    private final ConcurrentHashMap<Long, Room> rooms = new ConcurrentHashMap<>();
-
-    /** Reverse lookup: WebSocket sessionId → gameId (for disconnect handling) */
+    /** WebSocket sessionId → gameId */
     private final ConcurrentHashMap<String, Long> sessionToGame = new ConcurrentHashMap<>();
 
-    /** Reverse lookup: WebSocket sessionId → userId */
+    /** WebSocket sessionId → userId */
     private final ConcurrentHashMap<String, Long> sessionToUser = new ConcurrentHashMap<>();
+
+    /** gameId → { sessionId → userId } — local sessions per game */
+    private final ConcurrentHashMap<Long, ConcurrentHashMap<String, Long>> gameSessions = new ConcurrentHashMap<>();
+
+    /** gameId → ScheduledFuture (candle tick) — only on the owner instance */
+    private final ConcurrentHashMap<Long, ScheduledFuture<?>> schedulerHandles = new ConcurrentHashMap<>();
+
+    /** gameId → { userId → ScheduledFuture } — reconnection timers */
+    private final ConcurrentHashMap<Long, ConcurrentHashMap<Long, ScheduledFuture<?>>> reconnectTimers = new ConcurrentHashMap<>();
+
+    public RoomManager(ResilientRedisRoomStore store) {
+        this.store = store;
+    }
 
     // ===================== ROOM LIFECYCLE =====================
 
     /**
      * Create a new room when a match is created.
-     *
-     * @param gameId    The database game ID
-     * @param creatorId The user who created the game
-     * @return The created Room, or existing room if already present
+     * Uses Redis SETNX (via Lua) — only succeeds once per gameId,
+     * preventing duplicate rooms across all instances.
      */
-    public Room createRoom(long gameId, long creatorId) {
-        Room room = rooms.computeIfAbsent(gameId, id -> {
-            Room newRoom = new Room(id, creatorId);
-            GameLogger.logRoomCreated(log, id, creatorId);
+    public void createRoom(long gameId, long creatorId) {
+        boolean created = store.createRoom(gameId, creatorId);
+
+        if (created) {
+            GameLogger.logRoomCreated(log, gameId, creatorId);
             GameLogger.logDiagnosticSnapshot(log, "Room Created", Map.of(
-                "gameId", id,
+                "gameId", gameId,
                 "creatorId", creatorId,
-                "totalRooms", rooms.size() + 1,
-                "activeSessions", activeSessionCount()
+                "totalRooms", store.totalRoomCount(),
+                "instance", store.getInstanceId()
             ));
-            return newRoom;
-        });
-
-        if (room.getCreatorId() != creatorId) {
-            log.warn("[Room {}] Already exists (creator={}), ignoring create from user {}",
-                     gameId, room.getCreatorId(), creatorId);
+        } else {
+            log.warn("[Room {}] Already exists in Redis, ignoring create from user {}", gameId, creatorId);
         }
-
-        return room;
     }
 
     /**
      * Record that a player (opponent) has joined the room.
-     * Does NOT handle DB state — that's MatchService's job.
+     * Atomically adds the player and transitions phase to STARTING.
      *
-     * @throws IllegalStateException if room is already full
-     * @throws IllegalArgumentException if room doesn't exist
+     * @throws IllegalStateException    if room is full
+     * @throws IllegalArgumentException if room does not exist
      */
-    public Room joinRoom(long gameId, long userId) {
-        Room room = getRequiredRoom(gameId);
+    public void joinRoom(long gameId, long userId) {
+        int result = store.joinRoom(gameId, userId);
 
-        int currentSize = room.connectedPlayers.size();
-        
-        if (currentSize >= MAX_PLAYERS) {
+        if (result == -1) {
+            throw new IllegalArgumentException("Room " + gameId + " does not exist in Redis");
+        }
+        if (result == -2) {
+            int count = store.getPlayerCount(gameId);
             GameLogger.logGameCannotStart(log, gameId, "Room is full", Map.of(
-                "currentPlayers", currentSize,
+                "currentPlayers", count,
                 "maxPlayers", MAX_PLAYERS,
                 "attemptingUserId", userId
             ));
             throw new IllegalStateException("Room " + gameId + " is full (max " + MAX_PLAYERS + " players)");
         }
 
-        room.connectedPlayers.add(userId);
-        RoomPhase oldPhase = room.phase.get();
-        room.phase.compareAndSet(RoomPhase.WAITING, RoomPhase.STARTING);
-        RoomPhase newPhase = room.phase.get();
+        String phase = store.getPhase(gameId);
+        GameLogger.logPlayerJoined(log, gameId, userId, result, phase != null ? phase : "STARTING");
 
-        GameLogger.logPlayerJoined(log, gameId, userId, room.connectedPlayers.size(), newPhase.name());
-        
-        if (oldPhase != newPhase) {
-            GameLogger.logGameStateTransition(log, gameId, oldPhase.name(), newPhase.name(), room.connectedPlayers.size());
-        }
-        
         GameLogger.logDiagnosticSnapshot(log, "After Player Join", Map.of(
             "gameId", gameId,
             "userId", userId,
-            "roomSize", room.connectedPlayers.size(),
-            "playerIds", room.connectedPlayers,
-            "phase", newPhase.name(),
-            "isFull", room.isFull()
+            "roomSize", result,
+            "playerIds", store.getConnectedPlayers(gameId),
+            "phase", phase != null ? phase : "STARTING",
+            "isFull", result >= MAX_PLAYERS
         ));
-
-        return room;
     }
 
     /**
      * Transition the room to ACTIVE and store the scheduler handle.
-     * Called by MatchSchedulerService.startProgression() after candles load.
-     *
-     * @param gameId   The game
-     * @param scheduler The ScheduledFuture for the candle tick interval
+     * Called by MatchSchedulerService after candles load.
      */
     public void startGame(long gameId, ScheduledFuture<?> scheduler) {
-        Room room = getRequiredRoom(gameId);
+        String oldPhase = store.getPhase(gameId);
+        schedulerHandles.put(gameId, scheduler);
+        store.setPhase(gameId, "ACTIVE");
 
-        RoomPhase oldPhase = room.phase.get();
-        room.schedulerHandle = scheduler;
-        room.phase.set(RoomPhase.ACTIVE);
-
-        GameLogger.logGameStateTransition(log, gameId, oldPhase.name(), "ACTIVE", room.connectedPlayers.size());
+        int playerCount = store.getPlayerCount(gameId);
+        GameLogger.logGameStateTransition(log, gameId,
+                oldPhase != null ? oldPhase : "UNKNOWN", "ACTIVE", playerCount);
         GameLogger.logIntervalCreated(log, gameId, 5);
-        
+
         GameLogger.logDiagnosticSnapshot(log, "Game Started", Map.of(
             "gameId", gameId,
-            "playerIds", room.connectedPlayers,
-            "roomSize", room.connectedPlayers.size(),
+            "playerIds", store.getConnectedPlayers(gameId),
+            "roomSize", playerCount,
             "phase", "ACTIVE",
             "hasScheduler", true,
-            "schedulerCancelled", scheduler.isCancelled()
+            "instance", store.getInstanceId()
         ));
     }
 
     /**
-     * End a game: cancel scheduler, set terminal phase, trigger cleanup.
+     * End a game: cancel local scheduler, set terminal phase in Redis,
+     * clean up all local + Redis state.
      *
-     * @param gameId The game
-     * @param abandoned true if player disconnected, false if game finished normally
+     * <p>Idempotent — safe to call from multiple instances / threads.
+     * Redis cleanup is idempotent (SET + DELETE). Local cleanup only
+     * affects this instance's resources.</p>
      */
     public void endGame(long gameId, boolean abandoned) {
-        Room room = rooms.get(gameId);
-        if (room == null) {
-            log.debug("[Room {}] endGame called but room doesn't exist (already cleaned up?)", gameId);
-            return;
+        String oldPhase = store.getPhase(gameId);
+        String terminal = abandoned ? "ABANDONED" : "FINISHED";
+
+        // ── Redis: set terminal phase ──
+        if (oldPhase != null) {
+            store.setPhase(gameId, terminal);
         }
 
-        RoomPhase oldPhase = room.phase.get();
-        RoomPhase terminal = abandoned ? RoomPhase.ABANDONED : RoomPhase.FINISHED;
-        room.phase.set(terminal);
+        int playerCount = store.getPlayerCount(gameId);
+        GameLogger.logGameStateTransition(log, gameId,
+                oldPhase != null ? oldPhase : "UNKNOWN", terminal, playerCount);
 
-        GameLogger.logGameStateTransition(log, gameId, oldPhase.name(), terminal.name(), room.connectedPlayers.size());
-
-        // Cancel the scheduler if running
-        ScheduledFuture<?> scheduler = room.schedulerHandle;
+        // ── Local: cancel scheduler if this instance owns it ──
+        ScheduledFuture<?> scheduler = schedulerHandles.remove(gameId);
         if (scheduler != null && !scheduler.isCancelled()) {
             scheduler.cancel(false);
-            room.schedulerHandle = null;
-            GameLogger.logIntervalDeleted(log, gameId, abandoned ? "player_disconnect" : "game_finished");
+            GameLogger.logIntervalDeleted(log, gameId,
+                    abandoned ? "player_disconnect" : "game_finished");
         }
+
+        // ── Redis: release scheduler ownership ──
+        store.releaseScheduler(gameId);
 
         GameLogger.logDiagnosticSnapshot(log, "Game Ended", Map.of(
             "gameId", gameId,
-            "finalPhase", terminal.name(),
+            "finalPhase", terminal,
             "abandoned", abandoned,
-            "remainingPlayers", room.connectedPlayers.size(),
-            "playerIds", room.connectedPlayers
+            "remainingPlayers", playerCount,
+            "instance", store.getInstanceId()
         ));
 
-        // Auto-cleanup: disconnect all sessions, then remove room
-        cleanupRoomSessions(gameId);
-        removeRoom(gameId);
-    }
+        // ── Clean up local sessions + Redis room keys ──
+        cleanupLocalSessions(gameId);
+        cancelAllReconnectTimers(gameId);
+        store.deleteRoom(gameId);
 
-    /**
-     * Remove a room entirely. Called after endGame, or for stale rooms.
-     */
-    public Room removeRoom(long gameId) {
-        Room room = rooms.remove(gameId);
-        if (room != null) {
-            // Cancel scheduler if somehow still active
-            ScheduledFuture<?> s = room.schedulerHandle;
-            if (s != null && !s.isCancelled()) {
-                s.cancel(false);
-                GameLogger.logIntervalDeleted(log, gameId, "room_cleanup");
-            }
-            cleanupRoomSessions(gameId);
-            GameLogger.logRoomRemoved(log, gameId, "cleanup_after_end");
-            
-            GameLogger.logDiagnosticSnapshot(log, "Room Removed", Map.of(
-                "gameId", gameId,
-                "totalRoomsRemaining", rooms.size(),
-                "activeSessionsRemaining", activeSessionCount()
-            ));
-        }
-        return room;
+        GameLogger.logRoomRemoved(log, gameId, "cleanup_after_end");
     }
 
     // ===================== SESSION TRACKING =====================
 
     /**
-     * Register a WebSocket session to a user + room.
-     * Called when a player connects or sends their first trade.
+     * Register a WebSocket session to a user + game.
+     * Local session maps + Redis player set.
      */
     public void registerSession(String sessionId, long userId, long gameId) {
-        Room room = rooms.get(gameId);
-        if (room != null) {
-            room.sessions.put(sessionId, userId);
-            room.connectedPlayers.add(userId);
-        }
-
+        // ── Local ──
+        gameSessions.computeIfAbsent(gameId, k -> new ConcurrentHashMap<>())
+                    .put(sessionId, userId);
         sessionToGame.put(sessionId, gameId);
         sessionToUser.put(sessionId, userId);
 
+        // ── Redis: add player to connected set (idempotent SADD) ──
+        store.addPlayer(gameId, userId);
+
         GameLogger.logWebSocketConnected(log, sessionId, userId, gameId);
-        
-        if (room != null) {
-            GameLogger.logDiagnosticSnapshot(log, "Session Registered", Map.of(
-                "gameId", gameId,
-                "userId", userId,
-                "sessionId", sessionId,
-                "roomSize", room.connectedPlayers.size(),
-                "phase", room.phase.get().name(),
-                "totalSessions", room.sessions.size()
-            ));
-        }
+
+        GameLogger.logDiagnosticSnapshot(log, "Session Registered", Map.of(
+            "gameId", gameId,
+            "userId", userId,
+            "sessionId", sessionId,
+            "roomSize", store.getPlayerCount(gameId),
+            "phase", String.valueOf(store.getPhase(gameId)),
+            "instance", store.getInstanceId()
+        ));
     }
 
     /**
      * Unregister a WebSocket session (disconnect).
      *
-     * @return A DisconnectInfo if the player was in a room, or null if untracked
+     * Removes the session from local maps. If no other local sessions
+     * remain for this user + game, also removes the player from the
+     * Redis connected set.
+     *
+     * @return disconnect info, or {@code null} if session was untracked
      */
     public DisconnectInfo unregisterSession(String sessionId) {
         Long gameId = sessionToGame.remove(sessionId);
         Long userId = sessionToUser.remove(sessionId);
-
         if (gameId == null || userId == null) return null;
 
-        Room room = rooms.get(gameId);
-        if (room == null) return null;
+        // ── Local: remove from game sessions ──
+        ConcurrentHashMap<String, Long> sessions = gameSessions.get(gameId);
+        boolean hasOtherLocalSessions = false;
+        if (sessions != null) {
+            sessions.remove(sessionId);
+            hasOtherLocalSessions = sessions.values().contains(userId);
+        }
 
-        room.sessions.remove(sessionId);
-        room.connectedPlayers.remove(userId);
+        // ── Redis: remove player only if no other local sessions remain ──
+        if (!hasOtherLocalSessions) {
+            store.removePlayer(gameId, userId);
+        }
 
-        int remainingPlayers = room.connectedPlayers.size();
-        
+        int remainingPlayers = store.getPlayerCount(gameId);
+
         GameLogger.logWebSocketDisconnected(log, sessionId, userId, gameId, remainingPlayers);
         GameLogger.logPlayerLeft(log, gameId, userId, remainingPlayers, "websocket_disconnect");
-        
+
+        String phase = store.getPhase(gameId);
         GameLogger.logDiagnosticSnapshot(log, "Session Disconnected", Map.of(
             "gameId", gameId,
             "userId", userId,
             "sessionId", sessionId,
             "remainingPlayers", remainingPlayers,
-            "remainingPlayerIds", room.connectedPlayers,
-            "phase", room.phase.get().name(),
-            "shouldAbandon", remainingPlayers == 0
+            "remainingPlayerIds", store.getConnectedPlayers(gameId),
+            "phase", phase != null ? phase : "UNKNOWN",
+            "instance", store.getInstanceId()
         ));
 
         return new DisconnectInfo(gameId, userId, remainingPlayers);
     }
 
-    /**
-     * Info returned after a session disconnects.
-     */
+    /** Info returned after a session disconnects. */
     public record DisconnectInfo(long gameId, long userId, int remainingPlayers) {}
 
     // ===================== READY-UP =====================
 
     /**
-     * Increment the ready counter for a room.
+     * Increment the ready counter (distributed via Redis).
      *
-     * @return true if all players are now ready (ready count ≥ MAX_PLAYERS)
+     * @return {@code true} if all players are now ready
      */
     public boolean markReady(long gameId) {
-        Room room = rooms.get(gameId);
-        if (room == null) return false;
-
-        int count = room.readyCount.incrementAndGet();
+        int count = store.incrementReady(gameId);
         log.debug("[Room {}] Ready count: {}/{}", gameId, count, MAX_PLAYERS);
+        return count >= MAX_PLAYERS;
+    }
 
-        if (count >= MAX_PLAYERS) {
-            room.readyCount.set(0);   // reset for next round
-            return true;
+    // ===================== RECONNECTION GRACE PERIOD =====================
+
+    /** Mark a player as disconnected in Redis (cluster-visible). */
+    public void markDisconnected(long gameId, long userId) {
+        store.markDisconnected(gameId, userId);
+    }
+
+    /** Check if a player is in the disconnected (grace) state. */
+    public boolean isDisconnected(long gameId, long userId) {
+        return store.isDisconnected(gameId, userId);
+    }
+
+    /** Clear the disconnected flag for a player (they reconnected). */
+    public void clearDisconnected(long gameId, long userId) {
+        store.clearDisconnected(gameId, userId);
+    }
+
+    /** Store a local reconnection grace timer for a player. */
+    public void setReconnectTimer(long gameId, long userId, ScheduledFuture<?> timer) {
+        ConcurrentHashMap<Long, ScheduledFuture<?>> timers =
+                reconnectTimers.computeIfAbsent(gameId, k -> new ConcurrentHashMap<>());
+        ScheduledFuture<?> old = timers.put(userId, timer);
+        if (old != null) old.cancel(false);
+    }
+
+    /** Remove and return a reconnection timer (for cancellation). */
+    public ScheduledFuture<?> removeReconnectTimer(long gameId, long userId) {
+        ConcurrentHashMap<Long, ScheduledFuture<?>> timers = reconnectTimers.get(gameId);
+        return timers != null ? timers.remove(userId) : null;
+    }
+
+    /** Cancel all reconnection timers for a game (local + Redis disconnected set). */
+    public void cancelAllReconnectTimers(long gameId) {
+        ConcurrentHashMap<Long, ScheduledFuture<?>> timers = reconnectTimers.remove(gameId);
+        if (timers != null) {
+            timers.values().forEach(f -> f.cancel(false));
         }
-        return false;
+        // Clear all disconnected flags in Redis for this game
+        for (Long uid : store.getDisconnectedPlayers(gameId)) {
+            store.clearDisconnected(gameId, uid);
+        }
+    }
+
+    // ===================== SCHEDULER OWNERSHIP =====================
+
+    /**
+     * Try to claim scheduler ownership for this instance (Redis SETNX).
+     * Only the owner instance should run the candle tick.
+     */
+    public boolean tryClaimScheduler(long gameId) {
+        return store.tryClaimScheduler(gameId);
+    }
+
+    /** Refresh scheduler ownership TTL (called from tick). */
+    public void refreshSchedulerOwnership(long gameId) {
+        store.refreshSchedulerOwnership(gameId);
+    }
+
+    /** Release scheduler ownership (called on stop/end). */
+    public void releaseScheduler(long gameId) {
+        store.releaseScheduler(gameId);
     }
 
     // ===================== QUERIES =====================
 
-    /** Get a room, or null if not tracked. */
-    public Room getRoom(long gameId) {
-        return rooms.get(gameId);
-    }
-
-    /** Get a room, throw if missing. */
-    public Room getRequiredRoom(long gameId) {
-        Room room = rooms.get(gameId);
-        if (room == null) {
-            throw new IllegalArgumentException("Room " + gameId + " does not exist in RoomManager");
-        }
-        return room;
-    }
-
-    /** Check if a game has an active room. */
+    /** Check if a room exists in Redis. */
     public boolean hasRoom(long gameId) {
-        return rooms.containsKey(gameId);
+        return store.roomExists(gameId);
     }
 
-    /** Get the phase of a room without a DB hit. */
+    /** Get the room phase, or {@code null} if room does not exist. */
     public RoomPhase getPhase(long gameId) {
-        Room room = rooms.get(gameId);
-        return room != null ? room.getPhase() : null;
+        String p = store.getPhase(gameId);
+        if (p == null) return null;
+        try {
+            return RoomPhase.valueOf(p);
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
     }
 
-    /** Get the scheduler handle for a game (used by MatchSchedulerService). */
+    /** Get the connected player set from Redis. */
+    public Set<Long> getConnectedPlayers(long gameId) {
+        return store.getConnectedPlayers(gameId);
+    }
+
+    /** Get the player count from Redis. */
+    public int getPlayerCount(long gameId) {
+        return store.getPlayerCount(gameId);
+    }
+
+    /** Check if the room is full (≥ 2 players). */
+    public boolean isRoomFull(long gameId) {
+        return store.isFull(gameId);
+    }
+
+    /** Get the local scheduler handle for a game (this instance only). */
     public ScheduledFuture<?> getScheduler(long gameId) {
-        Room room = rooms.get(gameId);
-        return room != null ? room.schedulerHandle : null;
+        return schedulerHandles.get(gameId);
     }
 
-    /** Check if a room has a running scheduler. */
+    /** Check if this instance has a running scheduler for a game. */
     public boolean isSchedulerRunning(long gameId) {
-        Room room = rooms.get(gameId);
-        return room != null && room.hasScheduler();
+        ScheduledFuture<?> f = schedulerHandles.get(gameId);
+        return f != null && !f.isCancelled();
     }
 
-    /** Total number of active rooms. */
+    /** Count rooms with ACTIVE phase (Redis scan — for Micrometer). */
     public int activeRoomCount() {
-        return (int) rooms.values().stream()
-                .filter(r -> r.getPhase() == RoomPhase.ACTIVE)
-                .count();
+        return store.activeRoomCount();
     }
 
-    /** Total rooms (all phases). */
+    /** Total rooms across all phases. */
     public int totalRoomCount() {
-        return rooms.size();
+        return store.totalRoomCount();
     }
 
-    /** All rooms as diagnostic snapshots. */
+    /** All rooms as diagnostic snapshots (from Redis). */
     public Collection<Map<String, Object>> allRoomSnapshots() {
-        return rooms.values().stream().map(Room::snapshot).toList();
+        return store.allGameIds().stream()
+                .map(store::snapshot)
+                .filter(s -> s != null)
+                .toList();
     }
 
-    /** Get userId for a session (for disconnect handling). */
+    /** Get a diagnostic snapshot for a single room, or {@code null}. */
+    public Map<String, Object> getRoomSnapshot(long gameId) {
+        return store.snapshot(gameId);
+    }
+
+    /** Get userId for a session (local lookup). */
     public Long getUserForSession(String sessionId) {
         return sessionToUser.get(sessionId);
     }
 
-    /** Get gameId for a session (for disconnect handling). */
+    /** Get gameId for a session (local lookup). */
     public Long getGameForSession(String sessionId) {
         return sessionToGame.get(sessionId);
     }
 
-    /** Active session count. */
+    /** Active WebSocket session count on this instance. */
     public int activeSessionCount() {
         return sessionToUser.size();
     }
@@ -455,18 +456,15 @@ public class RoomManager {
     // ===================== INTERNAL =====================
 
     /**
-     * Remove all session mappings that belong to a game.
+     * Remove all local session mappings for a game.
      */
-    private void cleanupRoomSessions(long gameId) {
+    private void cleanupLocalSessions(long gameId) {
         sessionToGame.entrySet().removeIf(e -> e.getValue().equals(gameId));
-        // Also clean user map for those sessions
-        Room room = rooms.get(gameId);
-        if (room != null) {
-            for (String sid : room.sessions.keySet()) {
+        ConcurrentHashMap<String, Long> sessions = gameSessions.remove(gameId);
+        if (sessions != null) {
+            for (String sid : sessions.keySet()) {
                 sessionToUser.remove(sid);
             }
-            room.sessions.clear();
-            room.connectedPlayers.clear();
         }
     }
 }

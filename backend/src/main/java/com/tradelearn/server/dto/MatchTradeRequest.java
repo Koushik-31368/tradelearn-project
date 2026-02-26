@@ -19,8 +19,10 @@ public class MatchTradeRequest {
     @Positive(message = "Game ID must be positive")
     private Long gameId;
 
-    @NotNull(message = "User ID is required")
-    @Positive(message = "User ID must be positive")
+    /**
+     * User ID — set server-side from JWT token.
+     * Not required in request body (ignored if sent by client).
+     */
     private Long userId;
 
     @NotBlank(message = "Symbol is required")

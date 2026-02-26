@@ -53,6 +53,10 @@ public class MatchSchedulerService {
     private final MatchStatsRepository matchStatsRepository;
     private final UserRepository userRepository;
     private final RoomManager roomManager;
+    private final PositionSnapshotStore positionStore;
+    private final TradeRateLimiter rateLimiter;
+    private final GameMetricsService metrics;
+    private final GameFreezeService freezeService;
 
     /** ScheduledFuture per game — the ONLY in-memory per-game state */
     private final Map<Long, ScheduledFuture<?>> runningTasks = new ConcurrentHashMap<>();
@@ -64,7 +68,11 @@ public class MatchSchedulerService {
                                  GameBroadcaster broadcaster,
                                  MatchStatsRepository matchStatsRepository,
                                  UserRepository userRepository,
-                                 RoomManager roomManager) {
+                                 RoomManager roomManager,
+                                 PositionSnapshotStore positionStore,
+                                 TradeRateLimiter rateLimiter,
+                                 GameMetricsService metrics,
+                                 GameFreezeService freezeService) {
         this.taskScheduler = taskScheduler;
         this.gameRepository = gameRepository;
         this.tradeRepository = tradeRepository;
@@ -73,6 +81,10 @@ public class MatchSchedulerService {
         this.matchStatsRepository = matchStatsRepository;
         this.userRepository = userRepository;
         this.roomManager = roomManager;
+        this.positionStore = positionStore;
+        this.rateLimiter = rateLimiter;
+        this.metrics = metrics;
+        this.freezeService = freezeService;
     }
 
     // ==================== START / STOP ====================
@@ -81,11 +93,21 @@ public class MatchSchedulerService {
      * Begin candle progression for a game that just became ACTIVE.
      * Immediately broadcasts the first candle, then ticks every 5s.
      *
-     * Uses ConcurrentHashMap.computeIfAbsent to guarantee that at most
-     * ONE scheduler is ever created per game — even if two threads call
-     * this method simultaneously (e.g. from a double-join race).
+     * <p><b>Cluster-safe:</b> Uses Redis-based scheduler ownership
+     * ({@link RoomManager#tryClaimScheduler(long)}) to guarantee that
+     * exactly ONE instance runs the tick for a given game, even in a
+     * multi-instance deployment behind a load balancer.</p>
+     *
+     * Uses ConcurrentHashMap.computeIfAbsent locally to prevent
+     * duplicate schedulers on the same instance.
      */
     public void startProgression(long gameId) {
+        // ── Distributed guard: only the claiming instance starts the scheduler ──
+        if (!roomManager.tryClaimScheduler(gameId)) {
+            log.info("[Scheduler] Another instance owns the scheduler for game {} — skipping", gameId);
+            return;
+        }
+
         runningTasks.computeIfAbsent(gameId, id -> {
             GameLogger.logIntervalCreated(log, id, (int) TICK_INTERVAL.getSeconds());
             
@@ -145,6 +167,7 @@ public class MatchSchedulerService {
 
     /**
      * Cancel the scheduled task for a game (manual end or candle exhaustion).
+     * Also releases the distributed scheduler ownership key in Redis.
      */
     public void stopProgression(long gameId) {
         ScheduledFuture<?> future = runningTasks.remove(gameId);
@@ -157,15 +180,28 @@ public class MatchSchedulerService {
                 "remainingActiveGames", activeGameCount()
             ));
         }
+
+        // Release distributed scheduler ownership
+        roomManager.releaseScheduler(gameId);
     }
 
     // ==================== TICK ====================
 
     @SuppressWarnings("null")
     private void tick(long gameId) {
+        long startNanos = System.nanoTime();
         GameLogger.setGameContext(gameId);
         
         try {
+            // ── Freeze check: skip tick if game is frozen (DR) ──
+            if (freezeService.isFrozen(gameId)) {
+                log.debug("[Tick] Game {} is frozen — skipping tick", gameId);
+                return;
+            }
+
+            // ── Refresh distributed scheduler ownership TTL ──
+            roomManager.refreshSchedulerOwnership(gameId);
+
             // Note: tick() is NOT @Transactional (called from scheduler thread).
             // advanceCandle() opens its own transaction with a pessimistic lock,
             // so overlapping ticks are safely serialised at the DB level.
@@ -219,6 +255,11 @@ public class MatchSchedulerService {
 
             GameLogger.logIntervalTick(log, gameId, index, game.getTotalCandles(), nextCandle.getClose());
 
+            // Broadcast updated scoreboard with new mark price
+            broadcastScoreboard(game, nextCandle.getClose());
+
+            metrics.recordCandleTickTime(System.nanoTime() - startNanos);
+
         } catch (Exception e) {
             GameLogger.logError(log, "tick", gameId, e, null);
         } finally {
@@ -238,22 +279,25 @@ public class MatchSchedulerService {
 
             double finalPrice = candleService.getCurrentPrice(gameId);
 
-            // Replay trades with risk stats
-            ReplayResult creatorReplay = replayWithStats(
-                    gameId, game.getCreator().getId(), game.getStartingBalance(), finalPrice);
-            ReplayResult opponentReplay = replayWithStats(
-                    gameId, game.getOpponent().getId(), game.getStartingBalance(), finalPrice);
+            // Use position snapshots (O(1)) with fallback to trade replay
+            positionStore.updateMarkPrice(gameId, game.getCreator().getId(), finalPrice);
+            positionStore.updateMarkPrice(gameId, game.getOpponent().getId(), finalPrice);
 
-            double creatorBal = creatorReplay.finalEquity;
-            double opponentBal = opponentReplay.finalEquity;
+            MatchTradeService.PlayerPosition creatorPos = getOrReplayPosition(
+                    gameId, game.getCreator().getId(), game.getStartingBalance());
+            MatchTradeService.PlayerPosition opponentPos = getOrReplayPosition(
+                    gameId, game.getOpponent().getId(), game.getStartingBalance());
+
+            double creatorBal = PositionSnapshotStore.snapshotEquity(creatorPos, finalPrice);
+            double opponentBal = PositionSnapshotStore.snapshotEquity(opponentPos, finalPrice);
 
             // Calculate hybrid scores
             double creatorScore = ScoringUtil.calculate(
                     creatorBal, game.getStartingBalance(),
-                    creatorReplay.maxDrawdown, creatorReplay.totalTrades, creatorReplay.profitableTrades);
+                    creatorPos.maxDrawdown, creatorPos.totalTrades, creatorPos.profitableTrades);
             double opponentScore = ScoringUtil.calculate(
                     opponentBal, game.getStartingBalance(),
-                    opponentReplay.maxDrawdown, opponentReplay.totalTrades, opponentReplay.profitableTrades);
+                    opponentPos.maxDrawdown, opponentPos.totalTrades, opponentPos.profitableTrades);
 
             game.setStatus("FINISHED");
             game.setEndTime(LocalDateTime.now());
@@ -298,10 +342,14 @@ public class MatchSchedulerService {
             gameRepository.save(game);
 
             // Persist stats with scores
-            persistStats(gameId, game.getCreator().getId(), creatorReplay, creatorScore);
-            persistStats(gameId, game.getOpponent().getId(), opponentReplay, opponentScore);
+            persistStatsFromPosition(gameId, game.getCreator().getId(), creatorPos, creatorBal, creatorScore);
+            persistStatsFromPosition(gameId, game.getOpponent().getId(), opponentPos, opponentBal, opponentScore);
 
             candleService.evict(gameId);
+
+            // Evict position snapshots and rate limiter buckets
+            positionStore.evictGame(gameId);
+            rateLimiter.evictGame(gameId);
 
             // Broadcast result with stats
             double startBal = game.getStartingBalance();
@@ -313,17 +361,17 @@ public class MatchSchedulerService {
             payload.put("creatorId", game.getCreator().getId());
             payload.put("creatorFinalBalance", creatorBal);
             payload.put("creatorProfit", creatorBal - startBal);
-            payload.put("creatorPeakEquity", creatorReplay.peakEquity);
-            payload.put("creatorMaxDrawdown", creatorReplay.maxDrawdown);
-            payload.put("creatorTotalTrades", creatorReplay.totalTrades);
-            payload.put("creatorProfitableTrades", creatorReplay.profitableTrades);
+            payload.put("creatorPeakEquity", creatorPos.peakEquity);
+            payload.put("creatorMaxDrawdown", creatorPos.maxDrawdown);
+            payload.put("creatorTotalTrades", creatorPos.totalTrades);
+            payload.put("creatorProfitableTrades", creatorPos.profitableTrades);
             payload.put("opponentId", game.getOpponent().getId());
             payload.put("opponentFinalBalance", opponentBal);
             payload.put("opponentProfit", opponentBal - startBal);
-            payload.put("opponentPeakEquity", opponentReplay.peakEquity);
-            payload.put("opponentMaxDrawdown", opponentReplay.maxDrawdown);
-            payload.put("opponentTotalTrades", opponentReplay.totalTrades);
-            payload.put("opponentProfitableTrades", opponentReplay.profitableTrades);
+            payload.put("opponentPeakEquity", opponentPos.peakEquity);
+            payload.put("opponentMaxDrawdown", opponentPos.maxDrawdown);
+            payload.put("opponentTotalTrades", opponentPos.totalTrades);
+            payload.put("opponentProfitableTrades", opponentPos.profitableTrades);
             payload.put("creatorFinalScore", creatorScore);
             payload.put("opponentFinalScore", opponentScore);
             payload.put("creatorRatingDelta", creatorRatingDelta);
@@ -336,6 +384,8 @@ public class MatchSchedulerService {
 
             // Clean up in-memory room state
             roomManager.endGame(gameId, false);
+
+            metrics.recordMatchCompleted();
 
             log.info("Game {} auto-finished. Creator: {}, Opponent: {}",
                     gameId, String.format("%.2f", creatorBal), String.format("%.2f", opponentBal));
@@ -433,7 +483,7 @@ public class MatchSchedulerService {
         return r;
     }
 
-    /** Persist (or update) a MatchStats row for a player in a game */
+    /** Persist (or update) a MatchStats row for a player in a game (legacy ReplayResult) */
     private void persistStats(long gameId, long userId, ReplayResult r, double finalScore) {
         MatchStats stats = matchStatsRepository
                 .findByGameIdAndUserId(gameId, userId)
@@ -449,6 +499,67 @@ public class MatchSchedulerService {
         stats.setFinalScore(finalScore);
 
         matchStatsRepository.save(stats);
+    }
+
+    /** Persist stats from a PlayerPosition snapshot */
+    private void persistStatsFromPosition(long gameId, long userId,
+                                           MatchTradeService.PlayerPosition pos,
+                                           double finalEquity, double finalScore) {
+        MatchStats stats = matchStatsRepository
+                .findByGameIdAndUserId(gameId, userId)
+                .orElse(new MatchStats());
+
+        stats.setGameId(gameId);
+        stats.setUserId(userId);
+        stats.setPeakEquity(pos.peakEquity);
+        stats.setMaxDrawdown(pos.maxDrawdown);
+        stats.setTotalTrades(pos.totalTrades);
+        stats.setProfitableTrades(pos.profitableTrades);
+        stats.setFinalEquity(finalEquity);
+        stats.setFinalScore(finalScore);
+
+        matchStatsRepository.save(stats);
+    }
+
+    // ==================== SCOREBOARD BROADCAST ====================
+
+    /**
+     * Broadcast updated scoreboard to both players after a candle tick.
+     * Uses the PositionSnapshotStore so no trade replays are needed.
+     */
+    private void broadcastScoreboard(Game game, double markPrice) {
+        try {
+            if (game.getOpponent() == null) return;
+            long p1Id = game.getCreator().getId();
+            long p2Id = game.getOpponent().getId();
+
+            Map<String, Object> scoreboard = positionStore.buildScoreboardPayload(
+                    game.getId(), p1Id, p2Id, markPrice);
+            broadcaster.sendToGame(game.getId(), "scoreboard", scoreboard);
+        } catch (Exception e) {
+            log.warn("[Tick] Scoreboard broadcast failed for game {}: {}", game.getId(), e.getMessage());
+        }
+    }
+
+    /**
+     * Get position from snapshot store, falling back to trade replay.
+     */
+    private MatchTradeService.PlayerPosition getOrReplayPosition(
+            long gameId, long userId, double startingBalance) {
+        MatchTradeService.PlayerPosition pos = positionStore.getPosition(gameId, userId);
+        if (pos != null) return pos;
+
+        // Fallback: replay trades (server restart scenario)
+        ReplayResult r = replayWithStats(gameId, userId, startingBalance,
+                candleService.getCurrentPrice(gameId));
+
+        MatchTradeService.PlayerPosition fallback = new MatchTradeService.PlayerPosition();
+        fallback.cash = r.finalEquity; // approximate — includes mark-to-market
+        fallback.peakEquity = r.peakEquity;
+        fallback.maxDrawdown = r.maxDrawdown;
+        fallback.totalTrades = r.totalTrades;
+        fallback.profitableTrades = r.profitableTrades;
+        return fallback;
     }
 
     // ==================== QUERIES ====================

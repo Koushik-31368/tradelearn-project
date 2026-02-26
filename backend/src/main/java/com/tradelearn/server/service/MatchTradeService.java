@@ -26,13 +26,19 @@ public class MatchTradeService {
     private final TradeRepository tradeRepository;
     private final GameRepository gameRepository;
     private final CandleService candleService;
+    private final PositionSnapshotStore positionStore;
+    private final GameMetricsService metrics;
 
     public MatchTradeService(TradeRepository tradeRepository,
                              GameRepository gameRepository,
-                             CandleService candleService) {
+                             CandleService candleService,
+                             PositionSnapshotStore positionStore,
+                             GameMetricsService metrics) {
         this.tradeRepository = tradeRepository;
         this.gameRepository = gameRepository;
         this.candleService = candleService;
+        this.positionStore = positionStore;
+        this.metrics = metrics;
     }
 
     // ==================== PLACE TRADE IN A MATCH ====================
@@ -43,6 +49,7 @@ public class MatchTradeService {
 
     @Transactional
     public Trade placeTrade(MatchTradeRequest request) {
+        long startNanos = System.nanoTime();
         GameLogger.setGameContext(request.getGameId());
         GameLogger.setUserContext(request.getUserId());
         
@@ -90,10 +97,13 @@ public class MatchTradeService {
             // ---- Server-authoritative price from CandleService ----
             double price = candleService.getCurrentPrice(request.getGameId());
 
-            // ---- Validate against player's current position ----
-            PlayerPosition position = calculatePosition(
-                    request.getGameId(), userId, game.getStartingBalance()
-            );
+            // ---- Validate against player's current position (O(1) snapshot) ----
+            PlayerPosition position = positionStore.getPosition(request.getGameId(), userId);
+            if (position == null) {
+                // Snapshot missing (server restart?) — rebuild from trade replay
+                position = calculatePosition(request.getGameId(), userId, game.getStartingBalance());
+                positionStore.putPosition(request.getGameId(), userId, position);
+            }
 
             double cost = request.getQuantity() * price;
 
@@ -146,9 +156,12 @@ public class MatchTradeService {
             GameLogger.logTradePlaced(log, request.getGameId(), userId, type, 
                 request.getQuantity(), request.getSymbol(), price);
 
-            // Recalculate position + stats (peak equity, drawdown, trade counts)
-            // Stats are tracked in-memory via PlayerPosition and persisted at match end
-            calculatePosition(request.getGameId(), request.getUserId(), game.getStartingBalance());
+            // Update position snapshot incrementally (O(1) instead of O(n) replay)
+            positionStore.applyTrade(request.getGameId(), userId, type,
+                    request.getSymbol(), request.getQuantity(), price);
+
+            metrics.recordTrade();
+            metrics.recordTradeTime(System.nanoTime() - startNanos);
 
             return saved;
             
@@ -285,21 +298,11 @@ public class MatchTradeService {
      */
     public double calculateFinalBalance(long gameId, long userId,
                                          double startingBalance, double currentStockPrice) {
-        PlayerPosition pos = calculatePosition(gameId, userId, startingBalance);
-
-        double totalBalance = pos.cash;
-
-        // Add value of all long positions
-        for (Map.Entry<String, Integer> entry : pos.shares.entrySet()) {
-            totalBalance += entry.getValue() * currentStockPrice;
+        PlayerPosition pos = positionStore.getPosition(gameId, userId);
+        if (pos == null) {
+            pos = calculatePosition(gameId, userId, startingBalance);
         }
-
-        // Subtract cost to close short positions (buy to cover at current price)
-        for (Map.Entry<String, Integer> entry : pos.shortShares.entrySet()) {
-            totalBalance -= entry.getValue() * currentStockPrice;
-        }
-
-        return totalBalance;
+        return PositionSnapshotStore.snapshotEquity(pos, currentStockPrice);
     }
 
     // ==================== QUERIES ====================
@@ -313,6 +316,11 @@ public class MatchTradeService {
     }
 
     public PlayerPosition getPlayerPosition(long gameId, long userId, double startingBalance) {
-        return calculatePosition(gameId, userId, startingBalance);
+        PlayerPosition pos = positionStore.getPosition(gameId, userId);
+        if (pos != null) return pos;
+        // Fallback: rebuild from trade replay (server restart scenario)
+        pos = calculatePosition(gameId, userId, startingBalance);
+        positionStore.putPosition(gameId, userId, pos);
+        return pos;
     }
 }

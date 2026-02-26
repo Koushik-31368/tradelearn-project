@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { backendUrl } from '../utils/api';
+import { backendUrl, authHeaders } from '../utils/api';
 import './ProfilePage.css';
 
 const ProfilePage = () => {
@@ -16,7 +16,7 @@ const ProfilePage = () => {
         if (!user) return;
         (async () => {
             try {
-                const res = await fetch(backendUrl(`/api/users/${user.id}/profile`));
+                const res = await fetch(backendUrl(`/api/users/${user.id}/profile`), { headers: authHeaders() });
                 if (!res.ok) throw new Error('Failed to load profile');
                 setProfile(await res.json());
             } catch (err) {
