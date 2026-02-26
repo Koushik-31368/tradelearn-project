@@ -1,7 +1,12 @@
+
 import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { stompClient } from "../socket";
 import rankTier from "../utils/rankTier";
+
+// Props: winner, matchId, mode, skillType
+export default function MatchResult({ winner, matchId, mode, skillType }) {
+
 
   const navigate = useNavigate();
   const [waiting, setWaiting] = useState(false);
@@ -85,7 +90,7 @@ import rankTier from "../utils/rankTier";
       if (countdownInterval) clearInterval(countdownInterval);
       if (pollingInterval) clearInterval(pollingInterval);
     };
-  }, [navigate]);
+  }, [navigate, matchId]);
 
   return (
     <div className="result-screen arena-bg">

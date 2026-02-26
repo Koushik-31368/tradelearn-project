@@ -1,27 +1,6 @@
 
-    @PostMapping("/{matchId}/rematch")
-    public ResponseEntity<?> rematch(@PathVariable String matchId) {
-        User user = getAuthenticatedUser();
-        Match newMatch = matchService.requestRematch(matchId, user.getId().toString());
-        if (newMatch == null) {
-            return ResponseEntity.ok("Waiting for opponent...");
-        }
-        // Notify both players via WebSocket (if GameBroadcaster available)
-        Match oldMatch = matchService.getMatch(matchId);
-        try {
-            var gameBroadcasterField = matchService.getClass().getDeclaredField("broadcaster");
-            gameBroadcasterField.setAccessible(true);
-            Object broadcaster = gameBroadcasterField.get(matchService);
-            if (broadcaster != null) {
-                broadcaster.getClass().getMethod("sendToUser", String.class, String.class, Object.class)
-                    .invoke(broadcaster, oldMatch.getPlayer1(), "/queue/rematch", newMatch.getMatchId());
-                broadcaster.getClass().getMethod("sendToUser", String.class, String.class, Object.class)
-                    .invoke(broadcaster, oldMatch.getPlayer2(), "/queue/rematch", newMatch.getMatchId());
-            }
-        } catch (Exception ignored) {}
-        return ResponseEntity.ok(newMatch.getMatchId());
-    }
-package com.tradelearn.server.controller;
+
+    package com.tradelearn.server.controller;
 
 import java.util.List;
 import java.util.Map;
@@ -193,6 +172,16 @@ public class MatchController {
         } catch (IllegalArgumentException | IllegalStateException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
+    }
+
+
+    // ==================== REMATCH ====================
+
+    @PostMapping("/{gameId}/rematch")
+    public ResponseEntity<?> rematch(@PathVariable long gameId) {
+        User user = getAuthenticatedUser();
+        Game newGame = matchService.requestRematch(gameId, user.getId());
+        return ResponseEntity.ok(newGame.getId());
     }
 
     // ==================== TRADING ====================
