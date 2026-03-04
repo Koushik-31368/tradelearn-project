@@ -13,34 +13,92 @@ import java.util.Map;
 /**
  * Fetches historical OHLCV candles from Yahoo Finance for a given NSE symbol.
  *
- * <p>Endpoint used:
- * {@code https://query1.finance.yahoo.com/v8/finance/chart/{symbol}.NS?interval=5m&range=5d}
- * </p>
+ * <p>Two modes are supported:</p>
+ * <ul>
+ *   <li><b>Recent (live)</b> — last 5 trading days at 5-minute resolution
+ *       via the {@code range=5d&interval=5m} query.</li>
+ *   <li><b>Date-range (historical events)</b> — arbitrary {@code period1}/
+ *       {@code period2} range; the interval is auto-selected based on the
+ *       span so Yahoo Finance always returns data:
+ *       <ul>
+ *         <li>&lt; 60 days old → {@code 5m}</li>
+ *         <li>&lt; 730 days old → {@code 1h}</li>
+ *         <li>older → {@code 1d}</li>
+ *       </ul>
+ *   </li>
+ * </ul>
  *
  * <p>Yahoo Finance sometimes embeds {@code null} at closed-market timestamps.
- * Any candle whose OHLCV contains a null value is silently skipped so the
- * frontend chart always receives clean numeric data.</p>
+ * Any candle whose OHLCV contains a null value is silently skipped.</p>
  */
 @Slf4j
 @Service
 public class MarketDataService {
 
-    private static final String YAHOO_URL =
-            "https://query1.finance.yahoo.com/v8/finance/chart/%s.NS?interval=5m&range=5d";
+    private static final String YAHOO_BASE = "https://query1.finance.yahoo.com/v8/finance/chart/";
+    /** Recent-data URL — last 5 trading days at 5-minute resolution. */
+    private static final String YAHOO_RECENT_URL =
+            YAHOO_BASE + "%s.NS?interval=5m&range=5d";
+    /** Date-range URL — period1/period2 are Unix epoch seconds; interval chosen dynamically. */
+    private static final String YAHOO_RANGE_URL =
+            YAHOO_BASE + "%s.NS?period1=%d&period2=%d&interval=%s";
+
+    /** Epoch seconds threshold below which Yahoo's 5-minute data starts (roughly 60 days). */
+    private static final long SECONDS_60D  = 60L  * 24 * 3600;
+    /** Epoch seconds threshold below which Yahoo's 1-hour data starts (roughly 730 days). */
+    private static final long SECONDS_730D = 730L * 24 * 3600;
 
     private final RestTemplate restTemplate = new RestTemplate();
 
+    // ── PUBLIC API ──────────────────────────────────────────────────────────
+
     /**
-     * Returns up to ~375 five-minute candles for the given NSE stock symbol
-     * (last 5 trading days worth of 5-minute bars).
-     *
-     * @param symbol NSE symbol without the {@code .NS} suffix, e.g. {@code INFY}
-     * @return list of candle maps with keys: {@code time, open, high, low, close, volume}
-     * @throws RuntimeException if Yahoo Finance is unreachable or returns no data
+     * Returns up to ~375 five-minute candles for the given NSE symbol
+     * (last 5 trading days).  Used by the <em>Live Data</em> tab.
      */
     public List<Map<String, Object>> getHistoricalData(String symbol) {
-        String url = String.format(YAHOO_URL, symbol);
-        log.info("[MarketData] Fetching candles for {} — {}", symbol, url);
+        String url = String.format(YAHOO_RECENT_URL, symbol);
+        log.info("[MarketData] Fetching recent candles for {} — {}", symbol, url);
+        return fetchAndParse(symbol, url);
+    }
+
+    /**
+     * Returns OHLCV candles for {@code symbol} between {@code start} and {@code end}
+     * (Unix epoch <b>seconds</b>).  Used by the <em>Historical Events</em> tab.
+     *
+     * <p>The interval is chosen automatically:</p>
+     * <ul>
+     *   <li>End is within the last 60 days → {@code 5m}</li>
+     *   <li>End is within the last 730 days → {@code 1h}</li>
+     *   <li>Older → {@code 1d} (fully supported for any historical range)</li>
+     * </ul>
+     *
+     * @param symbol NSE symbol without {@code .NS}, e.g. {@code RELIANCE}
+     * @param start  range start in Unix epoch seconds
+     * @param end    range end   in Unix epoch seconds
+     */
+    public List<Map<String, Object>> getHistoricalData(String symbol, long start, long end) {
+        long nowSec     = System.currentTimeMillis() / 1000L;
+        long ageOfEnd   = nowSec - end;          // how old the end-boundary is
+        long spanSec    = end - start;            // total range width
+
+        String interval;
+        if (ageOfEnd < SECONDS_60D && spanSec <= SECONDS_60D) {
+            interval = "5m";
+        } else if (ageOfEnd < SECONDS_730D) {
+            interval = "1h";
+        } else {
+            interval = "1d";
+        }
+
+        String url = String.format(YAHOO_RANGE_URL, symbol, start, end, interval);
+        log.info("[MarketData] Fetching range candles for {} interval={} — {}", symbol, interval, url);
+        return fetchAndParse(symbol, url);
+    }
+
+    // ── PRIVATE HELPERS ─────────────────────────────────────────────────────
+
+    private List<Map<String, Object>> fetchAndParse(String symbol, String url) {
 
         try {
             JsonNode response = restTemplate.getForObject(url, JsonNode.class);
