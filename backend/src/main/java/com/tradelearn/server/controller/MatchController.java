@@ -8,6 +8,7 @@ import java.util.Map;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.tradelearn.server.exception.GameNotFoundException;
 import com.tradelearn.server.dto.CreateMatchRequest;
 import com.tradelearn.server.dto.EndMatchRequest;
 import com.tradelearn.server.dto.MatchResult;
@@ -371,6 +373,38 @@ public class MatchController {
         return matchStatsRepository.findByGameIdAndUserId(gameId, userId)
                 .<ResponseEntity<?>>map(ResponseEntity::ok)
                 .orElse(ResponseEntity.ok(Map.of("message", "No stats available for this player")));
+    }
+
+    // ==================== CANCEL GAME ====================
+
+    /**
+     * DELETE /api/match/{gameId}
+     *
+     * Let the host cancel their own WAITING lobby game.
+     * <ul>
+     *   <li>404 if game not found</li>
+     *   <li>403 if caller is not the creator</li>
+     *   <li>400 if game is not WAITING (already active / finished)</li>
+     * </ul>
+     * After a successful delete, a WebSocket {@code /topic/lobby/refresh}
+     * event is broadcast so every connected browser refreshes its lobby list.
+     */
+    @DeleteMapping("/{gameId}")
+    public ResponseEntity<?> deleteMatch(@PathVariable long gameId) {
+        try {
+            User user = getAuthenticatedUser();
+            matchService.deleteGame(gameId, user.getId());
+            return ResponseEntity.ok(Map.of("message", "Game cancelled successfully"));
+        } catch (GameNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        } catch (IllegalStateException e) {
+            // distinguishes "not host" (could 403) from "not WAITING" (400)
+            String msg = e.getMessage();
+            if (msg != null && msg.contains("Only the host")) {
+                return ResponseEntity.status(403).body(Map.of("error", msg));
+            }
+            return ResponseEntity.badRequest().body(Map.of("error", msg));
+        }
     }
 
     // ==================== ROOM DIAGNOSTICS ====================

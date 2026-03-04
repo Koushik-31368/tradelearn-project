@@ -101,7 +101,13 @@ const SimulatorDashboard = () => {
 
         {/* Center — Chart */}
         <section className="sim-dashboard__center">
-          <CandlestickChart candles={candles} smaData={smaData} symbol={selectedSymbol} />
+          <CandlestickChart
+            candles={candles}
+            smaData={smaData}
+            symbol={selectedSymbol}
+            basePrice={selectedStock?.price}
+            liveMode={true}
+          />
         </section>
 
         {/* Right — Sentiment + Trading Panel */}

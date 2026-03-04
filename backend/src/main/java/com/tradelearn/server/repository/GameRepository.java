@@ -19,6 +19,14 @@ public interface GameRepository extends JpaRepository<Game, Long> {
 
     List<Game> findByStatus(String status);
 
+    /**
+     * Find all WAITING games whose created_at timestamp is before the given
+     * cutoff. Used by {@link com.tradelearn.server.service.GameCleanupService}
+     * to purge abandoned lobby games.
+     */
+    @Query("SELECT g FROM Game g WHERE g.status = 'WAITING' AND g.createdAt < :cutoff")
+    List<Game> findStaleWaitingGames(@Param("cutoff") java.sql.Timestamp cutoff);
+
     List<Game> findByCreatorIdOrOpponentId(Long creatorId, Long opponentId);
 
     List<Game> findByCreatorIdOrOpponentIdAndStatus(Long creatorId, Long opponentId, String status);

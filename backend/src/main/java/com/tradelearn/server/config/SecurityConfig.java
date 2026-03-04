@@ -80,6 +80,9 @@ public class SecurityConfig {
                 .requestMatchers("GET", "/api/match/finished").permitAll()
                 .requestMatchers("GET", "/api/match/{gameId}").permitAll()
 
+                // ── Public: Market data (Practice Mode — no auth needed) ──
+                .requestMatchers("GET", "/api/market/**").permitAll()
+
                 // ── Public: Leaderboard ──
                 .requestMatchers("GET", "/api/users/leaderboard").permitAll()
 

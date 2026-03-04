@@ -746,6 +746,65 @@ public class MatchService {
         matchStatsRepository.save(stats);
     }
 
+    // ==================== DELETE GAME (host cancel) ====================
+
+    /**
+     * Cancel / delete a WAITING game created by the given user.
+     *
+     * <p>Rules enforced:
+     * <ul>
+     *   <li>Game must exist.</li>
+     *   <li>Only the creator (host) can delete — prevents any random player
+     *       from destroying someone else's lobby game.</li>
+     *   <li>Game must be in WAITING status — once a second player has joined
+     *       and the match is ACTIVE, this endpoint refuses to intervene so the
+     *       active trading session is never interrupted.</li>
+     * </ul>
+     *
+     * <p>After the DB delete commits, the method broadcasts a
+     * {@code /topic/lobby/refresh} WebSocket event so every browser tab
+     * immediately removes the cancelled game from its list.
+     *
+     * @param gameId      the match to delete
+     * @param requesterId the authenticated user requesting the delete
+     * @throws GameNotFoundException    if no game with that id exists
+     * @throws IllegalStateException    if requester is not the host, or game is not WAITING
+     */
+    @Transactional
+    public void deleteGame(long gameId, long requesterId) {
+        Game game = gameRepository.findById(gameId)
+                .orElseThrow(() -> new GameNotFoundException(gameId));
+
+        if (game.getCreator() == null || !game.getCreator().getId().equals(requesterId)) {
+            throw new IllegalStateException("Only the host can cancel this game");
+        }
+
+        if (!"WAITING".equals(game.getStatus())) {
+            throw new IllegalStateException("Cannot cancel a game that is already " + game.getStatus());
+        }
+
+        gameRepository.deleteById(gameId);
+
+        // Clean up in-memory room state on this instance (harmless if already absent).
+        // endGame() cancels any local scheduler, removes Redis keys, and marks the
+        // room FINISHED — keeping the Redis state consistent with the deleted DB row.
+        try {
+            roomManager.endGame(gameId, false);
+        } catch (Exception e) {
+            log.warn("[deleteGame] Room cleanup for game {} had a non-fatal error: {}", gameId, e.getMessage());
+        }
+
+        // Defer WebSocket broadcast to after commit so the message is only sent
+        // when we know the DB delete is fully durable.
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                broadcaster.broadcastLobbyUpdate();
+                log.info("[deleteGame] Game {} cancelled by user {} — lobby notified", gameId, requesterId);
+            }
+        });
+    }
+
     // ==================== QUERIES ====================
     public Optional<Game> getMatch(long gameId) {
         return gameRepository.findById(gameId);

@@ -10,6 +10,7 @@ import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import LobbyPage from './pages/LobbyPage';
 import GamePage from './pages/GamePage';
 import SimulatorPage from './pages/SimulatorPage'; // 1. Import
+import PracticePage from './pages/PracticePage';
 import LearnPage from './pages/LearnPage';
 import StrategiesPage from './pages/StrategiesPage';
 import MatchResultPage from './pages/MatchResultPage';
@@ -44,6 +45,7 @@ function AppContent() {
         <Route path="/learn" element={<LearnPage />} />
         <Route path="/strategies" element={<StrategiesPage />} />
         <Route path="/simulator" element={<SimulatorPage />} />
+        <Route path="/practice" element={<PracticePage />} />
         <Route path="/terms" element={<TermsPage />} />
         <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="/risk-disclosure" element={<RiskDisclosurePage />} />
