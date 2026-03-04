@@ -1,9 +1,11 @@
 package com.tradelearn.server.service;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,19 +52,43 @@ public class MarketDataService {
     private static final long SECONDS_60D  = 60L  * 24 * 3600;
     /** Epoch seconds threshold below which Yahoo's 1-hour data starts (roughly 730 days). */
     private static final long SECONDS_730D = 730L * 24 * 3600;
+    /** TTL in seconds for the "recent" (live-mode) cache entries (~10 minutes). */
+    private static final long RECENT_CACHE_TTL_SEC = 600L;
 
     private final RestTemplate restTemplate = new RestTemplate();
+
+    // ── In-memory caches ────────────────────────────────────────────────────
+    /** Cache for historical range requests — keyed by "symbol*start*end". */
+    private final Map<String, List<Map<String, Object>>> historyCache =
+            new ConcurrentHashMap<>();
+    /** Cache for recent (live 5-day) requests — keyed by symbol. */
+    private final Map<String, List<Map<String, Object>>> recentCache =
+            new ConcurrentHashMap<>();
+    /** Insertion timestamps (epoch seconds) for recent cache entries. */
+    private final Map<String, Long> recentCacheTimestamps = new ConcurrentHashMap<>();
+    /** Cache for current-price requests — keyed by symbol; TTL = RECENT_CACHE_TTL_SEC. */
+    private final Map<String, Double>  priceCache           = new ConcurrentHashMap<>();
+    private final Map<String, Long>    priceCacheTimestamps = new ConcurrentHashMap<>();
 
     // ── PUBLIC API ──────────────────────────────────────────────────────────
 
     /**
      * Returns up to ~375 five-minute candles for the given NSE symbol
-     * (last 5 trading days).  Used by the <em>Live Data</em> tab.
+     * (last 5 trading days).  Results are cached for {@code RECENT_CACHE_TTL_SEC} seconds.
      */
     public List<Map<String, Object>> getHistoricalData(String symbol) {
+        long now = Instant.now().getEpochSecond();
+        Long ts  = recentCacheTimestamps.get(symbol);
+        if (ts != null && (now - ts) < RECENT_CACHE_TTL_SEC && recentCache.containsKey(symbol)) {
+            log.info("[MarketData] Cache HIT (recent) for {}", symbol);
+            return recentCache.get(symbol);
+        }
         String url = String.format(YAHOO_RECENT_URL, symbol);
         log.info("[MarketData] Fetching recent candles for {} — {}", symbol, url);
-        return fetchAndParse(symbol, url);
+        List<Map<String, Object>> data = fetchAndParse(symbol, url);
+        recentCache.put(symbol, data);
+        recentCacheTimestamps.put(symbol, now);
+        return data;
     }
 
     /**
@@ -81,9 +107,15 @@ public class MarketDataService {
      * @param end    range end   in Unix epoch seconds
      */
     public List<Map<String, Object>> getHistoricalData(String symbol, long start, long end) {
+        String key = symbol + "*" + start + "*" + end;
+        if (historyCache.containsKey(key)) {
+            log.info("[MarketData] Cache HIT (history) for key={}", key);
+            return historyCache.get(key);
+        }
+
         long nowSec     = System.currentTimeMillis() / 1000L;
-        long ageOfEnd   = nowSec - end;          // how old the end-boundary is
-        long spanSec    = end - start;            // total range width
+        long ageOfEnd   = nowSec - end;
+        long spanSec    = end - start;
 
         String interval;
         if (ageOfEnd < SECONDS_60D && spanSec <= SECONDS_60D) {
@@ -96,7 +128,43 @@ public class MarketDataService {
 
         String url = String.format(YAHOO_RANGE_URL, symbol, start, end, interval);
         log.info("[MarketData] Fetching range candles for {} interval={} — {}", symbol, interval, url);
-        return fetchAndParse(symbol, url);
+        List<Map<String, Object>> data = fetchAndParse(symbol, url);
+        historyCache.put(key, data);
+        return data;
+    }
+
+    /**
+     * Returns the current (or latest) market price for a given NSE symbol via
+     * Yahoo Finance meta.regularMarketPrice.  Results are cached for
+     * {@code RECENT_CACHE_TTL_SEC} seconds to avoid rate limits.
+     *
+     * @param symbol NSE symbol without {@code .NS}
+     * @return current price
+     */
+    public double getCurrentPrice(String symbol) {
+        long now = Instant.now().getEpochSecond();
+        Long ts  = priceCacheTimestamps.get(symbol);
+        if (ts != null && (now - ts) < RECENT_CACHE_TTL_SEC && priceCache.containsKey(symbol)) {
+            log.info("[MarketData] Cache HIT (price) for {}", symbol);
+            return priceCache.get(symbol);
+        }
+
+        String url = YAHOO_BASE + symbol + ".NS?interval=1m&range=1d";
+        log.info("[MarketData] Fetching current price for {} — {}", symbol, url);
+        try {
+            JsonNode response = restTemplate.getForObject(url, JsonNode.class);
+            if (response == null) throw new RuntimeException("Empty response from Yahoo Finance");
+            double price = response
+                    .path("chart").path("result").path(0)
+                    .path("meta").path("regularMarketPrice").asDouble();
+            if (price <= 0) throw new RuntimeException("Invalid price returned for " + symbol);
+            priceCache.put(symbol, price);
+            priceCacheTimestamps.put(symbol, now);
+            return price;
+        } catch (RuntimeException e) {
+            log.error("[MarketData] getCurrentPrice failed for {}: {}", symbol, e.getMessage());
+            throw new RuntimeException("Failed to get current price for " + symbol + ": " + e.getMessage(), e);
+        }
     }
 
     // ── PRIVATE HELPERS ─────────────────────────────────────────────────────

@@ -9,24 +9,6 @@ import { aiDecision, aiDecisionLabel } from '../utils/aiTrader';
 import { useAuth } from '../context/AuthContext';
 import { backendUrl } from '../utils/api';
 
-// ── Modes ──────────────────────────────────────────────────────────────────
-const MODE_LIVE       = 'live';
-const MODE_HISTORICAL = 'historical';
-
-// ── Live Data: stocks available for recent 5-day replay ───────────────────
-const PRACTICE_STOCKS = [
-  { symbol: 'RELIANCE',  name: 'Reliance Industries', sector: 'Energy'  },
-  { symbol: 'TCS',       name: 'Tata Consultancy',    sector: 'IT'      },
-  { symbol: 'INFY',      name: 'Infosys Ltd',         sector: 'IT'      },
-  { symbol: 'HDFCBANK',  name: 'HDFC Bank',           sector: 'Banking' },
-  { symbol: 'ICICIBANK', name: 'ICICI Bank',          sector: 'Banking' },
-  { symbol: 'WIPRO',     name: 'Wipro Ltd',           sector: 'IT'      },
-  { symbol: 'SBIN',      name: 'State Bank of India', sector: 'Banking' },
-  { symbol: 'ITC',       name: 'ITC Ltd',             sector: 'FMCG'   },
-  { symbol: 'LT',        name: 'Larsen & Toubro',     sector: 'Infra'   },
-  { symbol: 'MARUTI',    name: 'Maruti Suzuki',       sector: 'Auto'    },
-];
-
 // ── Replay speed options (ms per candle) ────────────────────────────────────
 const SPEEDS = [
   { label: '0.5×',  ms: 3000 },
@@ -36,12 +18,6 @@ const SPEEDS = [
 ];
 
 export default function PracticePage() {
-  // ── Mode ──────────────────────────────────────────────────────────────────
-  const [mode,         setMode]         = useState(MODE_LIVE);
-
-  // ── Live mode: selected stock ──────────────────────────────────────────
-  const [symbol,       setSymbol]       = useState('RELIANCE');
-
   // ── Historical mode: selected event ──────────────────────────────────
   const [eventId,      setEventId]      = useState(historicalEvents[0].id);
   const activeEvent = findEvent(eventId);
@@ -74,10 +50,10 @@ export default function PracticePage() {
     ? Math.round((visibleCount / allCandles.length) * 100)
     : 0;
   const lastCandle     = visibleCandles[visibleCandles.length - 1] || null;
-  const displaySymbol  = mode === MODE_LIVE ? symbol : activeEvent.symbol;
+  const displaySymbol  = activeEvent.symbol;
 
   // ── Load data ─────────────────────────────────────────────────────────
-  const loadData = useCallback(async (currentMode, sym, event) => {
+  const loadData = useCallback(async (event) => {
     clearInterval(intervalRef.current);
     setIsPlaying(false);
     setHasStarted(false);
@@ -87,15 +63,10 @@ export default function PracticePage() {
     setIsLoading(true);
 
     try {
-      const data = currentMode === MODE_HISTORICAL
-        ? await fetchMarketHistory(event.symbol, event.start, event.end)
-        : await fetchMarketHistory(sym);
+      const data = await fetchMarketHistory(event.symbol, event.start, event.end);
 
       if (data.length === 0) {
-        setError(currentMode === MODE_HISTORICAL
-          ? `No data available for "${event.title}". Yahoo Finance may not have this range.`
-          : `No market data for ${sym} right now. Try another stock or check back during market hours.`
-        );
+        setError(`No data available for "${event.title}". Yahoo Finance may not have this range.`);
         return;
       }
       setAllCandles(data);
@@ -107,12 +78,12 @@ export default function PracticePage() {
     }
   }, []);
 
-  // Reload whenever mode, symbol, or event changes
+  // Reload whenever event changes
   useEffect(() => {
-    loadData(mode, symbol, activeEvent);
+    loadData(activeEvent);
     return () => clearInterval(intervalRef.current);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mode, symbol, eventId]);
+  }, [eventId]);
 
   // ── Replay tick ──────────────────────────────────────────────────────
   useEffect(() => {
@@ -177,7 +148,7 @@ export default function PracticePage() {
     setVisibleCount(Math.min(10, allCandles.length));
   };
 
-  const handleReload = () => loadData(mode, symbol, activeEvent);
+  const handleReload = () => loadData(activeEvent);
 
   // ── Strategy decision handler ─────────────────────────────────────────
   const handleDecision = async (decision) => {
@@ -203,11 +174,6 @@ export default function PracticePage() {
     }
   };
 
-  const handleModeSwitch = (newMode) => {
-    if (newMode === mode) return;
-    setMode(newMode);
-  };
-
   const finished = allCandles.length > 0 && visibleCount >= allCandles.length;
 
   // ── Last candle colour ────────────────────────────────────────────────
@@ -222,38 +188,19 @@ export default function PracticePage() {
       <div className="practice-header">
         <div className="practice-header__left">
           <h1 className="practice-header__title">
-            <span className={`practice-header__badge practice-header__badge--${mode}`}>
-              {mode === MODE_LIVE ? 'LIVE DATA' : 'HISTORICAL'}
+            <span className="practice-header__badge practice-header__badge--historical">
+              HISTORICAL
             </span>
             Practice Mode
           </h1>
           <p className="practice-header__sub">
-            {mode === MODE_LIVE
-              ? 'Real 5-minute NSE candles (last 5 trading days), replayed at your chosen speed.'
-              : 'Replay iconic Indian market crashes and rallies using real historical data.'}
+            Replay iconic market crashes and rallies using real historical data.
           </p>
         </div>
       </div>
 
-      {/* ── Mode tabs ── */}
-      <div className="practice-tabs">
-        <button
-          className={`practice-tab${mode === MODE_LIVE ? ' practice-tab--active' : ''}`}
-          onClick={() => handleModeSwitch(MODE_LIVE)}
-        >
-          📈 Live Data
-        </button>
-        <button
-          className={`practice-tab${mode === MODE_HISTORICAL ? ' practice-tab--active' : ''}`}
-          onClick={() => handleModeSwitch(MODE_HISTORICAL)}
-        >
-          📚 Historical Events
-        </button>
-      </div>
-
-      {/* ── Historical event cards (shown only in historical mode) ── */}
-      {mode === MODE_HISTORICAL && (
-        <div className="practice-events">
+      {/* ── Historical event cards ── */}
+      <div className="practice-events">
           {historicalEvents.map((ev) => (
             <button
               key={ev.id}
@@ -273,44 +220,22 @@ export default function PracticePage() {
             </button>
           ))}
         </div>
-      )}
 
       {/* ── Controls bar ── */}
       <div className="practice-controls">
 
-        {/* Live mode: stock picker */}
-        {mode === MODE_LIVE && (
-          <div className="practice-controls__group">
-            <label className="practice-controls__label">Stock</label>
-            <select
-              className="practice-controls__select"
-              value={symbol}
-              onChange={(e) => setSymbol(e.target.value)}
-              disabled={isLoading}
-            >
-              {PRACTICE_STOCKS.map((s) => (
-                <option key={s.symbol} value={s.symbol}>
-                  {s.symbol} — {s.name}
-                </option>
-              ))}
-            </select>
+        {/* Event summary pill */}
+        <div className="practice-controls__group">
+          <label className="practice-controls__label">Selected Event</label>
+          <div className="practice-event-pill">
+            <span className={`event-tag event-tag--${activeEvent.type}`}>
+              {activeEvent.type === 'crash' ? '📉' : '📈'}
+            </span>
+            <strong>{activeEvent.title}</strong>
+            <span className="practice-event-pill__sym">{activeEvent.symbol}</span>
+            <span className="practice-event-pill__period">{activeEvent.subtitle}</span>
           </div>
-        )}
-
-        {/* Historical mode: event summary pill */}
-        {mode === MODE_HISTORICAL && (
-          <div className="practice-controls__group">
-            <label className="practice-controls__label">Selected Event</label>
-            <div className="practice-event-pill">
-              <span className={`event-tag event-tag--${activeEvent.type}`}>
-                {activeEvent.type === 'crash' ? '📉' : '📈'}
-              </span>
-              <strong>{activeEvent.title}</strong>
-              <span className="practice-event-pill__sym">{activeEvent.symbol}</span>
-              <span className="practice-event-pill__period">{activeEvent.subtitle}</span>
-            </div>
-          </div>
-        )}
+        </div>
 
         {/* Speed selector */}
         <div className="practice-controls__group">
@@ -414,12 +339,7 @@ export default function PracticePage() {
         {isLoading && (
           <div className="practice-status">
             <div className="practice-spinner" />
-            <p>
-              {mode === MODE_HISTORICAL
-                ? <>Loading <strong>{activeEvent.title}</strong>…</>
-                : <>Loading market data for <strong>{symbol}</strong>…</>
-              }
-            </p>
+            <p>Loading <strong>{activeEvent.title}</strong>…</p>
           </div>
         )}
 
@@ -439,12 +359,6 @@ export default function PracticePage() {
             liveMode={false}
             symbol={displaySymbol}
           />
-        )}
-
-        {!isLoading && !error && allCandles.length === 0 && (
-          <div className="practice-status">
-            <p>No candles loaded. Press ▶ Play to start.</p>
-          </div>
         )}
       </div>
 
@@ -502,49 +416,24 @@ export default function PracticePage() {
 
       {/* ── Info footer ── */}
       <div className="practice-info">
-        {mode === MODE_LIVE ? (
-          <>
-            <div className="practice-info__card">
-              <h4>Live Data Mode</h4>
-              <ul>
-                <li>Real 5-minute OHLCV candles from NSE via Yahoo Finance (last 5 trading days).</li>
-                <li>Candles reveal one-by-one at your chosen speed — like watching a live market.</li>
-                <li>Press <strong>Pause</strong> at any time to study the price structure.</li>
-                <li>No real money — ideal for pattern recognition before live play.</li>
-              </ul>
-            </div>
-            <div className="practice-info__card">
-              <h4>Tips</h4>
-              <ul>
-                <li>Use <strong>1×</strong> speed to feel the natural market rhythm.</li>
-                <li>Look for support / resistance levels as candles form.</li>
-                <li>Try to call the next move before resuming — then check yourself.</li>
-                <li>Switch to <strong>Simulator Mode</strong> to test strategies with paper orders.</li>
-              </ul>
-            </div>
-          </>
-        ) : (
-          <>
-            <div className="practice-info__card">
-              <h4>Historical Events Mode</h4>
-              <ul>
-                <li>Real OHLCV data from iconic NSE crashes and rallies.</li>
-                <li>Daily candles for older events, hourly for recent ones.</li>
-                <li>Pause and study how price behaved at key support / resistance zones.</li>
-                <li>Each event has a linked stock most impacted by that macro event.</li>
-              </ul>
-            </div>
-            <div className="practice-info__card">
-              <h4>Learning Objectives</h4>
-              <ul>
-                <li><strong>Crashes</strong> — identify capitulation candles and reversal signals.</li>
-                <li><strong>Rallies</strong> — spot accumulation bases and breakout entries.</li>
-                <li>Compare different events to build a mental model of market cycles.</li>
-                <li>Apply what you learn in <strong>Simulator Mode</strong> with paper trades.</li>
-              </ul>
-            </div>
-          </>
-        )}
+        <div className="practice-info__card">
+          <h4>Historical Events Mode</h4>
+          <ul>
+            <li>Real OHLCV data from iconic NSE crashes and rallies.</li>
+            <li>Daily candles for older events, hourly for recent ones.</li>
+            <li>Pause and study how price behaved at key support / resistance zones.</li>
+            <li>Each event has a linked stock most impacted by that macro event.</li>
+          </ul>
+        </div>
+        <div className="practice-info__card">
+          <h4>Learning Objectives</h4>
+          <ul>
+            <li><strong>Crashes</strong> — identify capitulation candles and reversal signals.</li>
+            <li><strong>Rallies</strong> — spot accumulation bases and breakout entries.</li>
+            <li>Compare different events to build a mental model of market cycles.</li>
+            <li>Apply what you learn in <strong>Simulator Mode</strong> with paper trades.</li>
+          </ul>
+        </div>
       </div>
 
     </div>
