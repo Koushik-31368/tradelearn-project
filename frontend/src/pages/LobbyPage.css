@@ -365,6 +365,31 @@
   border-color: #6b7280;
 }
 
+/* Host action buttons (Enter + Cancel) */
+.game-card-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cancel-game-btn {
+  background-color: transparent;
+  color: #f87171;
+  border: 1px solid #f87171;
+  padding: 8px 16px;
+  font-size: 0.85rem;
+  font-weight: bold;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.cancel-game-btn:hover {
+  background-color: #7f1d1d;
+  color: #fecaca;
+  border-color: #fca5a5;
+}
+
 .no-games-message {
     color: #6b7280;
     text-align: center;

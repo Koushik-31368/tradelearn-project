@@ -73,6 +73,21 @@ public class GameBroadcaster {
     }
 
     /**
+     * Notify all lobby subscribers that the open-games list has changed
+     * (a game was created, cancelled, or auto-cleaned). Clients listening
+     * on {@code /topic/lobby/refresh} should re-fetch the open games list.
+     */
+    public void broadcastLobbyUpdate() {
+        java.util.Map<String, Object> payload = java.util.Map.of("event", "LOBBY_UPDATED");
+        messagingTemplate.convertAndSend("/topic/lobby/refresh", payload);
+        try {
+            redisRelay.broadcast("/topic/lobby/refresh", payload);
+        } catch (Exception e) {
+            log.warn("[Broadcaster] Redis relay failed for lobby refresh: {}", e.getMessage());
+        }
+    }
+
+    /**
      * Send a user-targeted event (e.g., match-found notification).
      * Routes through Redis relay for horizontal scaling.
      *

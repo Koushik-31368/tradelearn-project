@@ -74,6 +74,11 @@ const LobbyPage = () => {
           }
         });
 
+        // Subscribe to lobby refresh (triggered by host cancel or auto-cleanup)
+        client.subscribe('/topic/lobby/refresh', () => {
+          fetchOpenGames();
+        });
+
         // Subscribe to match-expired channel (2-minute timeout)
         client.subscribe(`/topic/user/${user.id}/match-expired`, (message) => {
           const data = JSON.parse(message.body);
@@ -205,6 +210,25 @@ const LobbyPage = () => {
     }
   };
 
+  // ── Cancel (delete) own game ──
+  const handleDeleteGame = async (gameId) => {
+    try {
+      const response = await fetch(backendUrl(`/api/match/${gameId}`), {
+        method: 'DELETE',
+        headers: { ...authHeaders() },
+      });
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.error || 'Failed to cancel game.');
+      }
+      // Optimistically remove from list; WS broadcast will also trigger a refresh
+      setOpenGames((prev) => prev.filter((g) => g.id !== gameId));
+    } catch (err) {
+      setError(err.message);
+      console.error(err);
+    }
+  };
+
   // ── Format search time ──
   const formatSearchTime = (seconds) => {
     const m = Math.floor(seconds / 60);
@@ -318,8 +342,11 @@ const LobbyPage = () => {
                     <p><strong>Balance:</strong> ₹{(game.startingBalance || 1000000).toLocaleString()}</p>
                     <span className={`status-badge status-${game.status?.toLowerCase()}`}>{game.status}</span>
                   </div>
-                  {user && user.id === game.creator.id ? (
-                    <button className="join-btn" onClick={() => navigate(`/game/${game.id}`)}>Enter Game</button>
+                  {user && user.id === game.creator?.id ? (
+                    <div className="game-card-actions">
+                      <button className="join-btn" onClick={() => navigate(`/game/${game.id}`)}>Enter Game</button>
+                      <button className="cancel-game-btn" onClick={() => handleDeleteGame(game.id)}>Cancel Game</button>
+                    </div>
                   ) : (
                     <button className="join-btn" onClick={() => handleJoinGame(game.id)}>Join Game</button>
                   )}

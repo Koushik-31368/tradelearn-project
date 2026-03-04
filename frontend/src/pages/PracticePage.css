@@ -1,0 +1,366 @@
+/* src/pages/PracticePage.css */
+
+/* ── Layout ─────────────────────────────────────────────────────────────── */
+.practice-page {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 28px 20px 60px;
+  color: var(--text-light, #f1f5f9);
+}
+
+/* ── Header ─────────────────────────────────────────────────────────────── */
+.practice-header {
+  margin-bottom: 24px;
+}
+
+.practice-header__title {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #f1f5f9;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 8px;
+}
+
+.practice-header__badge {
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  background: linear-gradient(135deg, #ef4444, #f97316);
+  color: #fff;
+  padding: 3px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.practice-header__sub {
+  font-size: 0.92rem;
+  color: #94a3b8;
+  margin: 0;
+  line-height: 1.6;
+  max-width: 680px;
+}
+
+/* ── Controls bar ───────────────────────────────────────────────────────── */
+.practice-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  align-items: flex-end;
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin-bottom: 16px;
+}
+
+.practice-controls__group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.practice-controls__group--actions {
+  flex-direction: row;
+  align-items: flex-end;
+  gap: 10px;
+  margin-left: auto;
+}
+
+.practice-controls__label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #64748b;
+}
+
+.practice-controls__select {
+  background: #0f172a;
+  color: #f1f5f9;
+  border: 1px solid #3b4565;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  min-width: 240px;
+}
+
+.practice-controls__select:focus {
+  outline: none;
+  border-color: #3b82f6;
+}
+
+.practice-controls__select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.practice-controls__speed-btns {
+  display: flex;
+  gap: 6px;
+}
+
+.speed-btn {
+  background: #0f172a;
+  color: #94a3b8;
+  border: 1px solid #334155;
+  border-radius: 6px;
+  padding: 7px 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.speed-btn:hover {
+  background: #1e3a5f;
+  border-color: #3b82f6;
+  color: #f1f5f9;
+}
+
+.speed-btn--active {
+  background: #1d4ed8;
+  border-color: #3b82f6;
+  color: #fff;
+}
+
+/* ── Shared button styles ───────────────────────────────────────────────── */
+.practice-btn {
+  padding: 8px 18px;
+  border-radius: 6px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  transition: background 0.2s ease, opacity 0.2s ease;
+}
+
+.practice-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.practice-btn--play {
+  background: #16a34a;
+  color: #fff;
+  min-width: 110px;
+}
+
+.practice-btn--play:hover:not(:disabled) {
+  background: #15803d;
+}
+
+.practice-btn--pause {
+  background: #d97706;
+  color: #fff;
+}
+
+.practice-btn--pause:hover:not(:disabled) {
+  background: #b45309;
+}
+
+.practice-btn--reset {
+  background: #374151;
+  color: #d1d5db;
+  border: 1px solid #4b5563;
+}
+
+.practice-btn--reset:hover:not(:disabled) {
+  background: #4b5563;
+}
+
+.practice-btn--reload {
+  background: transparent;
+  color: #60a5fa;
+  border: 1px solid #3b82f6;
+}
+
+.practice-btn--reload:hover:not(:disabled) {
+  background: #1e3a5f;
+}
+
+/* ── Progress bar ───────────────────────────────────────────────────────── */
+.practice-progress {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 12px;
+}
+
+.practice-progress__bar {
+  flex: 1;
+  height: 6px;
+  background: #1e293b;
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.practice-progress__fill {
+  height: 100%;
+  background: linear-gradient(90deg, #3b82f6, #06b6d4);
+  border-radius: 99px;
+  transition: width 0.3s ease;
+}
+
+.practice-progress__label {
+  font-size: 0.78rem;
+  color: #64748b;
+  white-space: nowrap;
+}
+
+.practice-progress__done {
+  color: #22c55e;
+  font-weight: 700;
+}
+
+/* ── OHLCV stats strip ──────────────────────────────────────────────────── */
+.practice-ohlcv {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+  background: #0f172a;
+  border: 1px solid #1e293b;
+  border-radius: 8px;
+  padding: 9px 16px;
+  margin-bottom: 12px;
+  font-size: 0.85rem;
+}
+
+.practice-ohlcv__symbol {
+  font-weight: 800;
+  font-size: 0.95rem;
+  letter-spacing: 0.03em;
+  margin-right: 4px;
+}
+
+.practice-ohlcv__field {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.practice-ohlcv__key {
+  color: #475569;
+  font-weight: 700;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+}
+
+.practice-ohlcv__val {
+  color: #cbd5e1;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Chart wrapper ──────────────────────────────────────────────────────── */
+.practice-chart-wrapper {
+  background: #0f172a;
+  border: 1px solid #1e293b;
+  border-radius: 10px;
+  overflow: hidden;
+  min-height: 380px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  margin-bottom: 28px;
+}
+
+.practice-chart-wrapper .candlestick-chart {
+  border: none;
+  border-radius: 0;
+}
+
+/* ── Loading / Error status ─────────────────────────────────────────────── */
+.practice-status {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 48px 24px;
+  color: #9ca3af;
+  text-align: center;
+}
+
+.practice-status--error {
+  color: #f87171;
+}
+
+.practice-status__icon {
+  font-size: 2rem;
+  margin: 0;
+}
+
+.practice-spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid #1e293b;
+  border-top-color: #3b82f6;
+  border-radius: 50%;
+  animation: practice-spin 0.7s linear infinite;
+}
+
+@keyframes practice-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Info cards ──────────────────────────────────────────────────────────── */
+.practice-info {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.practice-info__card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 18px 20px;
+}
+
+.practice-info__card h4 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #f1f5f9;
+  margin: 0 0 10px;
+}
+
+.practice-info__card ul {
+  margin: 0;
+  padding-left: 18px;
+  color: #94a3b8;
+  font-size: 0.85rem;
+  line-height: 1.75;
+}
+
+.practice-info__card li strong {
+  color: #cbd5e1;
+}
+
+/* ── Responsive ──────────────────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .practice-controls {
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .practice-controls__group--actions {
+    margin-left: 0;
+    flex-wrap: wrap;
+  }
+
+  .practice-controls__select {
+    min-width: 100%;
+  }
+
+  .practice-info {
+    grid-template-columns: 1fr;
+  }
+
+  .practice-header__title {
+    font-size: 1.4rem;
+  }
+}
