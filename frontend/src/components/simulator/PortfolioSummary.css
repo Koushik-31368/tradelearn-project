@@ -1,0 +1,129 @@
+/* src/components/simulator/PortfolioSummary.css */
+
+.portfolio-summary {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.summary-card {
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 12px;
+  padding: 20px 22px;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.summary-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  border-color: #484f58;
+}
+
+.summary-card--primary {
+  border-color: rgba(0, 255, 136, 0.15);
+}
+
+.summary-card--primary:hover {
+  border-color: rgba(0, 255, 136, 0.3);
+  box-shadow: 0 8px 32px rgba(0, 255, 136, 0.08);
+}
+
+.summary-card--profit {
+  border-color: rgba(0, 255, 136, 0.12);
+}
+
+.summary-card--loss {
+  border-color: rgba(255, 77, 79, 0.12);
+}
+
+.summary-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.summary-card__label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: #8b949e;
+}
+
+.summary-card__badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: rgba(0, 255, 136, 0.12);
+  color: #00ff88;
+  animation: badgePulse 2s ease-in-out infinite;
+}
+
+@keyframes badgePulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+.summary-card__indicator {
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.indicator--up { color: #00ff88; }
+.indicator--down { color: #ff4d4f; }
+
+.summary-card__value {
+  font-size: 1.55rem;
+  font-weight: 700;
+  color: #ffffff;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+
+.summary-card__sub {
+  font-size: 0.82rem;
+  margin-top: 4px;
+  font-weight: 600;
+}
+
+.summary-card__sparkline {
+  position: absolute;
+  bottom: 8px;
+  right: 12px;
+  opacity: 0.7;
+}
+
+.summary-card__icon {
+  opacity: 0.5;
+}
+
+.text-profit { color: #00ff88; }
+.text-loss { color: #ff4d4f; }
+.text-muted { color: #8b949e; }
+
+.sparkline-svg {
+  display: block;
+}
+
+/* Responsive */
+@media (max-width: 1100px) {
+  .portfolio-summary {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .portfolio-summary {
+    grid-template-columns: 1fr;
+  }
+  .summary-card__value {
+    font-size: 1.3rem;
+  }
+}

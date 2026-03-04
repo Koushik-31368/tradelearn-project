@@ -12,11 +12,14 @@ import GamePage from './pages/GamePage';
 import SimulatorPage from './pages/SimulatorPage'; // 1. Import
 import LearnPage from './pages/LearnPage';
 import StrategiesPage from './pages/StrategiesPage';
-import TrySimulatorPage from './pages/TrySimulatorPage';
 import MatchResultPage from './pages/MatchResultPage';
 import LeaderboardPage from './pages/LeaderboardPage';
 import ProfilePage from './pages/ProfilePage';
 import MatchHistoryPage from './pages/MatchHistoryPage';
+import TermsPage from './pages/TermsPage';
+import PrivacyPage from './pages/PrivacyPage';
+import RiskDisclosurePage from './pages/RiskDisclosurePage';
+import Footer from './components/Footer';
 
 const AUTH_PATHS = ['/login', '/register', '/forgot-password'];
 
@@ -40,11 +43,13 @@ function AppContent() {
         <Route path="/history" element={<MatchHistoryPage />} />
         <Route path="/learn" element={<LearnPage />} />
         <Route path="/strategies" element={<StrategiesPage />} />
-        <Route path="/simulator" element={<SimulatorPage />} /> {/* 2. Add route */}
-        <Route path="/try-simulator" element={<TrySimulatorPage />} />
-        <Route path="/try-simulator/:slug" element={<TrySimulatorPage />} />
+        <Route path="/simulator" element={<SimulatorPage />} />
+        <Route path="/terms" element={<TermsPage />} />
+        <Route path="/privacy" element={<PrivacyPage />} />
+        <Route path="/risk-disclosure" element={<RiskDisclosurePage />} />
       </Routes>
       {!hideTickerOnAuth && <StockTicker />}
+      {!hideTickerOnAuth && <Footer />}
     </div>
   );
 }

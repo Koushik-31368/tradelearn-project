@@ -283,14 +283,51 @@
   transition: background .2s, transform .15s;
 }
 
-.auth-btn:hover {
+.auth-btn:disabled {
+  background: #30363d;
+  color: #8b949e;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.auth-btn:hover:not(:disabled) {
   background: #00a865;
   transform: translateY(-1px);
 }
 
-.auth-btn:active {
+.auth-btn:active:not(:disabled) {
   transform: translateY(0);
   background: #009958;
+}
+
+/* ---------- agreement checkbox ---------- */
+.auth-agree {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 12px;
+  font-size: 13px;
+  color: #8b949e;
+  cursor: pointer;
+  line-height: 1.5;
+}
+
+.auth-agree input[type='checkbox'] {
+  width: 16px;
+  height: 16px;
+  margin-top: 2px;
+  accent-color: #00c876;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.auth-agree a {
+  color: #00c876;
+  text-decoration: none;
+}
+
+.auth-agree a:hover {
+  text-decoration: underline;
 }
 
 /* ---------- divider ---------- */

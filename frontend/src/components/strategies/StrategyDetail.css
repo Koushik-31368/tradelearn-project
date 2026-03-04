@@ -1,0 +1,304 @@
+/* StrategyDetail.css */
+
+/* ── Overlay ── */
+.strat-detail-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 40px 20px;
+  overflow-y: auto;
+  animation: strat-overlay-in 0.2s ease;
+}
+
+@keyframes strat-overlay-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* ── Panel ── */
+.strat-detail {
+  background: #0d1117;
+  border: 1px solid #30363d;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 780px;
+  animation: strat-slide-up 0.3s cubic-bezier(.4,0,.2,1);
+  overflow: hidden;
+}
+
+@keyframes strat-slide-up {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Header ── */
+.strat-detail__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 28px 32px 24px;
+  border-bottom: 1px solid #30363d;
+  background: #161b22;
+}
+
+.strat-detail__header-left {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.strat-detail__icon {
+  font-size: 1.8rem;
+  width: 52px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 255, 136, 0.06);
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+
+.strat-detail__name {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 8px 0;
+  letter-spacing: -0.02em;
+}
+
+.strat-detail__badges {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.strat-detail__risk,
+.strat-detail__category,
+.strat-detail__time {
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 3px 10px;
+  border-radius: 5px;
+}
+
+.strat-detail__risk--low {
+  color: #00ff88;
+  background: rgba(0, 255, 136, 0.1);
+}
+
+.strat-detail__risk--medium {
+  color: #f0b429;
+  background: rgba(240, 180, 41, 0.1);
+}
+
+.strat-detail__risk--high {
+  color: #ff4d4f;
+  background: rgba(255, 77, 79, 0.1);
+}
+
+.strat-detail__category {
+  color: #8b949e;
+  background: rgba(139, 148, 158, 0.1);
+}
+
+.strat-detail__time {
+  color: #8b949e;
+  background: rgba(139, 148, 158, 0.1);
+}
+
+.strat-detail__close {
+  background: none;
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #8b949e;
+  transition: border-color 0.2s ease, color 0.2s ease;
+  flex-shrink: 0;
+}
+
+.strat-detail__close:hover {
+  border-color: #ff4d4f;
+  color: #ff4d4f;
+}
+
+/* ── Body ── */
+.strat-detail__body {
+  padding: 32px;
+}
+
+.strat-detail__section {
+  margin-bottom: 28px;
+}
+
+.strat-detail__section:last-child {
+  margin-bottom: 0;
+}
+
+.strat-detail__section-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0 0 12px 0;
+}
+
+.strat-detail__section-num {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #00ff88;
+  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+  opacity: 0.6;
+  min-width: 20px;
+}
+
+.strat-detail__text {
+  font-size: 0.9rem;
+  color: #8b949e;
+  line-height: 1.65;
+  margin: 0;
+}
+
+/* Two column for entry/exit */
+.strat-detail__two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+/* Lists */
+.strat-detail__list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.strat-detail__list li {
+  position: relative;
+  padding-left: 20px;
+  margin-bottom: 8px;
+  font-size: 0.88rem;
+  color: #c9d1d9;
+  line-height: 1.55;
+}
+
+.strat-detail__list li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 8px;
+  width: 6px;
+  height: 6px;
+  border-radius: 2px;
+  background: #484f58;
+}
+
+.strat-detail__list--entry li::before {
+  background: #00ff88;
+}
+
+.strat-detail__list--exit li::before {
+  background: #ff4d4f;
+}
+
+.strat-detail__list--risk li::before {
+  background: #f0b429;
+}
+
+/* Chart */
+.strat-detail__chart-example {
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 12px;
+  padding: 20px;
+  overflow: hidden;
+}
+
+.strat-chart-svg {
+  width: 100%;
+  height: auto;
+}
+
+.strat-chart-label {
+  fill: #8b949e;
+  font-size: 9px;
+  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+}
+
+/* ── Footer ── */
+.strat-detail__footer {
+  padding: 24px 32px;
+  border-top: 1px solid #30363d;
+  background: #161b22;
+  text-align: center;
+}
+
+.strat-detail__sim-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 40px;
+  background: #00ff88;
+  color: #0d1117;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.92rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.strat-detail__sim-btn:hover {
+  background: #00e07a;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(0, 255, 136, 0.2);
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .strat-detail-overlay {
+    padding: 20px 12px;
+  }
+
+  .strat-detail__header {
+    padding: 22px 20px 18px;
+  }
+
+  .strat-detail__body {
+    padding: 24px 20px;
+  }
+
+  .strat-detail__two-col {
+    grid-template-columns: 1fr;
+  }
+
+  .strat-detail__footer {
+    padding: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .strat-detail__name {
+    font-size: 1.15rem;
+  }
+
+  .strat-detail__icon {
+    width: 42px;
+    height: 42px;
+    font-size: 1.4rem;
+  }
+}

@@ -1,0 +1,57 @@
+/* LearnCard.css */
+.learn-card {
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 12px;
+  padding: 28px 24px;
+  transition: transform 0.25s cubic-bezier(.4,0,.2,1),
+              border-color 0.25s ease,
+              box-shadow 0.25s ease;
+  cursor: default;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.learn-card:hover {
+  transform: translateY(-4px);
+  border-color: #00ff88;
+  box-shadow: 0 8px 30px rgba(0, 255, 136, 0.06);
+}
+
+.learn-card--highlight {
+  border-color: rgba(0, 255, 136, 0.3);
+}
+
+.learn-card__icon {
+  font-size: 1.6rem;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 255, 136, 0.08);
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+.learn-card__title {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.learn-card__desc {
+  font-size: 0.88rem;
+  color: #8b949e;
+  line-height: 1.65;
+  margin: 0;
+}
+
+@media (max-width: 640px) {
+  .learn-card {
+    padding: 22px 18px;
+  }
+}

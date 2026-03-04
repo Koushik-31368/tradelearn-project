@@ -10,9 +10,13 @@ import java.util.concurrent.ScheduledFuture;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import com.tradelearn.server.model.Game;
 import com.tradelearn.server.model.MatchStats;
@@ -60,6 +64,18 @@ public class MatchSchedulerService {
 
     /** ScheduledFuture per game — the ONLY in-memory per-game state */
     private final Map<Long, ScheduledFuture<?>> runningTasks = new ConcurrentHashMap<>();
+
+    /**
+     * Self-injection so that tick() calls autoFinishGame() through the Spring proxy,
+     * ensuring the @Transactional annotation is actually honoured.
+     * Without this, self-invocation bypasses the proxy and runs without a transaction.
+     */
+    private MatchSchedulerService self;
+
+    @Autowired
+    public void setSelf(@Lazy MatchSchedulerService self) {
+        this.self = self;
+    }
 
     public MatchSchedulerService(TaskScheduler taskScheduler,
                                  GameRepository gameRepository,
@@ -231,8 +247,8 @@ public class MatchSchedulerService {
                     "gameId", gameId,
                     "action", "auto_finishing"
                 ));
-                autoFinishGame(gameId);
-                stopProgression(gameId);
+                self.autoFinishGame(gameId);
+                // stopProgression is now called inside autoFinishGame's afterCommit
                 return;
             }
 
@@ -313,8 +329,6 @@ public class MatchSchedulerService {
                 game.setWinner(game.getOpponent());
             }
 
-            gameRepository.save(game);
-
             // ---- ELO rating update ----
             User creator = game.getCreator();
             User opponent = game.getOpponent();
@@ -339,19 +353,13 @@ public class MatchSchedulerService {
 
             game.setCreatorRatingDelta(creatorRatingDelta);
             game.setOpponentRatingDelta(opponentRatingDelta);
-            gameRepository.save(game);
+            gameRepository.save(game);  // Single save: game state + ELO deltas
 
             // Persist stats with scores
             persistStatsFromPosition(gameId, game.getCreator().getId(), creatorPos, creatorBal, creatorScore);
             persistStatsFromPosition(gameId, game.getOpponent().getId(), opponentPos, opponentBal, opponentScore);
 
-            candleService.evict(gameId);
-
-            // Evict position snapshots and rate limiter buckets
-            positionStore.evictGame(gameId);
-            rateLimiter.evictGame(gameId);
-
-            // Broadcast result with stats
+            // Build broadcast payload while inside TX (entity data is available)
             double startBal = game.getStartingBalance();
             Object winnerId = game.getWinner() != null ? game.getWinner().getId() : "draw";
 
@@ -380,15 +388,33 @@ public class MatchSchedulerService {
             payload.put("opponentNewRating", opponentNewRating);
             payload.put("winnerId", winnerId);
 
-            broadcaster.sendToGame(gameId, "finished", payload);
+            final double creatorBalFinal = creatorBal;
+            final double opponentBalFinal = opponentBal;
 
-            // Clean up in-memory room state
-            roomManager.endGame(gameId, false);
+            // All side effects (Redis, WS, cache eviction) run AFTER DB commit
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    try {
+                        stopProgression(gameId);
 
-            metrics.recordMatchCompleted();
+                        candleService.evict(gameId);
+                        positionStore.evictGame(gameId);
+                        rateLimiter.evictGame(gameId);
 
-            log.info("Game {} auto-finished. Creator: {}, Opponent: {}",
-                    gameId, String.format("%.2f", creatorBal), String.format("%.2f", opponentBal));
+                        broadcaster.sendToGame(gameId, "finished", payload);
+                        roomManager.endGame(gameId, false);
+                        metrics.recordMatchCompleted();
+
+                        log.info("Game {} auto-finished. Creator: {}, Opponent: {}",
+                                gameId, String.format("%.2f", creatorBalFinal),
+                                String.format("%.2f", opponentBalFinal));
+                    } catch (Exception e) {
+                        log.error("autoFinishGame afterCommit failed for game {}: {}",
+                                gameId, e.getMessage(), e);
+                    }
+                }
+            });
 
         } catch (Exception e) {
             log.error("Failed to auto-finish game {}: {}", gameId, e.getMessage(), e);
@@ -420,6 +446,7 @@ public class MatchSchedulerService {
         Map<String, Integer> longs = new HashMap<>();
         Map<String, Integer> shorts = new HashMap<>();
         Map<String, Double> avgShortPrice = new HashMap<>();
+        Map<String, Double> avgCostBasis = new HashMap<>();
 
         double peakEquity = startingBalance;
         double maxDrawdown = 0.0;
@@ -432,8 +459,21 @@ public class MatchSchedulerService {
             totalTrades++;
 
             switch (t.getType().toUpperCase()) {
-                case "BUY"   -> { cash -= cost; longs.merge(sym, t.getQuantity(), Integer::sum); }
-                case "SELL"  -> { cash += cost; longs.merge(sym, -t.getQuantity(), Integer::sum); }
+                case "BUY"   -> {
+                    cash -= cost;
+                    int prevShares = longs.getOrDefault(sym, 0);
+                    double prevBasis = avgCostBasis.getOrDefault(sym, 0.0);
+                    int newShares = prevShares + t.getQuantity();
+                    avgCostBasis.put(sym, newShares > 0 ? (prevBasis * prevShares + cost) / newShares : 0.0);
+                    longs.put(sym, newShares);
+                }
+                case "SELL"  -> {
+                    cash += cost;
+                    double avgBasis = avgCostBasis.getOrDefault(sym, 0.0);
+                    if (t.getPrice() > avgBasis && avgBasis > 0) profitableTrades++;
+                    longs.merge(sym, -t.getQuantity(), Integer::sum);
+                    if (longs.getOrDefault(sym, 0) <= 0) { longs.remove(sym); avgCostBasis.remove(sym); }
+                }
                 case "SHORT" -> {
                     cash += cost;
                     int prev = shorts.getOrDefault(sym, 0);
@@ -457,9 +497,6 @@ public class MatchSchedulerService {
             for (int q : longs.values())  equity += q * t.getPrice();
             for (int q : shorts.values()) equity -= q * t.getPrice();
 
-            if ("SELL".equalsIgnoreCase(t.getType()) && equity > peakEquity) {
-                profitableTrades++;
-            }
             if (equity > peakEquity) peakEquity = equity;
             if (peakEquity > 0) {
                 double dd = (peakEquity - equity) / peakEquity;

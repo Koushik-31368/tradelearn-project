@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { backendUrl, authHeaders } from '../utils/api';
+import TierBadge from '../components/TierBadge';
 import './ProfilePage.css';
 
 const ProfilePage = () => {
@@ -63,6 +64,7 @@ const ProfilePage = () => {
                     <div className="pf-rating-row">
                         <span className="pf-rating-badge">{profile.rating}</span>
                         <span className="pf-rating-label">ELO</span>
+                        <TierBadge rating={profile.rating} />
                         {profile.rank > 0 && (
                             <span className="pf-rank-badge">#{profile.rank}</span>
                         )}

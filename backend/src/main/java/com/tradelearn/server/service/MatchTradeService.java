@@ -187,6 +187,7 @@ public class MatchTradeService {
         public Map<String, Integer> shares = new HashMap<>();       // long positions
         public Map<String, Integer> shortShares = new HashMap<>();  // short positions
         public Map<String, Double> avgShortPrice = new HashMap<>(); // avg short entry price
+        public Map<String, Double> avgCostBasis = new HashMap<>();  // avg buy price for longs
 
         // ---- Risk / performance stats ----
         public double peakEquity;
@@ -218,17 +219,23 @@ public class MatchTradeService {
             switch (t.getType().toUpperCase()) {
                 case "BUY" -> {
                     pos.cash -= cost;
-                    pos.shares.merge(symbol, t.getQuantity(), Integer::sum);
+                    int prevShares = pos.shares.getOrDefault(symbol, 0);
+                    double prevBasis = pos.avgCostBasis.getOrDefault(symbol, 0.0);
+                    int newShares = prevShares + t.getQuantity();
+                    pos.avgCostBasis.put(symbol, newShares > 0 ? (prevBasis * prevShares + cost) / newShares : 0.0);
+                    pos.shares.put(symbol, newShares);
                 }
                 case "SELL" -> {
                     pos.cash += cost;
+                    double avgBasis = pos.avgCostBasis.getOrDefault(symbol, 0.0);
+                    if (t.getPrice() > avgBasis && avgBasis > 0) {
+                        pos.profitableTrades++;
+                    }
                     pos.shares.merge(symbol, -t.getQuantity(), Integer::sum);
                     if (pos.shares.getOrDefault(symbol, 0) <= 0) {
                         pos.shares.remove(symbol);
+                        pos.avgCostBasis.remove(symbol);
                     }
-                    // Profitable if sold above the last known price at time of trade
-                    // Simple heuristic: compare sell proceeds to cost basis is complex,
-                    // so we check if this trade brought equity above starting balance
                 }
                 case "SHORT" -> {
                     pos.cash += cost;
@@ -259,11 +266,6 @@ public class MatchTradeService {
             // ---- Update equity tracking after each trade ----
             // Approximate equity using the trade's price as mark price
             double equity = snapshotEquity(pos, t.getPrice());
-
-            // Check for profitable SELL (compare equity jump)
-            if ("SELL".equalsIgnoreCase(t.getType()) && equity > pos.peakEquity) {
-                pos.profitableTrades++;
-            }
 
             if (equity > pos.peakEquity) {
                 pos.peakEquity = equity;

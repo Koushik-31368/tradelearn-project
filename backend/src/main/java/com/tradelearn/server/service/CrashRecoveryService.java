@@ -7,6 +7,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import com.tradelearn.server.model.Game;
@@ -57,24 +59,36 @@ public class CrashRecoveryService {
     private final RoomManager roomManager;
     private final MatchSchedulerService schedulerService;
     private final CandleService candleService;
+    private final StringRedisTemplate redis;
+    private final GracefulDegradationManager degradationManager;
 
     private volatile int recoveredGames = 0;
     private volatile int recoveredPositions = 0;
     private volatile long recoveryDurationMs = 0;
     private volatile String recoveryResult = "pending";
 
+    /** Guards periodic methods from running before startup recovery completes. */
+    private volatile boolean startupComplete = false;
+
+    /** Tracks Redis availability for Phase 4 restart detection. */
+    private volatile boolean redisWasDown = false;
+
     public CrashRecoveryService(GameRepository gameRepository,
                                 TradeRepository tradeRepository,
                                 PositionSnapshotStore positionStore,
                                 RoomManager roomManager,
                                 MatchSchedulerService schedulerService,
-                                CandleService candleService) {
+                                CandleService candleService,
+                                StringRedisTemplate redis,
+                                GracefulDegradationManager degradationManager) {
         this.gameRepository = gameRepository;
         this.tradeRepository = tradeRepository;
         this.positionStore = positionStore;
         this.roomManager = roomManager;
         this.schedulerService = schedulerService;
         this.candleService = candleService;
+        this.redis = redis;
+        this.degradationManager = degradationManager;
     }
 
     // ==================== STARTUP RECOVERY ====================
@@ -118,6 +132,114 @@ public class CrashRecoveryService {
             recoveryDurationMs = System.currentTimeMillis() - start;
             recoveryResult = "FAILED: " + e.getMessage();
             log.error("[CrashRecovery] Failed: {}", e.getMessage(), e);
+        } finally {
+            startupComplete = true;
+        }
+    }
+
+    // ==================== PHASE 3: PERIODIC SCHEDULER RECOVERY ====================
+
+    /**
+     * Every 10 seconds, scan for ACTIVE games whose scheduler has no owner.
+     * This catches games orphaned by a crashed instance whose Redis ownership TTL
+     * has expired but no other instance has claimed the scheduler yet.
+     *
+     * <p>Safe across N instances: {@code tryClaimScheduler} is Redis SETNX —
+     * only one instance wins the claim. Others see the key and skip.</p>
+     */
+    @Scheduled(fixedDelay = 10_000)
+    public void periodicSchedulerRecovery() {
+        if (!startupComplete) return;
+
+        try {
+            List<Game> activeGames = gameRepository.findByStatus("ACTIVE");
+            int recovered = 0;
+
+            for (Game game : activeGames) {
+                long gameId = game.getId();
+
+                // Skip if this instance already runs the scheduler
+                if (schedulerService.isRunning(gameId)) continue;
+
+                // Skip if another instance owns the scheduler (Redis key exists)
+                if (roomManager.hasSchedulerOwner(gameId)) continue;
+
+                // Orphaned game — attempt full recovery
+                try {
+                    recoverGame(game);
+                    recovered++;
+                    log.info("[Recovery] Recovered orphaned game {} (scheduler had no owner)", gameId);
+                } catch (Exception e) {
+                    log.warn("[Recovery] Failed to recover game {}: {}", gameId, e.getMessage());
+                }
+            }
+
+            if (recovered > 0) {
+                log.info("[Recovery] Periodic scan recovered {} orphaned games", recovered);
+            }
+        } catch (Exception e) {
+            log.debug("[Recovery] Periodic scan error: {}", e.getMessage());
+        }
+    }
+
+    // ==================== PHASE 4: REDIS RESTART HARDENING ====================
+
+    /**
+     * Probes Redis every 5 seconds. When Redis transitions from DOWN → UP,
+     * triggers a full recovery: room state rebuild + scheduler restart for all
+     * ACTIVE games. Also notifies {@link GracefulDegradationManager} so the
+     * system can transition back to NORMAL mode from DEGRADED.
+     *
+     * <p>On Redis failure, notifies the degradation manager to enter DEGRADED
+     * mode and activate local fallback paths.</p>
+     */
+    @Scheduled(fixedDelay = 5_000)
+    public void probeRedis() {
+        if (!startupComplete) return;
+
+        try {
+            redis.opsForValue().get("tl:health:probe");
+
+            // Redis is healthy
+            if (redisWasDown) {
+                redisWasDown = false;
+                log.info("[Recovery] Redis connection restored — triggering full recovery");
+                degradationManager.onRedisRecovered();
+                onRedisRestored();
+            }
+        } catch (Exception e) {
+            if (!redisWasDown) {
+                redisWasDown = true;
+                log.warn("[Recovery] Redis unavailable: {}", e.getMessage());
+                degradationManager.onRedisUnavailable();
+            }
+        }
+    }
+
+    /**
+     * Called when Redis recovers after an outage. Rebuilds room state and
+     * restarts schedulers for ALL active games since all Redis keys were
+     * likely lost during the restart.
+     */
+    private void onRedisRestored() {
+        try {
+            List<Game> activeGames = gameRepository.findByStatus("ACTIVE");
+            int recovered = 0;
+
+            for (Game game : activeGames) {
+                try {
+                    recoverGame(game);
+                    recovered++;
+                } catch (Exception e) {
+                    log.warn("[Recovery] Redis restore — failed to recover game {}: {}",
+                            game.getId(), e.getMessage());
+                }
+            }
+
+            log.info("[Recovery] Redis restore complete: recovered {}/{} active games",
+                    recovered, activeGames.size());
+        } catch (Exception e) {
+            log.error("[Recovery] Redis restore failed: {}", e.getMessage(), e);
         }
     }
 

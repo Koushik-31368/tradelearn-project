@@ -47,7 +47,7 @@ public class PositionSnapshotStore {
             new ConcurrentHashMap<>();
 
     public PositionSnapshotStore(
-            @Value("${tradelearn.snapshot.max-entries:200}") int maxSnapshots) {
+            @Value("${tradelearn.snapshot.max-entries:20000}") int maxSnapshots) {
         this.maxSnapshots = maxSnapshots;
     }
 
@@ -150,13 +150,22 @@ public class PositionSnapshotStore {
         switch (type.toUpperCase()) {
             case "BUY" -> {
                 pos.cash -= cost;
-                pos.shares.merge(symbol, quantity, Integer::sum);
+                int prevShares = pos.shares.getOrDefault(symbol, 0);
+                double prevBasis = pos.avgCostBasis.getOrDefault(symbol, 0.0);
+                int newShares = prevShares + quantity;
+                pos.avgCostBasis.put(symbol, newShares > 0 ? (prevBasis * prevShares + cost) / newShares : 0.0);
+                pos.shares.put(symbol, newShares);
             }
             case "SELL" -> {
                 pos.cash += cost;
+                double avgBasis = pos.avgCostBasis.getOrDefault(symbol, 0.0);
+                if (price > avgBasis && avgBasis > 0) {
+                    pos.profitableTrades++;
+                }
                 pos.shares.merge(symbol, -quantity, Integer::sum);
                 if (pos.shares.getOrDefault(symbol, 0) <= 0) {
                     pos.shares.remove(symbol);
+                    pos.avgCostBasis.remove(symbol);
                 }
             }
             case "SHORT" -> {
@@ -186,11 +195,6 @@ public class PositionSnapshotStore {
 
         // ── Update equity tracking ──
         double equity = snapshotEquity(pos, price);
-
-        // SELL profitability heuristic (matches original calculatePosition logic)
-        if ("SELL".equalsIgnoreCase(type) && equity > pos.peakEquity) {
-            pos.profitableTrades++;
-        }
 
         if (equity > pos.peakEquity) {
             pos.peakEquity = equity;
@@ -315,6 +319,7 @@ public class PositionSnapshotStore {
         copy.shares = new HashMap<>(src.shares);
         copy.shortShares = new HashMap<>(src.shortShares);
         copy.avgShortPrice = new HashMap<>(src.avgShortPrice);
+        copy.avgCostBasis = new HashMap<>(src.avgCostBasis);
         copy.peakEquity = src.peakEquity;
         copy.maxDrawdown = src.maxDrawdown;
         copy.totalTrades = src.totalTrades;

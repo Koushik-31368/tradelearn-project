@@ -1,0 +1,41 @@
+/* src/components/simulator/MarketSentiment.css */
+
+.ms-panel {
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.ms-title {
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: #8b949e;
+  margin: 0 0 14px;
+}
+
+.ms-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ms-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.ms-label {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: #8b949e;
+}
+
+.ms-value {
+  font-size: 14px;
+  font-weight: 600;
+}

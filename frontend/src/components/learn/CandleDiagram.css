@@ -1,0 +1,129 @@
+/* CandleDiagram.css */
+.candle-diagram {
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 14px;
+  padding: 28px;
+  margin-top: 12px;
+}
+
+.candle-diagram__header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.candle-diagram__badge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #0d1117;
+  background: #00ff88;
+  padding: 3px 10px;
+  border-radius: 4px;
+}
+
+.candle-diagram__title {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0;
+}
+
+/* Tabs */
+.candle-diagram__tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.candle-tab {
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid #30363d;
+  background: transparent;
+  color: #8b949e;
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.candle-tab:hover {
+  border-color: #484f58;
+  color: #c9d1d9;
+}
+
+.candle-tab--active {
+  border-color: #00ff88;
+  color: #00ff88;
+  background: rgba(0, 255, 136, 0.06);
+}
+
+/* Chart */
+.candle-diagram__chart {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.candle-svg {
+  width: 100%;
+  max-width: 360px;
+  height: auto;
+}
+
+.candle-label {
+  fill: #8b949e;
+  font-size: 9px;
+  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+}
+
+.candle-label--left {
+  text-anchor: start;
+}
+
+/* Legend */
+.candle-diagram__legend {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.candle-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+  color: #8b949e;
+}
+
+.candle-legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 640px) {
+  .candle-diagram {
+    padding: 20px;
+  }
+
+  .candle-diagram__tabs {
+    gap: 6px;
+  }
+
+  .candle-tab {
+    padding: 6px 12px;
+    font-size: 0.78rem;
+  }
+
+  .candle-diagram__legend {
+    flex-direction: column;
+    gap: 8px;
+  }
+}

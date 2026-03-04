@@ -7,6 +7,7 @@ import './LobbyPage.css';
 import Modal from '../components/Modal';
 import CreateGameForm from '../components/CreateGameForm';
 import { useAuth } from '../context/AuthContext';
+import TierBadge from '../components/TierBadge';
 import { backendUrl, wsBase, getToken, authHeaders } from '../utils/api';
 
 const LobbyPage = () => {
@@ -61,7 +62,6 @@ const LobbyPage = () => {
         // Subscribe to personal match-found channel (for queued matches)
         client.subscribe(`/topic/user/${user.id}/match-found`, (message) => {
           const data = JSON.parse(message.body);
-          console.log('[Matchmaking] Match found via WS!', data);
           
           setIsSearching(false);
           if (searchTimerRef.current) {
@@ -77,7 +77,6 @@ const LobbyPage = () => {
         // Subscribe to match-expired channel (2-minute timeout)
         client.subscribe(`/topic/user/${user.id}/match-expired`, (message) => {
           const data = JSON.parse(message.body);
-          console.log('[Matchmaking] Search expired', data);
 
           setIsSearching(false);
           if (searchTimerRef.current) {
@@ -132,7 +131,6 @@ const LobbyPage = () => {
 
       // ── Instant match: navigate directly (no searching animation) ──
       if (data.status === 'MATCHED' && data.gameId) {
-        console.log('[Matchmaking] Instant match!', data);
         navigate(`/game/${data.gameId}`);
         return;
       }
@@ -231,6 +229,7 @@ const LobbyPage = () => {
             <div className="player-rating">
               <span className="rating-label">Your Rating</span>
               <span className="rating-value">{user.rating || 1000}</span>
+              <TierBadge rating={user.rating || 1000} />
             </div>
           )}
         </div>
@@ -266,6 +265,29 @@ const LobbyPage = () => {
             )}
           </div>
         )}
+      </div>
+
+      {/* ── Scoring System Explainer ── */}
+      <div className="scoring-section">
+        <h2 className="scoring-title">How Scoring Works</h2>
+        <p className="scoring-subtitle">Your final score is a weighted composite — not just profit.</p>
+        <div className="scoring-grid">
+          <div className="scoring-card">
+            <div className="scoring-card__pct">60%</div>
+            <div className="scoring-card__label">Profit</div>
+            <div className="scoring-card__desc">Portfolio return vs starting balance</div>
+          </div>
+          <div className="scoring-card">
+            <div className="scoring-card__pct">20%</div>
+            <div className="scoring-card__label">Risk Management</div>
+            <div className="scoring-card__desc">Lower max drawdown = higher score</div>
+          </div>
+          <div className="scoring-card">
+            <div className="scoring-card__pct">20%</div>
+            <div className="scoring-card__label">Accuracy</div>
+            <div className="scoring-card__desc">Percentage of profitable trades</div>
+          </div>
+        </div>
       </div>
 
       {/* ── Custom Games Section ── */}

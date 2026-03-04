@@ -179,9 +179,13 @@ public class MatchController {
 
     @PostMapping("/{gameId}/rematch")
     public ResponseEntity<?> rematch(@PathVariable long gameId) {
-        User user = getAuthenticatedUser();
-        Game newGame = matchService.requestRematch(gameId, user.getId());
-        return ResponseEntity.ok(newGame.getId());
+        try {
+            User user = getAuthenticatedUser();
+            Map<String, Object> result = matchService.requestRematch(gameId, user.getId());
+            return ResponseEntity.ok(result);
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
     }
 
     // ==================== TRADING ====================

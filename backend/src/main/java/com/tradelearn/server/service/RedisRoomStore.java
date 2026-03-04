@@ -101,6 +101,7 @@ public class RedisRoomStore {
     // ===================== ROOM LIFECYCLE =====================
 
     // ── Lua: create room ONLY if it does not already exist ──
+    // Also adds the creator to the players set so the room starts with 1 player.
     private static final String CREATE_ROOM_LUA = """
             if redis.call('EXISTS', KEYS[1]) == 1 then
               return 0
@@ -108,6 +109,8 @@ public class RedisRoomStore {
             redis.call('HSET', KEYS[1], 'creatorId', ARGV[1], 'phase', ARGV[2], 'createdAt', ARGV[3])
             redis.call('EXPIRE', KEYS[1], ARGV[4])
             redis.call('SADD', KEYS[2], ARGV[5])
+            redis.call('SADD', KEYS[3], ARGV[1])
+            redis.call('EXPIRE', KEYS[3], ARGV[4])
             return 1
             """;
 
@@ -119,7 +122,7 @@ public class RedisRoomStore {
     public boolean createRoom(long gameId, long creatorId) {
         DefaultRedisScript<Long> script = new DefaultRedisScript<>(CREATE_ROOM_LUA, Long.class);
         Long result = redis.execute(script,
-                List.of(roomKey(gameId), indexKey()),
+                List.of(roomKey(gameId), indexKey(), playersKey(gameId)),
                 String.valueOf(creatorId),
                 "WAITING",
                 Instant.now().toString(),
@@ -129,9 +132,15 @@ public class RedisRoomStore {
     }
 
     // ── Lua: add player, transition phase, enforce max players ──
+    // Idempotent: SISMEMBER check prevents counting the same player twice.
+    // Without this check, a retried join from the same player would increment
+    // the perceived count and could falsely return -2 (full).
     private static final String JOIN_ROOM_LUA = """
             if redis.call('EXISTS', KEYS[1]) == 0 then
               return -1
+            end
+            if redis.call('SISMEMBER', KEYS[2], ARGV[1]) == 1 then
+              return redis.call('SCARD', KEYS[2])
             end
             local count = redis.call('SCARD', KEYS[2])
             if count >= tonumber(ARGV[2]) then
@@ -320,6 +329,14 @@ public class RedisRoomStore {
      */
     public boolean isSchedulerOwner(long gameId) {
         return instanceId.equals(redis.opsForValue().get(schedKey(gameId)));
+    }
+
+    /**
+     * Check if ANY instance currently owns the scheduler for a game.
+     * Used by periodic recovery to detect orphaned games.
+     */
+    public boolean hasSchedulerOwner(long gameId) {
+        return Boolean.TRUE.equals(redis.hasKey(schedKey(gameId)));
     }
 
     // ===================== CLEANUP =====================

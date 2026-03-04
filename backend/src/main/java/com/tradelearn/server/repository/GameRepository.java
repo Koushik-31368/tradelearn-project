@@ -36,9 +36,17 @@ public interface GameRepository extends JpaRepository<Game, Long> {
     // ── ATOMIC JOIN (CAS-style) ─────────────────────────────
     // Single UPDATE that only succeeds if status is still WAITING.
     // Returns the count of affected rows (0 = someone else joined first).
-    @Modifying
+    //
+    // IMPORTANT: version = version + 1 is required because @Modifying
+    // bypasses Hibernate's entity lifecycle, so the @Version column must
+    // be incremented manually to keep optimistic locking consistent.
+    //
+    // clearAutomatically = true evicts all managed entities from the
+    // persistence context after the UPDATE, ensuring the subsequent
+    // findByIdForUpdate() reads fresh state from the DB, not the L1 cache.
+    @Modifying(clearAutomatically = true)
     @Query("UPDATE Game g SET g.status = 'ACTIVE', g.opponent = :opponent, " +
-           "g.startTime = CURRENT_TIMESTAMP " +
+           "g.startTime = CURRENT_TIMESTAMP, g.version = g.version + 1 " +
            "WHERE g.id = :gameId AND g.status = 'WAITING'")
     int atomicJoin(@Param("gameId") Long gameId,
                    @Param("opponent") com.tradelearn.server.model.User opponent);
