@@ -137,7 +137,6 @@ public class GameWebSocketHandler {
 
     // ===== TRADE HANDLER =====
 
-    @SuppressWarnings("null")
     @MessageMapping("/game/{gameId}/trade")
     public void handleTrade(
             @DestinationVariable long gameId,
@@ -222,8 +221,11 @@ public class GameWebSocketHandler {
                     : game.getStockSymbol();
 
             // ── Submit trade to async pipeline (non-blocking) ──
-            final long opponentId = game.getOpponent() != null ? game.getOpponent().getId() : -1;
-            final double startingBalance = game.getStartingBalance();
+            long opponentId = -1L;
+            if (game.getOpponent() != null) {
+                opponentId = game.getOpponent().getId();
+            }
+            final long finalOpponentId = opponentId;
 
             MatchTradeRequest req = new MatchTradeRequest();
             req.setGameId(gameId);
@@ -241,9 +243,9 @@ public class GameWebSocketHandler {
                         broadcaster.sendToGame(gameId, "trade", saved);
 
                         // Broadcast updated scoreboard
-                        if (opponentId > 0) {
+                        if (finalOpponentId > 0) {
                             Map<String, Object> scoreboard = positionStore.buildScoreboardPayload(
-                                    gameId, req.getUserId(), opponentId, saved.getPrice());
+                                    gameId, req.getUserId(), finalOpponentId, saved.getPrice());
                             broadcaster.sendToGame(gameId, "scoreboard", scoreboard);
                         }
                     });
@@ -363,6 +365,7 @@ public class GameWebSocketHandler {
 
     // ===== HELPERS =====
 
+    @SuppressWarnings("unused")
     private GameStateSnapshot buildGameState(Game game) {
         GameStateSnapshot snapshot = new GameStateSnapshot();
 

@@ -31,6 +31,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         this.wsChannelInterceptor = wsChannelInterceptor;
     }
 
+    @SuppressWarnings("null")
     @Override
     public void registerStompEndpoints(
             @NonNull StompEndpointRegistry registry) {

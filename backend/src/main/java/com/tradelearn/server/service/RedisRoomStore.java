@@ -60,6 +60,7 @@ import jakarta.annotation.PostConstruct;
  * {@link StringRedisTemplate} is thread-safe (connection-pooled via Lettuce).
  * Each Lua script executes atomically on the Redis server.
  */
+@SuppressWarnings("null")
 @Service
 public class RedisRoomStore {
 
@@ -83,7 +84,7 @@ public class RedisRoomStore {
     }
 
     @PostConstruct
-    void init() {
+    public void init() {
         log.info("[RedisRoomStore] Instance ID: {}", instanceId);
     }
 

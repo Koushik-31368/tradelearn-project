@@ -138,7 +138,7 @@ public class MatchmakingService implements QueueSizeProvider {
     }
 
     @PostConstruct
-    void init() {
+    public void init() {
         housekeeper = Executors.newSingleThreadScheduledExecutor(r -> {
             Thread t = new Thread(r, "mm-housekeeper");
             t.setDaemon(true);
@@ -152,7 +152,7 @@ public class MatchmakingService implements QueueSizeProvider {
     }
 
     @PreDestroy
-    void shutdown() {
+    public void shutdown() {
         if (housekeeper != null) {
             housekeeper.shutdownNow();
             log.info("[MM] Housekeeper shut down");
@@ -171,6 +171,7 @@ public class MatchmakingService implements QueueSizeProvider {
      *         or {@link Optional#empty()} if the player was queued
      * @throws IllegalStateException if the player is already in the queue
      */
+    @SuppressWarnings("null")
     public Optional<Game> enqueue(PlayerTicket ticket) {
         DefaultRedisScript<Long> script = new DefaultRedisScript<>(ENQUEUE_LUA, Long.class);
         Long result = redis.execute(script,
@@ -196,6 +197,7 @@ public class MatchmakingService implements QueueSizeProvider {
      *
      * @return true if the player was in the queue and removed
      */
+    @SuppressWarnings("null")
     public boolean dequeue(long userId) {
         DefaultRedisScript<Long> script = new DefaultRedisScript<>(DEQUEUE_LUA, Long.class);
         Long result = redis.execute(script,
@@ -268,7 +270,8 @@ public class MatchmakingService implements QueueSizeProvider {
         int bestGapDiff = Integer.MAX_VALUE;
 
         for (ZSetOperations.TypedTuple<String> tuple : candidates) {
-            if (tuple.getValue() == null || tuple.getScore() == null) continue;
+            Double score = tuple.getScore();
+            if (tuple.getValue() == null || score == null) continue;
 
             long candidateId;
             try {
@@ -279,7 +282,7 @@ public class MatchmakingService implements QueueSizeProvider {
 
             if (candidateId == userId) continue; // skip self
 
-            int candidateRating = tuple.getScore().intValue();
+            int candidateRating = score.intValue();
             int ratingDiff = Math.abs(rating - candidateRating);
 
             // Mutual window check: candidate must also accept the gap
@@ -336,6 +339,7 @@ public class MatchmakingService implements QueueSizeProvider {
      *   - Lua script is atomic on Redis server — no TOCTOU
      *   - If either player was already matched, Lua returns 0 → skip
      */
+    @SuppressWarnings("null")
     private Optional<Game> tryPair(long userId1, int rating1, long userId2, int rating2) {
         long lo = Math.min(userId1, userId2);
         long hi = Math.max(userId1, userId2);
@@ -403,7 +407,8 @@ public class MatchmakingService implements QueueSizeProvider {
             int paired = 0;
 
             for (ZSetOperations.TypedTuple<String> tuple : all) {
-                if (tuple.getValue() == null || tuple.getScore() == null) continue;
+                Double score = tuple.getScore();
+                if (tuple.getValue() == null || score == null) continue;
 
                 long userId;
                 try {
@@ -416,7 +421,7 @@ public class MatchmakingService implements QueueSizeProvider {
                 int gap = computeAllowedGap(userId);
                 if (gap > INITIAL_GAP) {
                     checked++;
-                    int rating = tuple.getScore().intValue();
+                    int rating = score.intValue();
                     Optional<Game> result = tryInstantMatch(userId, rating);
                     if (result.isPresent()) paired++;
                 }
@@ -436,6 +441,7 @@ public class MatchmakingService implements QueueSizeProvider {
      * Also removes orphaned ZSET entries (ticket hash expired but ZSET member remains).
      * Runs every 30 seconds.
      */
+    @SuppressWarnings("null")
     void cleanupExpired() {
         try {
             Set<ZSetOperations.TypedTuple<String>> all =

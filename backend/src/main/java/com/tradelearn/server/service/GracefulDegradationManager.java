@@ -64,6 +64,7 @@ public class GracefulDegradationManager {
     // ===================== DEPENDENCIES =====================
 
     private final DatabaseFailoverHandler dbFailover;
+    @SuppressWarnings("unused")
     private final ResilientRedisRoomStore resilientRedis;
     private volatile GameFreezeService freezeService;
 
@@ -74,7 +75,7 @@ public class GracefulDegradationManager {
     }
 
     @PostConstruct
-    void init() {
+    public void init() {
         // Wire bidirectional reference (breaks circular dep)
         dbFailover.setDegradationManager(this);
         log.info("[Degradation] Manager initialized — state={}", state.get());

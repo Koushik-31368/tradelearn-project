@@ -65,6 +65,7 @@ public class GameLogger {
             return this;
         }
 
+        @SuppressWarnings("unused")
         public String toJson() {
             try {
                 return objectMapper.writeValueAsString(this);

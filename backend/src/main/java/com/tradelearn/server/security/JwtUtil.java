@@ -51,6 +51,7 @@ public class JwtUtil {
 
     private static final Logger log = LoggerFactory.getLogger(JwtUtil.class);
     private static final String CURRENT_KID = "current";
+    @SuppressWarnings("unused")
     private static final String PREVIOUS_KID = "previous";
 
     private final SecretKey currentKey;
@@ -63,6 +64,7 @@ public class JwtUtil {
      * Max size bounded to prevent OOM: 500K entries ≈ ~50 MB in worst case.
      */
     private static final int MAX_JTI_CACHE_SIZE = 500_000;
+    @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
     private final ConcurrentHashMap<String, Long> usedJtis = new ConcurrentHashMap<>();
     private ScheduledExecutorService jtiCleanupExecutor;
 

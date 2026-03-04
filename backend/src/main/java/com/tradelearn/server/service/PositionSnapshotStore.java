@@ -162,10 +162,12 @@ public class PositionSnapshotStore {
                 if (price > avgBasis && avgBasis > 0) {
                     pos.profitableTrades++;
                 }
-                pos.shares.merge(symbol, -quantity, Integer::sum);
-                if (pos.shares.getOrDefault(symbol, 0) <= 0) {
+                int remaining = pos.shares.getOrDefault(symbol, 0) - quantity;
+                if (remaining <= 0) {
                     pos.shares.remove(symbol);
                     pos.avgCostBasis.remove(symbol);
+                } else {
+                    pos.shares.put(symbol, remaining);
                 }
             }
             case "SHORT" -> {

@@ -117,6 +117,7 @@ public class MatchSchedulerService {
      * Uses ConcurrentHashMap.computeIfAbsent locally to prevent
      * duplicate schedulers on the same instance.
      */
+    @SuppressWarnings("null")
     public void startProgression(long gameId) {
         // ── Distributed guard: only the claiming instance starts the scheduler ──
         if (!roomManager.tryClaimScheduler(gameId)) {
@@ -203,7 +204,6 @@ public class MatchSchedulerService {
 
     // ==================== TICK ====================
 
-    @SuppressWarnings("null")
     private void tick(long gameId) {
         long startNanos = System.nanoTime();
         GameLogger.setGameContext(gameId);
@@ -289,7 +289,6 @@ public class MatchSchedulerService {
     public void autoFinishGame(long gameId) {
         try {
             // Pessimistic lock prevents race with MatchService.endMatch()
-            @SuppressWarnings("null")
             Game game = gameRepository.findByIdForUpdate(gameId).orElse(null);
             if (game == null || !"ACTIVE".equals(game.getStatus())) return;
 
@@ -416,7 +415,7 @@ public class MatchSchedulerService {
                 }
             });
 
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             log.error("Failed to auto-finish game {}: {}", gameId, e.getMessage(), e);
         }
     }
@@ -430,6 +429,7 @@ public class MatchSchedulerService {
         double maxDrawdown;
         int totalTrades;
         int profitableTrades;
+        @SuppressWarnings("unused")
         double finalScore;
     }
 
@@ -521,6 +521,7 @@ public class MatchSchedulerService {
     }
 
     /** Persist (or update) a MatchStats row for a player in a game (legacy ReplayResult) */
+    @SuppressWarnings("unused")
     private void persistStats(long gameId, long userId, ReplayResult r, double finalScore) {
         MatchStats stats = matchStatsRepository
                 .findByGameIdAndUserId(gameId, userId)

@@ -63,7 +63,7 @@ public class GameFreezeService {
     }
 
     @PostConstruct
-    void init() {
+    public void init() {
         // Wire bidirectional reference
         degradationManager.setFreezeService(this);
         log.info("[GameFreeze] Service initialized");
@@ -110,12 +110,6 @@ public class GameFreezeService {
 
         // Get all rooms known to be ACTIVE
         try {
-            Set<Long> allGameIds = roomManager.getConnectedPlayers(0) != null
-                    ? ConcurrentHashMap.newKeySet() : ConcurrentHashMap.newKeySet();
-
-            // Use RoomManager to get all game IDs from stored sessions
-            // Since RoomManager doesn't directly expose allGameIds, we'll
-            // use the store's allGameIds method via the room snapshots
             for (Map<String, Object> snapshot : roomManager.allRoomSnapshots()) {
                 Object gidObj = snapshot.get("gameId");
                 if (gidObj instanceof Number gid) {
@@ -164,6 +158,7 @@ public class GameFreezeService {
      * Unfreeze ALL games. Called by {@link GracefulDegradationManager}
      * when the system returns to NORMAL.
      */
+    @SuppressWarnings("null")
     public void unfreezeAllGames() {
         log.info("[GameFreeze] Unfreezing ALL games ({} total)", frozenGames.size());
         // Copy to avoid ConcurrentModificationException

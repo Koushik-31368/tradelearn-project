@@ -53,6 +53,7 @@ public class StateReconciliationService {
     private final ResilientRedisRoomStore resilientRedis;
     private final RedisRoomStore rawRedis;
     private final GameRepository gameRepository;
+    @SuppressWarnings("unused")
     private final PositionSnapshotStore positionStore;
     private final GameFreezeService freezeService;
     private final GracefulDegradationManager degradationManager;
@@ -121,6 +122,7 @@ public class StateReconciliationService {
      *
      * @return number of rooms reconciled
      */
+    @SuppressWarnings("null")
     private int reconcileRedisShadow() {
         Set<Long> shadowIds = resilientRedis.getShadowGameIds();
         if (shadowIds.isEmpty()) {

@@ -2,8 +2,6 @@ package com.tradelearn.server.middleware;
 
 import java.io.IOException;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
@@ -33,9 +31,6 @@ import jakarta.servlet.http.HttpServletResponse;
 @Component
 @Order(2)
 public class SecurityHeadersFilter implements Filter {
-
-    private static final Logger log = LoggerFactory.getLogger(SecurityHeadersFilter.class);
-
     @Value("${tradelearn.security.hsts.enabled:true}")
     private boolean hstsEnabled;
 

@@ -245,7 +245,6 @@ public class CrashRecoveryService {
 
     // ==================== PER-GAME RECOVERY ====================
 
-    @SuppressWarnings("null")
     private void recoverGame(Game game) {
         long gameId = game.getId();
         log.info("[CrashRecovery] Recovering game {} (candle {}/{})",
