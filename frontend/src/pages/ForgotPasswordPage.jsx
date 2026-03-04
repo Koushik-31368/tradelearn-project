@@ -9,7 +9,6 @@ const ForgotPasswordPage = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log('Password reset request for:', email);
     setIsSubmitted(true);
   };
 

@@ -211,6 +211,63 @@
   background: rgba(233, 69, 96, 0.1);
 }
 
+/* ===================== SCORING SYSTEM ===================== */
+
+.scoring-section {
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 12px;
+  padding: 28px 24px;
+  margin-bottom: 32px;
+  text-align: center;
+}
+
+.scoring-title {
+  margin: 0 0 4px;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.scoring-subtitle {
+  margin: 0 0 20px;
+  font-size: 0.85rem;
+  color: #8b949e;
+}
+
+.scoring-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+.scoring-card {
+  background: rgba(0, 255, 136, 0.04);
+  border: 1px solid #30363d;
+  border-radius: 10px;
+  padding: 18px 12px;
+}
+
+.scoring-card__pct {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #00ff88;
+  margin-bottom: 4px;
+}
+
+.scoring-card__label {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 6px;
+}
+
+.scoring-card__desc {
+  font-size: 0.75rem;
+  color: #8b949e;
+  line-height: 1.4;
+}
+
 /* ===================== CUSTOM GAMES SECTION ===================== */
 
 .custom-section {

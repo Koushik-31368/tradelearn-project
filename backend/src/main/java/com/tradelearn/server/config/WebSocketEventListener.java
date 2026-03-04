@@ -19,6 +19,7 @@ import com.tradelearn.server.repository.GameRepository;
 import com.tradelearn.server.service.CandleService;
 import com.tradelearn.server.service.GameMetricsService;
 import com.tradelearn.server.service.MatchSchedulerService;
+import com.tradelearn.server.service.MatchService;
 import com.tradelearn.server.service.PositionSnapshotStore;
 import com.tradelearn.server.service.RoomManager;
 import com.tradelearn.server.socket.GameBroadcaster;
@@ -46,6 +47,7 @@ public class WebSocketEventListener {
     private final TaskScheduler taskScheduler;
     private final PositionSnapshotStore positionStore;
     private final GameMetricsService metrics;
+    private final MatchService matchService;
 
     public WebSocketEventListener(GameRepository gameRepository,
                                   MatchSchedulerService matchSchedulerService,
@@ -54,7 +56,8 @@ public class WebSocketEventListener {
                                   RoomManager roomManager,
                                   TaskScheduler taskScheduler,
                                   PositionSnapshotStore positionStore,
-                                  GameMetricsService metrics) {
+                                  GameMetricsService metrics,
+                                  MatchService matchService) {
         this.gameRepository = gameRepository;
         this.matchSchedulerService = matchSchedulerService;
         this.candleService = candleService;
@@ -63,6 +66,7 @@ public class WebSocketEventListener {
         this.taskScheduler = taskScheduler;
         this.positionStore = positionStore;
         this.metrics = metrics;
+        this.matchService = matchService;
     }
 
     // ==================== PUBLIC: REGISTER SESSION ====================
@@ -211,21 +215,24 @@ public class WebSocketEventListener {
     }
 
     /**
-     * Execute the full abandon sequence: stop scheduler, mark ABANDONED, cleanup, notify.
+     * Execute the full abandon sequence: stop scheduler, score game with ELO
+     * penalty for the disconnected player, cleanup, and notify.
      */
     private void doAbandon(long gameId, long userId, Game game) {
         // Stop candle progression
         matchSchedulerService.stopProgression(gameId);
 
-        // Mark game as abandoned in DB
-        game.setStatus("ABANDONED");
-        gameRepository.save(game);
-
-        // Free candle cache
-        candleService.evict(gameId);
-
-        // Evict position snapshots
-        positionStore.evictGame(gameId);
+        // Score the game and apply ELO penalty (disconnected player loses)
+        try {
+            matchService.forceFinishOnAbandon(gameId, userId);
+        } catch (Exception e) {
+            log.error("[WS] forceFinishOnAbandon failed for game {} — falling back to simple ABANDONED",
+                    gameId, e);
+            game.setStatus("ABANDONED");
+            gameRepository.save(game);
+            candleService.evict(gameId);
+            positionStore.evictGame(gameId);
+        }
 
         // Clean up room (sets phase ABANDONED, cancels scheduler + reconnect timers, removes room)
         roomManager.cancelAllReconnectTimers(gameId);
@@ -251,12 +258,12 @@ public class WebSocketEventListener {
                         "disconnectedUsername", disconnectedUsername,
                         "remainingPlayerId", remainingPlayerId != null ? remainingPlayerId : -1,
                         "status", "ABANDONED",
-                        "message", disconnectedUsername + " disconnected. Game abandoned."
+                        "message", disconnectedUsername + " disconnected. Game ended \u2014 ELO updated."
                 )
         );
 
-        log.info("[WS] Game {} marked ABANDONED. Notified remaining player {}",
-                gameId, remainingPlayerId);
+        log.info("[WS] Game {} abandoned with ELO penalty. Disconnected: {}, Remaining: {}",
+                gameId, userId, remainingPlayerId);
     }
 
     // ==================== DIAGNOSTICS ====================

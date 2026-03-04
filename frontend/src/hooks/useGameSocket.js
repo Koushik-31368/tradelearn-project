@@ -80,6 +80,10 @@ export default function useGameSocket({ gameId, userId, enabled = true, options 
     /* ── reconnection state (opponent temporarily disconnected) ── */
     const [reconnecting, setReconnecting] = useState(null);
 
+    /* ── rematch state ── */
+    const [rematchRequest, setRematchRequest] = useState(null);
+    const [rematchStarted, setRematchStarted] = useState(null);
+
     // ─────────────────────────────────────────────────────────
     // SAFE state setter — only updates if component is mounted
     // ─────────────────────────────────────────────────────────
@@ -269,7 +273,19 @@ export default function useGameSocket({ gameId, userId, enabled = true, options 
                     });
                 });
 
-                // ── 10. REJOIN: tell server we're (re)joining this game ──
+                // ── 10. REMATCH REQUEST (opponent wants a rematch) ──
+                subscribeTo(client, `/topic/user/${userId}/rematch-request`, (msg) => {
+                    const data = JSON.parse(msg.body);
+                    safeSet(() => setRematchRequest(data));
+                });
+
+                // ── 11. REMATCH STARTED (new game created from rematch) ──
+                subscribeTo(client, `/topic/user/${userId}/rematch-started`, (msg) => {
+                    const data = JSON.parse(msg.body);
+                    safeSet(() => setRematchStarted(data));
+                });
+
+                // ── 12. REJOIN: tell server we're (re)joining this game ──
                 client.publish({
                     destination: `/app/game/${gameId}/rejoin`,
                     body: JSON.stringify({ userId }),
@@ -358,6 +374,8 @@ export default function useGameSocket({ gameId, userId, enabled = true, options 
         setStatusMessage('');
         setScoreboard(null);
         setReconnecting(null);
+        setRematchRequest(null);
+        setRematchStarted(null);
     }, []);
 
     // ─────────────────────────────────────────────────────────
@@ -394,6 +412,10 @@ export default function useGameSocket({ gameId, userId, enabled = true, options 
 
         /* reconnection */
         reconnecting,
+
+        /* rematch */
+        rematchRequest,
+        rematchStarted,
 
         /* utilities */
         publish,

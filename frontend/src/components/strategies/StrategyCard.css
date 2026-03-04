@@ -1,0 +1,132 @@
+/* StrategyCard.css */
+.strat-card {
+  display: flex;
+  flex-direction: column;
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 14px;
+  padding: 26px 24px 22px;
+  cursor: pointer;
+  text-align: left;
+  color: inherit;
+  transition: transform 0.25s cubic-bezier(.4,0,.2,1),
+              border-color 0.25s ease,
+              box-shadow 0.25s ease;
+  width: 100%;
+}
+
+.strat-card:hover {
+  transform: translateY(-4px);
+  border-color: #00ff88;
+  box-shadow: 0 8px 32px rgba(0, 255, 136, 0.06);
+}
+
+.strat-card__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.strat-card__icon {
+  font-size: 1.6rem;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 255, 136, 0.06);
+  border-radius: 10px;
+}
+
+.strat-card__risk {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 4px 10px;
+  border-radius: 6px;
+}
+
+.strat-card__risk--low {
+  color: #00ff88;
+  background: rgba(0, 255, 136, 0.1);
+}
+
+.strat-card__risk--medium {
+  color: #f0b429;
+  background: rgba(240, 180, 41, 0.1);
+}
+
+.strat-card__risk--high {
+  color: #ff4d4f;
+  background: rgba(255, 77, 79, 0.1);
+}
+
+.strat-card__name {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0 0 8px 0;
+  letter-spacing: -0.01em;
+}
+
+.strat-card__desc {
+  font-size: 0.85rem;
+  color: #8b949e;
+  line-height: 1.6;
+  margin: 0 0 16px 0;
+  flex: 1;
+}
+
+.strat-card__meta {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.strat-card__meta-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  color: #484f58;
+}
+
+.strat-card__meta-item svg {
+  color: #484f58;
+  flex-shrink: 0;
+}
+
+.strat-card__cta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #00ff88;
+  opacity: 0;
+  transform: translateX(-4px);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.strat-card:hover .strat-card__cta {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.strat-card__cta svg {
+  color: #00ff88;
+}
+
+@media (max-width: 640px) {
+  .strat-card {
+    padding: 22px 18px 18px;
+  }
+
+  .strat-card__cta {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}

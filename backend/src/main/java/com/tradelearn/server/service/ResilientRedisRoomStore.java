@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -386,6 +385,18 @@ public class ResilientRedisRoomStore {
         } catch (RedisConnectionFailureException | org.springframework.data.redis.RedisSystemException e) {
             cb().recordFailure();
             return true;
+        }
+    }
+
+    public boolean hasSchedulerOwner(long gameId) {
+        if (!cb().isCallPermitted()) return false; // assume orphaned during outage
+        try {
+            boolean result = delegate.hasSchedulerOwner(gameId);
+            cb().recordSuccess();
+            return result;
+        } catch (RedisConnectionFailureException | org.springframework.data.redis.RedisSystemException e) {
+            cb().recordFailure();
+            return false;
         }
     }
 

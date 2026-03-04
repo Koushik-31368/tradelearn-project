@@ -371,6 +371,11 @@ public class RoomManager {
         store.releaseScheduler(gameId);
     }
 
+    /** Check if any instance owns the scheduler for a game (without claiming). */
+    public boolean hasSchedulerOwner(long gameId) {
+        return store.hasSchedulerOwner(gameId);
+    }
+
     // ===================== QUERIES =====================
 
     /** Check if a room exists in Redis. */

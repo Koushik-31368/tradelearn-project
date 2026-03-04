@@ -27,33 +27,28 @@ const MatchResultPage = () => {
         userId: user?.id,
         enabled: !!user && !!gameId,
     });
-    // Rematch event subscription
+    // Rematch event: opponent requested a rematch
     useEffect(() => {
-        if (!socket.isConnected) return;
-        // Subscribe only once per mount
-        const handler = (msg) => {
-            const newMatchId = msg.body || (msg && msg.body);
-            setPendingMatchId(newMatchId);
-            setCountdown(3);
-        };
-        // Subscribe to rematch event
-        const sub = socket.publish ? socket.publish : null;
-        let subscription;
-        if (socket.clientRef && socket.clientRef.current) {
-            subscription = socket.clientRef.current.subscribe(
-                `/user/queue/rematch`, handler
-            );
+        if (socket.rematchRequest) {
+            // Opponent wants a rematch — update UI to show prompt
+            setWaiting(false);
         }
-        return () => {
-            if (subscription) subscription.unsubscribe();
-        };
-    }, [socket.isConnected]);
+    }, [socket.rematchRequest]);
+
+    // Rematch event: new game created (mutual consent achieved)
+    useEffect(() => {
+        if (socket.rematchStarted) {
+            const newId = socket.rematchStarted.newGameId;
+            setPendingMatchId(newId);
+            setCountdown(3);
+        }
+    }, [socket.rematchStarted]);
 
     // Countdown before redirect
     useEffect(() => {
         if (countdown === null || pendingMatchId === null) return;
         if (countdown === 0) {
-            navigate(`/match/${pendingMatchId}`);
+            navigate(`/game/${pendingMatchId}`);
             setCountdown(null);
             setPendingMatchId(null);
             setWaiting(false);
@@ -205,8 +200,11 @@ const MatchResultPage = () => {
 
             {/* ── Actions ── */}
             <div className={`mr-actions ${revealed ? 'mr-revealed' : ''}`}>
+                {socket.rematchRequest && !waiting && countdown === null && (
+                    <p className="mr-rematch-prompt">🔔 Opponent wants a rematch!</p>
+                )}
                 <button className="mr-btn mr-btn-primary" onClick={requestRematch} disabled={waiting || countdown !== null}>
-                    🔄 Rematch
+                    {socket.rematchRequest ? '✅ Accept Rematch' : '🔄 Rematch'}
                 </button>
                 <button className="mr-btn mr-btn-ghost" onClick={() => navigate('/')} disabled={countdown !== null}>
                     Home
