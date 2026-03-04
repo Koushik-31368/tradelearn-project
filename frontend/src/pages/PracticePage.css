@@ -27,12 +27,170 @@
   font-size: 0.7rem;
   font-weight: 800;
   letter-spacing: 0.05em;
-  background: linear-gradient(135deg, #ef4444, #f97316);
   color: #fff;
   padding: 3px 8px;
   border-radius: 4px;
   text-transform: uppercase;
   flex-shrink: 0;
+}
+
+.practice-header__badge--live {
+  background: linear-gradient(135deg, #ef4444, #f97316);
+}
+
+.practice-header__badge--historical {
+  background: linear-gradient(135deg, #7c3aed, #2563eb);
+}
+
+/* ── Mode tabs ───────────────────────────────────────────────────────────── */
+.practice-tabs {
+  display: flex;
+  margin-bottom: 20px;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  overflow: hidden;
+  width: fit-content;
+}
+
+.practice-tab {
+  background: #0f172a;
+  color: #64748b;
+  border: none;
+  padding: 10px 24px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.practice-tab:hover {
+  background: #1e293b;
+  color: #cbd5e1;
+}
+
+.practice-tab--active {
+  background: #1d4ed8;
+  color: #fff;
+}
+
+/* ── Historical event cards ─────────────────────────────────────────────── */
+.practice-events {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.event-card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 14px 16px;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, transform 0.1s ease;
+  width: 100%;
+}
+
+.event-card:hover:not(:disabled) {
+  border-color: #60a5fa;
+  background: #1e3a5f;
+  transform: translateY(-1px);
+}
+
+.event-card--selected {
+  border-color: #3b82f6 !important;
+  background: #1e3a5f !important;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+}
+
+.event-card:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.event-card__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.event-card__period {
+  font-size: 0.72rem;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.event-card__title {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #f1f5f9;
+  margin-bottom: 4px;
+}
+
+.event-card__stock {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+.event-card__desc {
+  font-size: 0.78rem;
+  color: #64748b;
+  line-height: 1.5;
+}
+
+/* ── Event type tags ─────────────────────────────────────────────────────── */
+.event-tag {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.event-tag--crash {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.event-tag--rally {
+  background: rgba(34, 197, 94, 0.12);
+  color: #4ade80;
+  border: 1px solid rgba(34, 197, 94, 0.25);
+}
+
+/* ── Historical event summary pill in controls bar ──────────────────────── */
+.practice-event-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 6px;
+  padding: 7px 12px;
+  font-size: 0.88rem;
+  color: #f1f5f9;
+  font-weight: 600;
+}
+
+.practice-event-pill__sym {
+  background: #1e293b;
+  color: #94a3b8;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.practice-event-pill__period {
+  font-size: 0.75rem;
+  color: #64748b;
+  font-weight: 500;
 }
 
 .practice-header__sub {
@@ -362,5 +520,25 @@
 
   .practice-header__title {
     font-size: 1.4rem;
+  }
+
+  .practice-tabs {
+    width: 100%;
+  }
+
+  .practice-tab {
+    flex: 1;
+    text-align: center;
+    padding: 10px 12px;
+    font-size: 0.82rem;
+  }
+
+  .practice-events {
+    grid-template-columns: 1fr;
+  }
+
+  .practice-event-pill {
+    flex-wrap: wrap;
+    gap: 6px;
   }
 }
