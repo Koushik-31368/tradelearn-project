@@ -87,4 +87,33 @@ public class MarketController {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
+
+    /**
+     * GET /api/market/price?symbol=RELIANCE
+     *
+     * Returns the current (latest) NSE market price for the given symbol.
+     * Cached in {@code MarketDataService} for ~10 minutes to avoid Yahoo Finance
+     * rate limits.
+     *
+     * <p>Response: {@code { "symbol": "RELIANCE", "price": 2456.75 }}</p>
+     */
+    @GetMapping("/price")
+    public ResponseEntity<?> getCurrentPrice(@RequestParam String symbol) {
+        if (symbol == null || symbol.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "symbol parameter is required"));
+        }
+
+        String clean = symbol.trim().toUpperCase().replaceAll("[^A-Z0-9]", "");
+        if (clean.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "invalid symbol"));
+        }
+
+        try {
+            double price = marketDataService.getCurrentPrice(clean);
+            return ResponseEntity.ok(Map.of("symbol", clean, "price", price));
+        } catch (RuntimeException e) {
+            log.warn("[MarketController] Price request failed for '{}': {}", clean, e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
 }

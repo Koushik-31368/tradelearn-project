@@ -1,6 +1,6 @@
 // src/components/simulator/SimulatorDashboard.jsx
 // Main simulator dashboard — orchestrates all sub-components.
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import PortfolioSummary from './PortfolioSummary';
 import Watchlist from './Watchlist';
@@ -11,13 +11,14 @@ import TransactionHistory from './TransactionHistory';
 import MarketSentiment from './MarketSentiment';
 import {
   getDailyStocks,
-  generateCandleHistory,
   generateEquityCurve,
   computeSMA,
   getPortfolio,
   getTradeHistory,
   executeDemoTrade,
 } from '../../utils/simulatorData';
+import { generateInitialCandles } from '../../utils/marketSimulator';
+import { backendUrl } from '../../utils/api';
 import './SimulatorDashboard.css';
 
 /* ── Strategy slug → display name mapping ── */
@@ -43,6 +44,24 @@ const SimulatorDashboard = () => {
   const [trades, setTrades] = useState(() => getTradeHistory());
   const [, setTick] = useState(0); // force re-render after trades
 
+  // ── Real market base price (fetched from backend on symbol change) ───────
+  const [realBasePrice, setRealBasePrice] = useState(null);
+
+  useEffect(() => {
+    if (!selectedSymbol) return;
+    setRealBasePrice(null); // reset while loading
+    fetch(backendUrl(`/api/market/price?symbol=${encodeURIComponent(selectedSymbol)}`))
+      .then((res) => res.ok ? res.json() : Promise.reject(res))
+      .then((data) => {
+        if (data && data.price > 0) {
+          setRealBasePrice(data.price);
+        }
+      })
+      .catch(() => {
+        // Non-critical — fall back to static base price from simulatorData
+      });
+  }, [selectedSymbol]);
+
   const equityCurve = useMemo(() => generateEquityCurve(), []);
 
   const selectedStock = useMemo(
@@ -50,9 +69,13 @@ const SimulatorDashboard = () => {
     [stocks, selectedSymbol]
   );
 
+  // Use real market price as the base when available; fall back to daily-seeded price.
+  const effectiveBasePrice = realBasePrice ?? selectedStock?.price ?? 1400;
+
   const candles = useMemo(
-    () => (selectedSymbol ? generateCandleHistory(selectedSymbol, 30) : []),
-    [selectedSymbol]
+    () => selectedSymbol ? generateInitialCandles(effectiveBasePrice, 30) : [],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [selectedSymbol, effectiveBasePrice]
   );
 
   const smaData = useMemo(() => (candles.length > 0 ? computeSMA(candles, 7) : []), [candles]);
