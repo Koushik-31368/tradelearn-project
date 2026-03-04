@@ -230,4 +230,53 @@
   .lb-rating-value {
     font-size: 0.9rem;
   }
+  .lb-tabs { width: 100%; }
+  .lb-tab  { flex: 1; text-align: center; }
+}
+
+/* ══════════════════════════════════════
+   MODE TABS (Multiplayer / Practice)
+   ══════════════════════════════════════ */
+.lb-tabs {
+  display: flex;
+  gap: 0;
+  margin-bottom: 28px;
+  border: 1px solid #1e2733;
+  border-radius: 10px;
+  overflow: hidden;
+  width: 100%;
+  max-width: 720px;
+}
+
+.lb-tab {
+  flex: 1;
+  padding: 11px 20px;
+  background: #0d1117;
+  color: #6b7280;
+  border: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: background 0.15s, color 0.15s;
+}
+
+.lb-tab:hover { background: #141c26; color: #d1d5db; }
+
+.lb-tab--active {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: #fff;
+}
+
+/* ── Practice leaderboard note ─────────────────────────────────────────── */
+.lb-practice-note {
+  max-width: 640px;
+  margin: 0 auto 20px;
+  padding: 12px 16px;
+  background: rgba(79, 70, 229, 0.08);
+  border: 1px solid #4f46e5;
+  border-radius: 8px;
+  color: #a5b4fc;
+  font-size: 0.84rem;
+  line-height: 1.55;
+  text-align: center;
 }

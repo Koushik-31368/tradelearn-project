@@ -4,6 +4,10 @@ import { fetchMarketHistory } from '../services/marketApi';
 import CandlestickChart from '../components/simulator/CandlestickChart';
 import { historicalEvents, findEvent } from '../data/historicalEvents';
 import './PracticePage.css';
+import { detectStrategies, expectedDecision } from '../utils/strategyDetector';
+import { aiDecision, aiDecisionLabel } from '../utils/aiTrader';
+import { useAuth } from '../context/AuthContext';
+import { backendUrl } from '../utils/api';
 
 // ── Modes ──────────────────────────────────────────────────────────────────
 const MODE_LIVE       = 'live';
@@ -52,6 +56,17 @@ export default function PracticePage() {
   const [hasStarted,   setHasStarted]   = useState(false);
 
   const intervalRef = useRef(null);
+
+  // ── Feature: Strategy hints ─────────────────────────────────────────────
+  const [hint,             setHint]             = useState(null);
+  const [decisionFeedback, setDecisionFeedback] = useState(null);
+
+  // ── Feature: AI Opponent ──────────────────────────────────────────────
+  const [aiEnabled,       setAiEnabled]       = useState(false);
+  const [aiDecisionState, setAiDecisionState] = useState(null);
+
+  // ── Auth (for ELO submission) ─────────────────────────────────────────
+  const { user } = useAuth();
 
   // ── Derived display ───────────────────────────────────────────────────
   const visibleCandles = allCandles.slice(0, visibleCount);
@@ -119,6 +134,33 @@ export default function PracticePage() {
     return () => clearInterval(intervalRef.current);
   }, [isPlaying, speedIdx, allCandles.length]);
 
+  // ── Reset hints & AI state when new data loads ────────────────────────
+  useEffect(() => {
+    setHint(null);
+    setDecisionFeedback(null);
+    setAiDecisionState(null);
+  }, [allCandles]);
+
+  // ── Strategy detection + AI decision on each newly revealed candle ────
+  useEffect(() => {
+    const visible = allCandles.slice(0, visibleCount);
+    if (visible.length < 3) return;
+
+    const detected = detectStrategies(visible);
+    // Only surface a new hint when the pattern type actually changes
+    if (detected && (!hint || hint.type !== detected.type)) {
+      setHint(detected);
+      setDecisionFeedback(null);
+    }
+
+    if (aiEnabled) {
+      const move = aiDecision(visible);
+      setAiDecisionState(move);
+    }
+    // visibleCount is the only trigger we need; other deps are stable refs
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visibleCount]);
+
   // ── Controls ──────────────────────────────────────────────────────────
   const handlePlayPause = () => {
     if (visibleCount >= allCandles.length && !isPlaying) {
@@ -136,6 +178,30 @@ export default function PracticePage() {
   };
 
   const handleReload = () => loadData(mode, symbol, activeEvent);
+
+  // ── Strategy decision handler ─────────────────────────────────────────
+  const handleDecision = async (decision) => {
+    if (!hint) return;
+    const correct = expectedDecision(hint.type);
+    const isRight = decision === correct;
+    const aiMove  = aiEnabled ? aiDecisionState : null;
+
+    setDecisionFeedback({ decision, correct, isRight, aiMove });
+    setHint(null);
+
+    // Submit ELO delta to practice leaderboard when user is logged in
+    if (user?.username) {
+      const delta = isRight ? 8 : -4;
+      try {
+        await fetch(
+          backendUrl(`/api/leaderboard/update?username=${encodeURIComponent(user.username)}&scoreDelta=${delta}`),
+          { method: 'POST' }
+        );
+      } catch {
+        // Non-critical — silently swallow network errors
+      }
+    }
+  };
 
   const handleModeSwitch = (newMode) => {
     if (newMode === mode) return;
@@ -285,6 +351,15 @@ export default function PracticePage() {
           >
             ⟳ Refresh
           </button>
+          <button
+            className={`practice-btn practice-btn--ai${aiEnabled ? ' practice-btn--ai-on' : ''}`}
+            onClick={() => {
+              setAiEnabled((prev) => !prev);
+              if (aiEnabled) setAiDecisionState(null);
+            }}
+          >
+            {aiEnabled ? '🤖 AI On' : '🤖 AI Off'}
+          </button>
         </div>
 
       </div>
@@ -372,6 +447,58 @@ export default function PracticePage() {
           </div>
         )}
       </div>
+
+      {/* ── Decision feedback banner ── */}
+      {decisionFeedback && (
+        <div className={`decision-feedback decision-feedback--${decisionFeedback.isRight ? 'correct' : 'wrong'}`}>
+          <span className="decision-feedback__icon">
+            {decisionFeedback.isRight ? '✅' : '❌'}
+          </span>
+          <div className="decision-feedback__text">
+            <strong>{decisionFeedback.isRight ? 'Correct!' : 'Not quite.'}</strong>
+            {' '}Textbook answer for this pattern:{' '}
+            <em className="decision-feedback__answer">{decisionFeedback.correct}</em>.
+            {decisionFeedback.aiMove && (
+              <span> AI chose: <strong>{aiDecisionLabel(decisionFeedback.aiMove)}</strong>.</span>
+            )}
+          </div>
+          <button className="decision-feedback__close" onClick={() => setDecisionFeedback(null)}>×</button>
+        </div>
+      )}
+
+      {/* ── Strategy hint panel ── */}
+      {hint && (
+        <div className={`strategy-hint strategy-hint--${hint.direction}`}>
+          <div className="strategy-hint__header">
+            <h3 className="strategy-hint__title">📊 Trading Hint</h3>
+            <span className="strategy-hint__badge">{hint.type.replace(/_/g, ' ').toUpperCase()}</span>
+          </div>
+          <p className="strategy-hint__message">{hint.message}</p>
+          <p className="strategy-hint__question">What would you do right now?</p>
+          <div className="decision-buttons">
+            <button className="decision-btn decision-btn--buy"  onClick={() => handleDecision('buy')}>📈 Buy</button>
+            <button className="decision-btn decision-btn--sell" onClick={() => handleDecision('sell')}>📉 Sell</button>
+            <button className="decision-btn decision-btn--hold" onClick={() => handleDecision('hold')}>⏸ Hold</button>
+          </div>
+        </div>
+      )}
+
+      {/* ── AI Opponent box ── */}
+      {aiEnabled && (
+        <div className="ai-box">
+          <div className="ai-box__header">
+            <span className="ai-box__icon">🤖</span>
+            <h4 className="ai-box__title">AI Trader</h4>
+          </div>
+          <p className="ai-box__decision">
+            Current call:&nbsp;
+            <strong className={`ai-decision ai-decision--${aiDecisionState || 'hold'}`}>
+              {aiDecisionLabel(aiDecisionState || 'hold')}
+            </strong>
+          </p>
+          <p className="ai-box__sub">5-candle SMA + RSI-14 momentum strategy.</p>
+        </div>
+      )}
 
       {/* ── Info footer ── */}
       <div className="practice-info">

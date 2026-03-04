@@ -42,6 +42,16 @@ public class LeaderboardController {
 
     // ================= LEADERBOARD =================
 
+    /** Default leaderboard endpoint — used by the frontend LeaderboardPage. */
+    @GetMapping("/leaderboard")
+    public ResponseEntity<List<LeaderboardDTO>> getLeaderboard() {
+	List<User> allUsers = userRepository.findAllByOrderByRatingDesc();
+	List<LeaderboardDTO> dtos = allUsers.stream()
+		.map(u -> new LeaderboardDTO(u, rankService.getRankTier(u.getRating())))
+		.collect(Collectors.toList());
+	return ResponseEntity.ok(dtos);
+    }
+
     @GetMapping("/leaderboard/top10")
     public ResponseEntity<List<LeaderboardDTO>> getTop10Leaderboard() {
 	List<User> topUsers = userRepository.findTop10ByOrderByRatingDesc();

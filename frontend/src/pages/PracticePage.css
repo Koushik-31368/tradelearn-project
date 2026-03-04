@@ -542,3 +542,219 @@
     gap: 6px;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   FEATURE 1 — Strategy Hint Panel
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.strategy-hint {
+  margin: 20px 0;
+  padding: 20px 24px;
+  border-radius: 12px;
+  border: 1px solid #334155;
+  background: #0f172a;
+  animation: hint-slide-in 0.35s ease;
+}
+
+@keyframes hint-slide-in {
+  from { opacity: 0; transform: translateY(-10px); }
+  to   { opacity: 1; transform: translateY(0);     }
+}
+
+.strategy-hint--bullish {
+  border-color: #16a34a;
+  background: linear-gradient(135deg, rgba(22, 163, 74, 0.08), rgba(15, 23, 42, 1));
+}
+
+.strategy-hint--bearish {
+  border-color: #dc2626;
+  background: linear-gradient(135deg, rgba(220, 38, 38, 0.08), rgba(15, 23, 42, 1));
+}
+
+.strategy-hint--neutral {
+  border-color: #4f46e5;
+  background: linear-gradient(135deg, rgba(79, 70, 229, 0.08), rgba(15, 23, 42, 1));
+}
+
+.strategy-hint__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.strategy-hint__title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #f1f5f9;
+}
+
+.strategy-hint__badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: #1e293b;
+  color: #94a3b8;
+  border: 1px solid #334155;
+}
+
+.strategy-hint__message {
+  margin: 0 0 10px;
+  color: #cbd5e1;
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+
+.strategy-hint__question {
+  margin: 0 0 14px;
+  color: #94a3b8;
+  font-size: 0.85rem;
+}
+
+/* ── Decision buttons ─────────────────────────────────────────────────────── */
+.decision-buttons {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.decision-btn {
+  flex: 1;
+  min-width: 90px;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.1s, opacity 0.15s;
+}
+
+.decision-btn:hover  { opacity: 0.85; transform: translateY(-1px); }
+.decision-btn:active { transform: scale(0.97); }
+
+.decision-btn--buy  { background: #16a34a; color: #fff; }
+.decision-btn--sell { background: #dc2626; color: #fff; }
+.decision-btn--hold { background: #2563eb; color: #fff; }
+
+/* ── Decision feedback banner ─────────────────────────────────────────────── */
+.decision-feedback {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  border-radius: 10px;
+  margin: 14px 0;
+  font-size: 0.9rem;
+  animation: hint-slide-in 0.3s ease;
+}
+
+.decision-feedback--correct {
+  background: rgba(22, 163, 74, 0.15);
+  border: 1px solid #16a34a;
+  color: #bbf7d0;
+}
+
+.decision-feedback--wrong {
+  background: rgba(220, 38, 38, 0.12);
+  border: 1px solid #dc2626;
+  color: #fecaca;
+}
+
+.decision-feedback__icon { font-size: 1.2rem; flex-shrink: 0; }
+
+.decision-feedback__text { flex: 1; line-height: 1.5; }
+
+.decision-feedback__answer {
+  text-transform: capitalize;
+  font-style: normal;
+  font-weight: 700;
+}
+
+.decision-feedback__close {
+  background: transparent;
+  border: none;
+  color: inherit;
+  font-size: 1.2rem;
+  cursor: pointer;
+  opacity: 0.6;
+  flex-shrink: 0;
+  line-height: 1;
+  padding: 0 4px;
+}
+.decision-feedback__close:hover { opacity: 1; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   FEATURE 2 — AI Opponent Box
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.ai-box {
+  margin: 14px 0 20px;
+  padding: 16px 20px;
+  border-radius: 10px;
+  border: 1px solid #334155;
+  background: #0f172a;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ai-box__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ai-box__icon { font-size: 1.2rem; }
+
+.ai-box__title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #f1f5f9;
+}
+
+.ai-box__decision {
+  margin: 0;
+  font-size: 0.88rem;
+  color: #94a3b8;
+}
+
+.ai-box__sub {
+  margin: 0;
+  font-size: 0.78rem;
+  color: #475569;
+}
+
+/* AI decision coloured labels */
+.ai-decision { font-size: 0.9rem; }
+.ai-decision--buy  { color: #4ade80; }
+.ai-decision--sell { color: #f87171; }
+.ai-decision--hold { color: #60a5fa; }
+
+/* ── AI toggle button ─────────────────────────────────────────────────────── */
+.practice-btn--ai {
+  background: #1e293b;
+  color: #94a3b8;
+  border: 1px solid #334155;
+}
+
+.practice-btn--ai:hover { background: #273549; }
+
+.practice-btn--ai-on {
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  color: #fff;
+  border-color: transparent;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Responsive overrides for new components
+   ═══════════════════════════════════════════════════════════════════════════ */
+@media (max-width: 600px) {
+  .decision-buttons { flex-direction: column; }
+  .decision-btn     { min-width: 100%; }
+  .ai-box           { padding: 12px 16px; }
+}
