@@ -76,6 +76,7 @@ public class LeaderboardController {
 
     // ================= PROFILE =================
 
+    @SuppressWarnings("null")
     @GetMapping("/{userId}/profile")
     public ResponseEntity<?> getUserProfile(@PathVariable Long userId) {
 

@@ -1,13 +1,17 @@
 package com.tradelearn.server.controller;
 
-import com.tradelearn.server.service.MarketDataService;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.tradelearn.server.service.MarketDataService;
 
 /**
  * REST controller that exposes historical market data for Practice Mode.
@@ -17,13 +21,17 @@ import java.util.Map;
  *
  * <p>Base path: {@code /api/market}</p>
  */
-@Slf4j
 @RestController
 @RequestMapping("/api/market")
-@RequiredArgsConstructor
 public class MarketController {
 
+    private static final Logger log = LoggerFactory.getLogger(MarketController.class);
+
     private final MarketDataService marketDataService;
+
+    public MarketController(MarketDataService marketDataService) {
+        this.marketDataService = marketDataService;
+    }
 
     /**
      * GET /api/market/history?symbol=INFY
@@ -70,7 +78,7 @@ public class MarketController {
         }
 
         try {
-            List<Map<String, Object>> candles = (start != null)
+            List<Map<String, Object>> candles = (start != null && end != null)
                     ? marketDataService.getHistoricalData(clean, start, end)
                     : marketDataService.getHistoricalData(clean);
             return ResponseEntity.ok(candles);

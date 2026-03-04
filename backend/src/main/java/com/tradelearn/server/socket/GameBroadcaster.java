@@ -22,6 +22,7 @@ import org.springframework.stereotype.Component;
  *   broadcaster.sendToGame(gameId, "started", startPayload);
  *   broadcaster.sendToGame(gameId, "finished", resultPayload);
  */
+@SuppressWarnings("null")
 @Component
 public class GameBroadcaster {
 

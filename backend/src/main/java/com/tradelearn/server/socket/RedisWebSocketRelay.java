@@ -46,6 +46,7 @@ import jakarta.annotation.PostConstruct;
  *        At 10K games × 5 events/sec = 50K msgs/sec — well within
  *        Redis's 500K+ msg/sec throughput on a single node.
  */
+@SuppressWarnings("null")
 @Component
 public class RedisWebSocketRelay implements MessageListener {
 
@@ -110,7 +111,7 @@ public class RedisWebSocketRelay implements MessageListener {
     // ==================== RECEIVE ====================
 
     @Override
-    public void onMessage(Message message, byte[] pattern) {
+    public void onMessage(@org.springframework.lang.NonNull Message message, @org.springframework.lang.Nullable byte[] pattern) {
         try {
             String raw = new String(message.getBody());
 
@@ -126,7 +127,7 @@ public class RedisWebSocketRelay implements MessageListener {
 
             messagingTemplate.convertAndSend(msg.destination, msg.payload);
 
-        } catch (Exception e) {
+        } catch (com.fasterxml.jackson.core.JsonProcessingException | RuntimeException e) {
             log.error("[Redis Relay] Failed to process incoming message: {}", e.getMessage());
         }
     }
@@ -226,7 +227,7 @@ public class RedisWebSocketRelay implements MessageListener {
             mac.init(hmacKey);
             byte[] hash = mac.doFinal(data.getBytes(StandardCharsets.UTF_8));
             return bytesToHex(hash);
-        } catch (Exception e) {
+        } catch (java.security.NoSuchAlgorithmException | java.security.InvalidKeyException e) {
             throw new RuntimeException("HMAC computation failed", e);
         }
     }
@@ -234,6 +235,7 @@ public class RedisWebSocketRelay implements MessageListener {
     /**
      * Constant-time comparison to prevent timing attacks on HMAC verification.
      */
+    @SuppressWarnings("unused")
     private static boolean constantTimeEquals(String a, String b) {
         if (a == null || b == null) return false;
         if (a.length() != b.length()) return false;

@@ -53,6 +53,7 @@ public class MatchService {
     private static final String REMATCH_PREFIX = "rematch:";
     private static final Duration REMATCH_TTL = Duration.ofSeconds(120);
 
+    @SuppressWarnings("null")
     @Transactional
     public Game createMatch(CreateMatchRequest request) {
         User creator = userRepository.findById(request.getCreatorId())
@@ -88,6 +89,7 @@ public class MatchService {
     private final PositionSnapshotStore positionStore;
     private final TradeRateLimiter rateLimiter;
     private final GameMetricsService metrics;
+    @SuppressWarnings("unused")
     private final GracefulDegradationManager degradationManager;
     private final StringRedisTemplate redis;
 
@@ -133,6 +135,7 @@ public class MatchService {
      * Cluster-safe: Lua script ensures atomic check + delete for mutual consent.
      * Only one instance sees the consent result; all others see key-deleted.
      */
+    @SuppressWarnings("null")
     @Transactional
     public Map<String, Object> requestRematch(long oldGameId, long userId) {
         Game oldGame = gameRepository.findById(oldGameId)
@@ -239,6 +242,7 @@ public class MatchService {
      * afterCommit, we guarantee that Redis/WebSocket only fire when we KNOW
      * the DB change is durable.
      */
+    @SuppressWarnings("null")
     @Transactional
     public Game joinMatch(long gameId, Long userId) {
         User opponent = userRepository.findById(userId)
@@ -446,8 +450,10 @@ public class MatchService {
 
             User opponent = game.getOpponent();
             User creator = game.getCreator();
+            long creatorIdForLog = -1L;
+            if (creator != null) creatorIdForLog = creator.getId();
             GameLogger.logGameStartAttempt(log, gameId, 
-                creator != null ? creator.getId() : -1,
+                creatorIdForLog,
                 opponent != null ? opponent.getId() : null,
                 game.getStatus());
 
@@ -461,10 +467,14 @@ public class MatchService {
 
             if (opponent == null) {
                 GameLogger.logGameCannotStart(log, gameId, "No opponent", Map.of(
-                    "creatorId", creator.getId(),
+                    "creatorId", creator != null ? creator.getId() : Long.valueOf(-1L),
                     "hasOpponent", false
                 ));
                 throw new IllegalStateException("Game needs two players to start");
+            }
+
+            if (creator == null) {
+                throw new IllegalStateException("Game has no creator");
             }
 
             game.setStartTime(LocalDateTime.now());
@@ -500,7 +510,7 @@ public class MatchService {
             });
 
             return saved;
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             GameLogger.logError(log, "startMatch", gameId, e, null);
             throw e;
         } finally {

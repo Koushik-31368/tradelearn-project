@@ -109,6 +109,7 @@ public class WebSocketEventListener {
 
     // ==================== DISCONNECT ====================
 
+    @SuppressWarnings("null")
     @EventListener
     public void handleDisconnect(SessionDisconnectEvent event) {
         StompHeaderAccessor accessor = StompHeaderAccessor.wrap(event.getMessage());

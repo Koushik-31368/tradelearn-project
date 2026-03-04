@@ -1,14 +1,16 @@
 package com.tradelearn.server.service;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+
+import com.fasterxml.jackson.databind.JsonNode;
 
 /**
  * Fetches historical OHLCV candles from Yahoo Finance for a given NSE symbol.
@@ -31,9 +33,10 @@ import java.util.Map;
  * <p>Yahoo Finance sometimes embeds {@code null} at closed-market timestamps.
  * Any candle whose OHLCV contains a null value is silently skipped.</p>
  */
-@Slf4j
 @Service
 public class MarketDataService {
+
+    private static final Logger log = LoggerFactory.getLogger(MarketDataService.class);
 
     private static final String YAHOO_BASE = "https://query1.finance.yahoo.com/v8/finance/chart/";
     /** Recent-data URL — last 5 trading days at 5-minute resolution. */
@@ -98,6 +101,7 @@ public class MarketDataService {
 
     // ── PRIVATE HELPERS ─────────────────────────────────────────────────────
 
+    @SuppressWarnings("null")
     private List<Map<String, Object>> fetchAndParse(String symbol, String url) {
 
         try {
@@ -170,6 +174,9 @@ public class MarketDataService {
             log.info("[MarketData] Returning {} clean candles for {}", candles.size(), symbol);
             return candles;
 
+        } catch (RuntimeException e) {
+            log.error("[MarketData] Failed to fetch data for {}: {}", symbol, e.getMessage());
+            throw e;
         } catch (Exception e) {
             log.error("[MarketData] Failed to fetch data for {}: {}", symbol, e.getMessage());
             throw new RuntimeException("Failed to load market data for " + symbol + ": " + e.getMessage(), e);

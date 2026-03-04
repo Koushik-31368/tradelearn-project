@@ -433,7 +433,8 @@ public class RoomManager {
     /** All rooms as diagnostic snapshots (from Redis). */
     public Collection<Map<String, Object>> allRoomSnapshots() {
         return store.allGameIds().stream()
-                .map(store::snapshot)
+                .filter(id -> id != null)
+                .map(id -> store.snapshot(id))
                 .filter(s -> s != null)
                 .toList();
     }
