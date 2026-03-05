@@ -9,6 +9,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.http.server.ServletServerHttpRequest;
@@ -153,7 +154,8 @@ public class WebSocketAuthInterceptor implements HandshakeInterceptor {
         }
 
         // 3. Try from request headers directly
-        List<String> authHeaders = request.getHeaders().get("Authorization");
+        HttpHeaders httpHeaders = request.getHeaders();
+        List<String> authHeaders = (httpHeaders != null) ? httpHeaders.get("Authorization") : null;
         if (authHeaders != null && !authHeaders.isEmpty()) {
             String authHeader = authHeaders.get(0);
             if (authHeader != null && authHeader.startsWith("Bearer ")) {
