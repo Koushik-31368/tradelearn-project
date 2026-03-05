@@ -183,7 +183,11 @@ export default function useGameSocket({ gameId, userId, enabled = true, options 
                 // ── 1. GAME STARTED (opponent joined → creator notified) ──
                 subscribeTo(client, `/topic/game/${gameId}/started`, () => {
                     safeSet(() => {
-                        setGamePhase(GamePhase.STARTING);
+                        // Don't downgrade if we're already ACTIVE (e.g. duplicate
+                        // broadcast triggered by a rejoin on the other player's side).
+                        setGamePhase((current) =>
+                            current === GamePhase.ACTIVE ? GamePhase.ACTIVE : GamePhase.STARTING
+                        );
                         setStatusMessage('Opponent joined! Game starting…');
                     });
                 });
@@ -341,13 +345,29 @@ export default function useGameSocket({ gameId, userId, enabled = true, options 
     // initial fetch — "game.status === WAITING")
     // ─────────────────────────────────────────────────────────
     const syncPhaseFromRest = useCallback((serverStatus) => {
-        const map = {
+        const restMap = {
             WAITING:   GamePhase.WAITING,
             ACTIVE:    GamePhase.ACTIVE,
             FINISHED:  GamePhase.FINISHED,
             ABANDONED: GamePhase.ABANDONED,
         };
-        setGamePhase(map[serverStatus] || null);
+        const phaseOrder = {
+            [GamePhase.CREATING]:  0,
+            [GamePhase.WAITING]:   1,
+            [GamePhase.STARTING]:  2,
+            [GamePhase.ACTIVE]:    3,
+            [GamePhase.FINISHED]:  4,
+            [GamePhase.ABANDONED]: 4,
+        };
+        const newPhase = restMap[serverStatus];
+        if (!newPhase) return;
+        setGamePhase((currentPhase) => {
+            const currentOrder = phaseOrder[currentPhase] ?? -1;
+            const newOrder     = phaseOrder[newPhase]     ?? -1;
+            // Never downgrade: e.g. don't reset STARTING → WAITING due to a
+            // REST race where DB commit hasn't landed yet.
+            return newOrder >= currentOrder ? newPhase : currentPhase;
+        });
     }, []);
 
     /** Seed candle state from the initial REST fetch */

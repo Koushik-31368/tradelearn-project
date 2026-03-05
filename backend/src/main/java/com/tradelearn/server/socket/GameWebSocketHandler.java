@@ -360,6 +360,31 @@ public class GameWebSocketHandler {
             );
         } else {
             log.debug("[WS] Player {} joined game {} (normal join, not reconnection)", userId, gameId);
+
+            // If the game is already ACTIVE, the player may have missed the initial
+            // "started" broadcast (e.g. brief WS disconnect during the waiting phase).
+            // Re-broadcast to the game topic so they transition out of WAITING.
+            Game game = gameRepository.findById(gameId).orElse(null);
+            if (game != null && "ACTIVE".equals(game.getStatus())) {
+                boolean isCreator  = game.getCreator() != null && game.getCreator().getId().equals(userId);
+                boolean isOpponent = game.getOpponent() != null && game.getOpponent().getId().equals(userId);
+                if (isCreator || isOpponent) {
+                    Long   opponentId       = isCreator
+                            ? (game.getOpponent() != null ? game.getOpponent().getId() : null)
+                            : game.getCreator().getId();
+                    String opponentUsername = isCreator
+                            ? (game.getOpponent() != null ? game.getOpponent().getUsername() : "")
+                            : (game.getCreator() != null  ? game.getCreator().getUsername()  : "");
+                    log.info("[WS] Game {} is already ACTIVE — resending 'started' event for player {}",
+                            gameId, userId);
+                    broadcaster.sendToGame(gameId, "started", Map.of(
+                            "gameId",           gameId,
+                            "status",           "ACTIVE",
+                            "opponentId",       opponentId != null ? opponentId : -1L,
+                            "opponentUsername", opponentUsername
+                    ));
+                }
+            }
         }
     }
 

@@ -71,19 +71,27 @@ const GamePage = () => {
             if (data.status === 'FINISHED') return;
 
             if (data.status === 'ACTIVE') {
-                try {
-                    const hdrs = authHeaders();
-                    const [candleRes, remainRes] = await Promise.all([
-                        fetch(backendUrl(`/api/match/${gameId}/candle`), { headers: hdrs }),
-                        fetch(backendUrl(`/api/match/${gameId}/candle/remaining`), { headers: hdrs }),
-                    ]);
-                    let c = null, rem = null;
-                    if (candleRes.ok) c = await candleRes.json();
-                    if (remainRes.ok) rem = await remainRes.json();
-                    seedCandle(c, data.currentCandleIndex || 0, rem?.remaining ?? rem);
-                } catch (candleErr) {
-                    console.warn('Initial candle fetch failed, waiting for WS:', candleErr);
-                }
+                const fetchCandle = async (attempt = 1) => {
+                    try {
+                        const hdrs = authHeaders();
+                        const [candleRes, remainRes] = await Promise.all([
+                            fetch(backendUrl(`/api/match/${gameId}/candle`), { headers: hdrs }),
+                            fetch(backendUrl(`/api/match/${gameId}/candle/remaining`), { headers: hdrs }),
+                        ]);
+                        let c = null, rem = null;
+                        if (candleRes.ok) c = await candleRes.json();
+                        if (remainRes.ok) rem = await remainRes.json();
+                        if (c) {
+                            seedCandle(c, data.currentCandleIndex || 0, rem?.remaining ?? rem);
+                        } else if (attempt < 3) {
+                            // Game just started — first candle not ready yet, retry shortly
+                            setTimeout(() => fetchCandle(attempt + 1), 1500);
+                        }
+                    } catch (candleErr) {
+                        console.warn('Initial candle fetch failed, waiting for WS:', candleErr);
+                    }
+                };
+                fetchCandle();
             }
         } catch (err) {
             console.error('Fetch game error:', err);
@@ -103,6 +111,21 @@ const GamePage = () => {
         if (gamePhase === GamePhase.STARTING) {
             fetchGameData();
         }
+    }, [gamePhase, fetchGameData]);
+
+    // ─────────────────────────────────────────────
+    // Polling fallback while waiting for opponent.
+    // If the WS "started" event is never received
+    // (e.g. brief disconnect), poll every 3 s so
+    // the creator transitions automatically instead
+    // of needing a manual refresh.
+    // ─────────────────────────────────────────────
+    useEffect(() => {
+        if (gamePhase !== GamePhase.WAITING) return;
+        const pollId = setInterval(() => {
+            fetchGameData();
+        }, 3000);
+        return () => clearInterval(pollId);
     }, [gamePhase, fetchGameData]);
 
     // ─────────────────────────────────────────────
@@ -189,7 +212,9 @@ const GamePage = () => {
     if (!game)     return <div>Waiting for match data…</div>;
 
     // ── WAITING screen ──
-    if (gamePhase === GamePhase.WAITING || game.status === 'WAITING') {
+    // Only show when phase is explicitly WAITING (or not yet synced from REST while status=WAITING).
+    // Once gamePhase moves to STARTING/ACTIVE the active screen takes over immediately.
+    if (gamePhase === GamePhase.WAITING || (gamePhase == null && game.status === 'WAITING')) {
         return (
             <div className="game-page-grid">
                 <header className="game-header">
