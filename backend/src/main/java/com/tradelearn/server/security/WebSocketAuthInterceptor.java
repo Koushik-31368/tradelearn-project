@@ -156,7 +156,7 @@ public class WebSocketAuthInterceptor implements HandshakeInterceptor {
         List<String> authHeaders = request.getHeaders().get("Authorization");
         if (authHeaders != null && !authHeaders.isEmpty()) {
             String authHeader = authHeaders.get(0);
-            if (authHeader.startsWith("Bearer ")) {
+            if (authHeader != null && authHeader.startsWith("Bearer ")) {
                 return authHeader.substring(7);
             }
         }
