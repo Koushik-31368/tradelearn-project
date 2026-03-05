@@ -8,14 +8,18 @@ const CreateGameForm = ({ onCreate, onCancel }) => {
   const [stockSymbol, setStockSymbol] = useState('');
   const [duration, setDuration] = useState(2);
   const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { user } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isSubmitting) return;          // guard against rapid re-clicks
     setError('');
+    setIsSubmitting(true);
 
     if (!user) {
       setError("You must be logged in to create a game.");
+      setIsSubmitting(false);
       return;
     }
 
@@ -38,6 +42,7 @@ const CreateGameForm = ({ onCreate, onCancel }) => {
       onCreate(game);
     } catch (err) {
       setError(err.message);
+      setIsSubmitting(false);   // re-enable only on error; on success we navigate away
     }
   };
 
@@ -71,8 +76,10 @@ const CreateGameForm = ({ onCreate, onCancel }) => {
       </div>
       {error && <p className="form-error" style={{color: 'red', textAlign: 'center'}}>{error}</p>}
       <div className="form-actions">
-        <button type="button" className="btn-cancel" onClick={onCancel}>Cancel</button>
-        <button type="submit" className="btn-create">Create Game</button>
+        <button type="button" className="btn-cancel" onClick={onCancel} disabled={isSubmitting}>Cancel</button>
+        <button type="submit" className="btn-create" disabled={isSubmitting}>
+          {isSubmitting ? 'Creating…' : 'Create Game'}
+        </button>
       </div>
     </form>
   );
