@@ -92,7 +92,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             log.debug("JWT authenticated user: {} (id={})", email, user.getId());
 
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             log.warn("JWT authentication failed: {}", e.getMessage());
             // Don't set authentication — request continues as anonymous
         }
