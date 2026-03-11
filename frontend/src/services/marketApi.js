@@ -2,26 +2,15 @@
 import { backendUrl } from '../utils/api';
 
 /**
- * Fetches OHLCV candles for a given NSE symbol from the Spring Boot backend
- * which proxies Yahoo Finance.
+ * Fetches OHLCV candles for a given NSE symbol from the Spring Boot backend.
+ * Data is served from local classpath JSON files — no external API dependencies.
  *
- * @param {string} symbol     - NSE symbol without .NS suffix (e.g. "INFY")
- * @param {number} [start]    - Range start in Unix epoch seconds (optional)
- * @param {number} [end]      - Range end   in Unix epoch seconds (optional)
- *
- * When both `start` and `end` are omitted the backend returns the last 5
- * trading days at 5-minute resolution (Live Data mode).
- * When timestamps are supplied the backend auto-picks the best interval
- * (5m / 1h / 1d) depending on the range age (Historical Events mode).
- *
+ * @param {string} symbol - NSE symbol without .NS suffix (e.g. "INFY")
  * @returns {Promise<Array<{ time, open, high, low, close, volume }>>}
  * @throws  {Error} if the fetch fails or the backend returns an error body
  */
-export async function fetchMarketHistory(symbol, start, end) {
-  let path = `/api/market/history?symbol=${encodeURIComponent(symbol)}`;
-  if (start != null && end != null) {
-    path += `&start=${start}&end=${end}`;
-  }
+export async function fetchMarketHistory(symbol) {
+  const path = `/api/candles/${encodeURIComponent(symbol)}`;
 
   const res = await fetch(backendUrl(path));
 
