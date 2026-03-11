@@ -35,7 +35,7 @@ const RegisterPage = () => {
       setIsError(true);
       const errData = err?.response?.data;
       setMessage(
-        typeof errData === 'string' ? errData : errData?.message || 'Registration failed'
+        typeof errData === 'string' ? errData : errData?.error || errData?.message || 'Registration failed'
       );
     }
   };

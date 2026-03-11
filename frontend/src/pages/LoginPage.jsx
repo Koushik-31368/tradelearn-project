@@ -34,7 +34,7 @@ const LoginPage = () => {
       setIsError(true);
       const errData = err?.response?.data;
       setMessage(
-        typeof errData === 'string' ? errData : errData?.message || 'Login failed'
+        typeof errData === 'string' ? errData : errData?.error || errData?.message || 'Login failed'
       );
     }
   };
