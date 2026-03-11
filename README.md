@@ -87,7 +87,7 @@ This scoring model rewards consistent, disciplined trading over high-risk specul
 |------------|---------|
 | Docker + Docker Compose | Containerized deployment |
 | Nginx | Frontend static file serving and reverse proxy |
-| Railway | Production hosting |
+| Render | Production hosting |
 | Vercel | Frontend CDN (alternative deployment) |
 
 ---
