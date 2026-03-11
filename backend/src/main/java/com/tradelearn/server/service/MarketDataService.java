@@ -9,6 +9,10 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -152,7 +156,9 @@ public class MarketDataService {
         String url = YAHOO_BASE + symbol + ".NS?interval=1m&range=1d";
         log.info("[MarketData] Fetching current price for {} — {}", symbol, url);
         try {
-            JsonNode response = restTemplate.getForObject(url, JsonNode.class);
+            HttpEntity<Void> req = new HttpEntity<>(YAHOO_HEADERS);
+            ResponseEntity<JsonNode> re = restTemplate.exchange(url, HttpMethod.GET, req, JsonNode.class);
+            JsonNode response = re.getBody();
             if (response == null) throw new RuntimeException("Empty response from Yahoo Finance");
             double price = response
                     .path("chart").path("result").path(0)
@@ -169,11 +175,23 @@ public class MarketDataService {
 
     // ── PRIVATE HELPERS ─────────────────────────────────────────────────────
 
+    private static final HttpHeaders YAHOO_HEADERS = new HttpHeaders();
+    static {
+        YAHOO_HEADERS.set("User-Agent",
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+            + "(KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36");
+        YAHOO_HEADERS.set("Accept", "application/json");
+        YAHOO_HEADERS.set("Accept-Language", "en-US,en;q=0.9");
+    }
+
     @SuppressWarnings("null")
     private List<Map<String, Object>> fetchAndParse(String symbol, String url) {
 
         try {
-            JsonNode response = restTemplate.getForObject(url, JsonNode.class);
+            HttpEntity<Void> req = new HttpEntity<>(YAHOO_HEADERS);
+            ResponseEntity<JsonNode> responseEntity =
+                restTemplate.exchange(url, HttpMethod.GET, req, JsonNode.class);
+            JsonNode response = responseEntity.getBody();
 
             if (response == null) {
                 throw new RuntimeException("Empty response from Yahoo Finance for symbol: " + symbol);
