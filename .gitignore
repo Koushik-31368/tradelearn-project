@@ -1,2 +1,5 @@
 # Ignore local database config
 backend/src/main/resources/application-local.properties
+
+# Node modules
+node_modules/
