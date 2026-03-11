@@ -1,7 +1,7 @@
 // src/data/historicalEvents.js
 // Historical market events for Practice Mode.
-// start/end are Unix epoch seconds — passed directly to Yahoo Finance's
-// period1/period2 params. The backend auto-selects 5m / 1h / 1d resolution.
+// Candle data is served from local JSON datasets on the backend.
+// start/end fields are retained for reference but are no longer sent to the API.
 
 export const historicalEvents = [
   {

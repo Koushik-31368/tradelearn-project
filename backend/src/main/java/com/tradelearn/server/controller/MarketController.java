@@ -19,7 +19,10 @@ import com.tradelearn.server.service.MarketDataService;
  * <p>All endpoints are public (no JWT required). CORS is handled globally
  * by {@code SecurityConfig} — no {@code @CrossOrigin} needed here.</p>
  *
- * <p>Base path: {@code /api/market}</p>
+ * <p>All candle data is served from local classpath JSON files — no external
+ * API dependencies.</p>
+ *
+ * <p>Base paths: {@code /api/market} (legacy) and {@code /api/candles}</p>
  */
 @RestController
 @RequestMapping("/api/market")
@@ -35,21 +38,13 @@ public class MarketController {
 
     /**
      * GET /api/market/history?symbol=INFY
-     * GET /api/market/history?symbol=RELIANCE&start=1580515200&end=1585699200
      *
-     * Returns OHLCV candles for the given NSE symbol.
-     *
-     * <ul>
-     *   <li>Without {@code start}/{@code end} — returns the last 5 trading days
-     *       at 5-minute resolution (Live Data tab).</li>
-     *   <li>With {@code start}/{@code end} (Unix epoch seconds) — returns the
-     *       requested historical range; the backend auto-picks the best interval
-     *       ({@code 5m} / {@code 1h} / {@code 1d}) based on the range age and span
-     *       (Historical Events tab).</li>
-     * </ul>
+     * Returns all OHLCV candles from the local dataset for the given NSE symbol.
+     * The {@code start} and {@code end} parameters are accepted for backward
+     * compatibility but ignored — the full local dataset is always returned.
      *
      * <p>Response candle shape:</p>
-     * <pre>{ "time": 1709550600000, "open": 1452.3, "high": 1460.0,
+     * <pre>{ "time": "2020-03-01", "open": 1452.3, "high": 1460.0,
      *        "low": 1448.5, "close": 1455.1, "volume": 120400 }</pre>
      */
     @GetMapping("/history")
@@ -91,9 +86,7 @@ public class MarketController {
     /**
      * GET /api/market/price?symbol=RELIANCE
      *
-     * Returns the current (latest) NSE market price for the given symbol.
-     * Cached in {@code MarketDataService} for ~10 minutes to avoid Yahoo Finance
-     * rate limits.
+     * Returns the last close price from the local dataset for the given symbol.
      *
      * <p>Response: {@code { "symbol": "RELIANCE", "price": 2456.75 }}</p>
      */

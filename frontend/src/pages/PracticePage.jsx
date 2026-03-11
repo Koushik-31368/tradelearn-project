@@ -63,10 +63,10 @@ export default function PracticePage() {
     setIsLoading(true);
 
     try {
-      const data = await fetchMarketHistory(event.symbol, event.start, event.end);
+      const data = await fetchMarketHistory(event.symbol);
 
       if (data.length === 0) {
-        setError(`No data available for "${event.title}". Yahoo Finance may not have this range.`);
+        setError(`No data available for "${event.title}". The dataset may not be loaded on the server.`);
         return;
       }
       setAllCandles(data);
