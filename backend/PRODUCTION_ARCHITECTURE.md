@@ -561,7 +561,7 @@ Docker Compose:
                          │       │
               ┌──────────▼┐  ┌──▼──────────┐
               │ Node 1    │  │ Node 2      │
-              │ (Railway) │  │ (Railway)   │
+              │ (Render)  │  │ (Render)    │
               └────┬──────┘  └──────┬──────┘
                    │                │
          ┌─────────▼────────────────▼──────────┐
@@ -569,7 +569,7 @@ Docker Compose:
          └─────────────────────────────────────────┘
                           │
          ┌────────────────▼────────────────────────┐
-         │     PostgreSQL (Railway / RDS)           │
+         │     PostgreSQL (Render / RDS)            │
          └─────────────────────────────────────────┘
 ```
 
@@ -578,7 +578,7 @@ Docker Compose:
 Load balancer MUST route WebSocket upgrade requests to the same backend instance for the lifetime of the connection. Configure via:
 - **Nginx**: `ip_hash` or `sticky cookie`
 - **AWS ALB**: Target group stickiness (application cookie)
-- **Railway**: Single node per service (scale via separate services)
+- **Render**: Single node per service (scale via separate services)
 
 ---
 
