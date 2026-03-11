@@ -40,12 +40,6 @@ public class AuthController {
                         .body(Map.of("error", "All fields are required"));
             }
 
-            // Only gmail allowed
-            if (!user.getEmail().endsWith("@gmail.com")) {
-                return ResponseEntity.badRequest()
-                        .body(Map.of("error", "Email must end with @gmail.com"));
-            }
-
             if (userRepository.existsByEmail(user.getEmail())) {
                 return ResponseEntity.badRequest()
                         .body(Map.of("error", "Email already exists"));
