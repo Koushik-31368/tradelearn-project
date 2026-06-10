@@ -1,0 +1,129 @@
+/* src/components/StockDetailView.css */
+.stock-detail-container {
+  background-color: #161a25;
+  padding: 25px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.stock-detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  border-bottom: 1px solid #374151;
+  padding-bottom: 15px;
+  margin-bottom: 20px;
+}
+
+.stock-detail-header h2 {
+  margin: 0;
+  font-size: 1.8rem;
+}
+
+.price-info {
+  text-align: right;
+}
+
+.price-info .current-price {
+  font-size: 1.8rem;
+  font-weight: bold;
+  display: block;
+}
+
+.price-info .price-change {
+  font-size: 1rem;
+  font-weight: bold;
+}
+
+.chart-placeholder {
+  height: 250px;
+  background-color: #111827;
+  border-radius: 5px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #6b7280;
+  margin-bottom: 20px;
+}
+
+.trade-controls {
+  background-color: #1f2937;
+  padding: 15px;
+  border-radius: 8px;
+}
+
+.order-type-selector {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+  background-color: #374151;
+  border-radius: 5px;
+  padding: 5px;
+}
+
+.order-type-selector button {
+  flex: 1;
+  padding: 8px;
+  border: none;
+  background-color: transparent;
+  color: #9ca3af;
+  font-weight: bold;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.order-type-selector button.active {
+  background-color: #4b5563;
+  color: var(--text-light);
+}
+
+.trade-actions {
+  display: flex;
+  gap: 15px;
+  align-items: flex-end; /* Aligns items to the bottom */
+}
+
+.trade-input {
+  display: flex;
+  flex-direction: column;
+}
+
+.trade-input label {
+  font-size: 0.8rem;
+  color: #9ca3af;
+  margin-bottom: 4px;
+}
+
+.trade-input input {
+  background-color: #374151;
+  border: 1px solid #4b5563;
+  border-radius: 5px;
+  color: var(--text-light);
+  padding: 8px 12px;
+  width: 100px;
+}
+
+.trade-actions button {
+  padding: 10px 30px;
+  border: none;
+  border-radius: 5px;
+  color: white;
+  font-weight: bold;
+  font-size: 1rem;
+  cursor: pointer;
+  height: 38px; /* Match height of input fields */
+}
+
+.buy-button {
+  background-color: var(--primary-green);
+}
+
+.sell-button {
+  background-color: #EF4444; /* Red for sell */
+}
+
+.trade-actions button:disabled {
+  background-color: #4b5563;
+  cursor: not-allowed;
+}
