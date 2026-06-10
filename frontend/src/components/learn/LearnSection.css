@@ -1,0 +1,121 @@
+/* LearnSection.css */
+.learn-section {
+  margin-bottom: 12px;
+  border: 1px solid #30363d;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #0d1117;
+  transition: border-color 0.25s ease;
+}
+
+.learn-section:hover {
+  border-color: #484f58;
+}
+
+/* Header button */
+.learn-section__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 22px 28px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #ffffff;
+  transition: background 0.2s ease;
+}
+
+.learn-section__header:hover {
+  background: rgba(0, 255, 136, 0.02);
+}
+
+.learn-section__header--open {
+  border-bottom: 1px solid #30363d;
+}
+
+.learn-section__header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.learn-section__number {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #00ff88;
+  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+  letter-spacing: 0.05em;
+  opacity: 0.7;
+  min-width: 22px;
+}
+
+.learn-section__icon {
+  font-size: 1.35rem;
+  display: flex;
+  align-items: center;
+}
+
+.learn-section__title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin: 0;
+  letter-spacing: -0.01em;
+  color: #ffffff;
+}
+
+/* Chevron */
+.learn-section__chevron {
+  display: flex;
+  align-items: center;
+  color: #8b949e;
+  transition: transform 0.3s cubic-bezier(.4,0,.2,1), color 0.2s ease;
+}
+
+.learn-section__chevron--open {
+  transform: rotate(180deg);
+  color: #00ff88;
+}
+
+/* Accordion body */
+.learn-section__body {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.35s cubic-bezier(.4,0,.2,1);
+}
+
+.learn-section__content {
+  padding: 28px;
+}
+
+/* Card grid inside sections */
+.learn-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 768px) {
+  .learn-section__header {
+    padding: 18px 20px;
+  }
+
+  .learn-section__content {
+    padding: 20px;
+  }
+
+  .learn-section__title {
+    font-size: 1.05rem;
+  }
+
+  .learn-cards-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .learn-section__number {
+    display: none;
+  }
+}

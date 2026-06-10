@@ -1,0 +1,245 @@
+/* ═══════════════════════════════════════
+   STRATEGIES PAGE — Premium Fintech
+   #0d1117 bg · #161b22 card · #00ff88 accent
+   ═══════════════════════════════════════ */
+
+.strategies-page {
+  background: #0d1117;
+  min-height: 100vh;
+  color: #ffffff;
+}
+
+/* ─── Hero ─── */
+.strat-hero {
+  padding: 80px 24px 48px;
+  text-align: center;
+  background:
+    radial-gradient(ellipse 70% 40% at 50% 0%, rgba(0, 255, 136, 0.06) 0%, transparent 100%),
+    linear-gradient(180deg, #0d1117 0%, #0d1117 100%);
+}
+
+.strat-hero__inner {
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.strat-hero__tag {
+  display: inline-block;
+  background: rgba(0, 255, 136, 0.08);
+  border: 1px solid rgba(0, 255, 136, 0.2);
+  color: #00ff88;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+  padding: 6px 18px;
+  border-radius: 20px;
+  margin-bottom: 20px;
+}
+
+.strat-hero__heading {
+  font-size: 2.8rem;
+  font-weight: 800;
+  line-height: 1.15;
+  margin: 0 0 18px;
+  color: #ffffff;
+}
+
+.strat-hero__accent {
+  color: #00ff88;
+}
+
+.strat-hero__sub {
+  color: #8b949e;
+  font-size: 1.05rem;
+  line-height: 1.6;
+  margin: 0 0 32px;
+  max-width: 580px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Hero stats */
+.strat-hero__stats {
+  display: inline-flex;
+  align-items: center;
+  gap: 28px;
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 14px;
+  padding: 16px 32px;
+}
+
+.strat-hero__stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.strat-hero__stat-value {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #00ff88;
+}
+
+.strat-hero__stat-label {
+  font-size: 0.72rem;
+  color: #8b949e;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-top: 2px;
+}
+
+.strat-hero__stat-divider {
+  width: 1px;
+  height: 36px;
+  background: #30363d;
+}
+
+/* ─── Journey Breadcrumb ─── */
+.strat-journey {
+  padding: 0 24px 32px;
+}
+
+.strat-journey__inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-size: 0.82rem;
+}
+
+.strat-journey__step {
+  color: #484f58;
+  font-weight: 600;
+}
+
+.strat-journey__step--active {
+  color: #00ff88;
+  background: rgba(0, 255, 136, 0.08);
+  padding: 4px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 255, 136, 0.2);
+}
+
+.strat-journey__arrow {
+  color: #30363d;
+  font-size: 0.75rem;
+}
+
+/* ─── Main ─── */
+.strat-main {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px 80px;
+}
+
+/* ─── Filters ─── */
+.strat-filters {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-bottom: 40px;
+}
+
+.strat-filter {
+  padding: 8px 18px;
+  background: transparent;
+  color: #8b949e;
+  border: 1px solid #30363d;
+  border-radius: 20px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.strat-filter:hover {
+  color: #ffffff;
+  border-color: #484f58;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.strat-filter--active {
+  color: #0d1117;
+  background: #00ff88;
+  border-color: #00ff88;
+}
+
+.strat-filter--active:hover {
+  color: #0d1117;
+  background: #00ff88;
+  border-color: #00ff88;
+}
+
+/* ─── Grid ─── */
+.strat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 20px;
+}
+
+/* ─── Empty State ─── */
+.strat-empty {
+  text-align: center;
+  padding: 60px 20px;
+  color: #484f58;
+  font-size: 1rem;
+}
+
+/* ─── Animations ─── */
+@keyframes strat-fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── Responsive ─── */
+@media (max-width: 768px) {
+  .strat-hero {
+    padding: 60px 16px 36px;
+  }
+
+  .strat-hero__heading {
+    font-size: 2rem;
+  }
+
+  .strat-hero__stats {
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px 24px;
+  }
+
+  .strat-hero__stat-divider {
+    width: 40px;
+    height: 1px;
+  }
+
+  .strat-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .strat-filters {
+    gap: 6px;
+  }
+
+  .strat-filter {
+    font-size: 0.75rem;
+    padding: 6px 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .strat-hero__heading {
+    font-size: 1.6rem;
+  }
+
+  .strat-hero__sub {
+    font-size: 0.92rem;
+  }
+
+  .strat-journey__inner {
+    font-size: 0.72rem;
+    gap: 6px;
+  }
+}

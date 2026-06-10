@@ -1,0 +1,21 @@
+/* src/components/TierBadge.css */
+
+.tier-badge {
+  display: inline-block;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  line-height: 1;
+  border: 1px solid;
+  border-radius: 20px;
+  background: transparent;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+/* Elite only — subtle gold glow */
+.tier-badge--elite {
+  box-shadow: 0 0 8px rgba(207, 170, 60, 0.25);
+}

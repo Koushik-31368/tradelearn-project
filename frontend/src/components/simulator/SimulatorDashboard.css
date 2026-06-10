@@ -1,0 +1,154 @@
+/* src/components/simulator/SimulatorDashboard.css */
+
+/* ====================================
+   SIMULATOR DASHBOARD — Master Layout
+   ==================================== */
+
+.sim-dashboard {
+  min-height: calc(100vh - 70px);
+  padding: 20px 24px 40px;
+  background: #0d1117;
+  color: #ffffff;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  animation: simDashFadeIn 0.4s ease-out;
+}
+
+@keyframes simDashFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ---- Strategy Mode Banner ---- */
+.sim-dashboard__strategy-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: linear-gradient(135deg, rgba(0, 255, 136, 0.08) 0%, rgba(0, 255, 136, 0.03) 100%);
+  border: 1px solid rgba(0, 255, 136, 0.2);
+  border-radius: 12px;
+  padding: 14px 20px;
+  margin-bottom: 20px;
+  animation: simDashFadeIn 0.5s ease-out;
+}
+
+.sim-dashboard__strategy-icon {
+  font-size: 1.4rem;
+}
+
+.sim-dashboard__strategy-label {
+  font-size: 0.95rem;
+  color: #00ff88;
+}
+
+.sim-dashboard__strategy-label strong {
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.sim-dashboard__strategy-hint {
+  margin-left: auto;
+  font-size: 0.8rem;
+  color: #8b949e;
+}
+
+/* ---- 3-Column Main Layout ---- */
+.sim-dashboard__main {
+  display: grid;
+  grid-template-columns: 260px 1fr 300px;
+  gap: 16px;
+  margin-bottom: 20px;
+  min-height: 480px;
+}
+
+.sim-dashboard__left {
+  min-width: 0;
+  max-height: 520px;
+}
+
+.sim-dashboard__center {
+  min-width: 0;
+}
+
+.sim-dashboard__right {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ---- Bottom Section ---- */
+.sim-dashboard__bottom {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.sim-dashboard__bottom-left,
+.sim-dashboard__bottom-right {
+  min-width: 0;
+}
+
+/* ---- Responsive ---- */
+
+/* Tablet: collapse to 2 cols */
+@media (max-width: 1200px) {
+  .sim-dashboard__main {
+    grid-template-columns: 240px 1fr;
+    grid-template-rows: auto auto;
+  }
+
+  .sim-dashboard__right {
+    grid-column: 1 / -1;
+  }
+}
+
+/* Mobile: single column */
+@media (max-width: 768px) {
+  .sim-dashboard {
+    padding: 12px 12px 32px;
+  }
+
+  .sim-dashboard__main {
+    grid-template-columns: 1fr;
+  }
+
+  .sim-dashboard__left {
+    max-height: 360px;
+  }
+
+  .sim-dashboard__bottom {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---- Global Utility Overrides for Simulator ---- */
+.sim-dashboard *::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+.sim-dashboard *::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sim-dashboard *::-webkit-scrollbar-thumb {
+  background: #30363d;
+  border-radius: 4px;
+}
+
+/* Prevent weird number input styling */
+.sim-dashboard input[type='number']::-webkit-inner-spin-button,
+.sim-dashboard input[type='number']::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.sim-dashboard input[type='number'] {
+  -moz-appearance: textfield;
+}
