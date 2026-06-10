@@ -1,0 +1,127 @@
+/* src/components/LiveScoreboard.css — esports trading HUD */
+
+.scoreboard {
+  --sb-accent: #10b981;
+  background: #0d1117;
+  border: 1px solid #1e2733;
+  border-radius: 10px;
+  padding: 14px 16px;
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Subtle glow line at top */
+.scoreboard::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: var(--sb-accent);
+  opacity: 0.7;
+}
+
+.scoreboard.sb-green { --sb-accent: #10b981; }
+.scoreboard.sb-red   { --sb-accent: #ef4444; }
+
+/* ── Label ── */
+.sb-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--sb-accent);
+  margin-bottom: 10px;
+}
+
+/* ── Equity row ── */
+.sb-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 2px;
+}
+
+.sb-key {
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: #6b7280;
+  text-transform: uppercase;
+}
+
+.sb-val {
+  font-size: 1.25rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.sb-up   { color: #10b981; }
+.sb-down { color: #ef4444; }
+
+/* ── P&L badge ── */
+.sb-pnl-badge {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 6px;
+  margin-bottom: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.sb-pnl-badge.sb-up {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+}
+.sb-pnl-badge.sb-down {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+}
+
+/* ── Stat pills (2×2 grid) ── */
+.sb-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.sb-pill {
+  background: #161b22;
+  border: 1px solid #1e2733;
+  border-radius: 6px;
+  padding: 6px 8px;
+  text-align: center;
+}
+
+.sb-pill-label {
+  display: block;
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: #4b5563;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+
+.sb-pill-value {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #e5e7eb;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Accuracy progress bar ── */
+.sb-bar-track {
+  height: 4px;
+  background: #1e2733;
+  border-radius: 2px;
+  overflow: hidden;
+}
+.sb-bar-fill {
+  height: 100%;
+  background: var(--sb-accent);
+  border-radius: 2px;
+  transition: width 0.5s ease;
+}

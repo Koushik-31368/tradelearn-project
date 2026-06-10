@@ -1,0 +1,87 @@
+/* src/components/Navbar.css */
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: var(--dark-bg);
+  padding: 1rem 2rem;
+  color: var(--text-light);
+}
+
+.navbar-logo a {
+  color: var(--text-light);
+  text-decoration: none;
+  font-weight: bold;
+  font-size: 1.5rem;
+}
+
+.navbar-links {
+  list-style: none;
+  display: flex;
+  margin: 0;
+  padding: 0;
+}
+
+.navbar-links li {
+  margin: 0 15px;
+}
+
+.navbar-links a {
+  color: var(--text-light);
+  text-decoration: none;
+  font-size: 1rem;
+  transition: color 0.3s ease;
+}
+
+.navbar-links a:hover {
+  color: var(--primary-green);
+}
+
+.login-button {
+  background-color: var(--primary-green);
+  color: var(--text-light);
+  padding: 10px 20px;
+  border-radius: 5px;
+  text-decoration: none;
+  font-weight: bold;
+  transition: background-color 0.3s ease;
+}
+
+.login-button:hover {
+  background-color: #0e9e6e;
+}
+
+.navbar-login {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.nav-profile-link {
+  color: var(--text-light);
+  text-decoration: none;
+  font-size: 0.9rem;
+  opacity: 0.85;
+  transition: opacity 0.2s, color 0.2s;
+}
+
+.nav-profile-link:hover {
+  opacity: 1;
+  color: var(--primary-green);
+}
+
+.logout-button {
+  background: none;
+  border: 1px solid rgba(255,255,255,0.3);
+  color: var(--text-light);
+  padding: 6px 14px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.logout-button:hover {
+  border-color: var(--primary-green);
+  background: rgba(255,255,255,0.05);
+}

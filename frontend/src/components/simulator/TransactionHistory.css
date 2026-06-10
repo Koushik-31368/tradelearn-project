@@ -1,0 +1,141 @@
+/* src/components/simulator/TransactionHistory.css */
+
+.transaction-history {
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.transaction-history__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid #21262d;
+}
+
+.transaction-history__title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0;
+}
+
+.transaction-history__count {
+  font-size: 0.72rem;
+  color: #8b949e;
+  background: #21262d;
+  padding: 2px 10px;
+  border-radius: 10px;
+}
+
+.transaction-history__scroll {
+  overflow-x: auto;
+}
+
+.transaction-history__table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 520px;
+}
+
+.transaction-history__table thead {
+  background: #0d1117;
+}
+
+.transaction-history__table th {
+  padding: 10px 16px;
+  text-align: left;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #8b949e;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+  transition: color 0.15s ease;
+}
+
+.transaction-history__table th:hover {
+  color: #c9d1d9;
+}
+
+.th-sort-icon {
+  font-size: 0.65rem;
+  margin-left: 4px;
+  color: #484f58;
+}
+
+.th-sort-icon.active {
+  color: #00ff88;
+}
+
+.transaction-history__row {
+  transition: background 0.1s ease;
+}
+
+.transaction-history__row:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.transaction-history__table td {
+  padding: 10px 16px;
+  font-size: 0.8rem;
+  color: #c9d1d9;
+  border-bottom: 1px solid #161b22;
+  font-variant-numeric: tabular-nums;
+}
+
+.td-date {
+  color: #8b949e;
+  font-size: 0.75rem;
+}
+
+.td-symbol {
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.td-num {
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 0.78rem;
+}
+
+/* Trade Type Badges */
+.trade-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+}
+
+.trade-badge--buy {
+  background: rgba(0, 255, 136, 0.1);
+  color: #00ff88;
+}
+
+.trade-badge--sell {
+  background: rgba(255, 77, 79, 0.1);
+  color: #ff4d4f;
+}
+
+.trade-badge--short {
+  background: rgba(255, 153, 0, 0.1);
+  color: #ff9900;
+}
+
+.trade-badge--cover {
+  background: rgba(0, 170, 255, 0.1);
+  color: #00aaff;
+}
+
+.transaction-history__empty {
+  padding: 36px;
+  text-align: center;
+  color: #484f58;
+  font-size: 0.85rem;
+}

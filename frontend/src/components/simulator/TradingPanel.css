@@ -1,0 +1,415 @@
+/* src/components/simulator/TradingPanel.css */
+
+.trading-panel {
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 12px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: visible;
+}
+
+.trading-panel__header {
+  padding: 16px 18px 0;
+}
+
+.trading-panel__title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.trading-panel__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  color: #484f58;
+  gap: 12px;
+}
+
+.trading-panel__empty p {
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+/* Stock Info */
+.trading-panel__stock-info {
+  padding: 14px 18px;
+  border-bottom: 1px solid #21262d;
+}
+
+.trading-panel__stock-name {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.trading-panel__symbol {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.trading-panel__fullname {
+  font-size: 0.75rem;
+  color: #8b949e;
+}
+
+.trading-panel__price-block {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.trading-panel__current-price {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #ffffff;
+  font-variant-numeric: tabular-nums;
+}
+
+.trading-panel__change {
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+/* Position */
+.trading-panel__position {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 18px;
+  background: rgba(0, 255, 136, 0.03);
+  border-bottom: 1px solid #21262d;
+}
+
+.trading-panel__position-label {
+  font-size: 0.75rem;
+  color: #8b949e;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  font-weight: 600;
+}
+
+.trading-panel__position-value {
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.text-profit { color: #00ff88; }
+.text-loss { color: #ff4d4f; }
+
+/* Tabs */
+.trading-panel__tabs {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+  padding: 14px 18px 0;
+}
+
+.trading-panel__tab {
+  padding: 8px 4px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  background: transparent;
+  color: #8b949e;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.trading-panel__tab:hover {
+  border-color: #484f58;
+  color: #ffffff;
+}
+
+.trading-panel__tab--buy {
+  background: rgba(0, 255, 136, 0.1);
+  border-color: rgba(0, 255, 136, 0.3);
+  color: #00ff88;
+}
+
+.trading-panel__tab--sell {
+  background: rgba(255, 77, 79, 0.1);
+  border-color: rgba(255, 77, 79, 0.3);
+  color: #ff4d4f;
+}
+
+.trading-panel__tab--short {
+  background: rgba(255, 153, 0, 0.1);
+  border-color: rgba(255, 153, 0, 0.3);
+  color: #ff9900;
+}
+
+.trading-panel__tab--cover {
+  background: rgba(0, 170, 255, 0.1);
+  border-color: rgba(0, 170, 255, 0.3);
+  color: #00aaff;
+}
+
+/* Quantity */
+.trading-panel__field {
+  padding: 14px 18px;
+}
+
+.trading-panel__label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #8b949e;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-bottom: 8px;
+}
+
+.trading-panel__qty-row {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.trading-panel__qty-btn {
+  width: 40px;
+  height: 40px;
+  background: #21262d;
+  border: none;
+  color: #ffffff;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.trading-panel__qty-btn:hover {
+  background: #30363d;
+}
+
+.trading-panel__qty-input {
+  flex: 1;
+  height: 40px;
+  text-align: center;
+  background: #0d1117;
+  border: none;
+  color: #ffffff;
+  font-size: 1rem;
+  font-weight: 700;
+  outline: none;
+  font-variant-numeric: tabular-nums;
+  -moz-appearance: textfield;
+}
+
+.trading-panel__qty-input::-webkit-inner-spin-button,
+.trading-panel__qty-input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.trading-panel__presets {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.trading-panel__preset {
+  padding: 4px 10px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  border-radius: 4px;
+  border: 1px solid #30363d;
+  background: transparent;
+  color: #8b949e;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.trading-panel__preset:hover {
+  border-color: #484f58;
+  color: #ffffff;
+}
+
+.trading-panel__preset--active {
+  background: rgba(0, 255, 136, 0.1);
+  border-color: rgba(0, 255, 136, 0.3);
+  color: #00ff88;
+}
+
+/* Summary */
+.trading-panel__summary {
+  padding: 0 18px 14px;
+}
+
+.trading-panel__summary-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+  font-size: 0.78rem;
+  color: #8b949e;
+  border-bottom: 1px solid #161b22;
+}
+
+.trading-panel__summary-row span:last-child {
+  color: #c9d1d9;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.trading-panel__summary-row--total {
+  border-bottom: none;
+  padding-top: 8px;
+  border-top: 1px solid #30363d;
+  font-weight: 700;
+}
+
+.trading-panel__summary-row--total span {
+  color: #ffffff !important;
+  font-size: 0.85rem;
+}
+
+/* Execute Button */
+.trading-panel__execute {
+  margin: 0 18px 14px;
+  padding: 12px;
+  border-radius: 8px;
+  border: none;
+  font-size: 0.88rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.trading-panel__execute--buy {
+  background: linear-gradient(135deg, #00ff88, #00cc6a);
+  color: #0d1117;
+  box-shadow: 0 4px 20px rgba(0, 255, 136, 0.2);
+}
+
+.trading-panel__execute--buy:hover {
+  box-shadow: 0 6px 28px rgba(0, 255, 136, 0.3);
+  transform: translateY(-1px);
+}
+
+.trading-panel__execute--sell {
+  background: linear-gradient(135deg, #ff4d4f, #cc3d3f);
+  color: #ffffff;
+  box-shadow: 0 4px 20px rgba(255, 77, 79, 0.2);
+}
+
+.trading-panel__execute--sell:hover {
+  box-shadow: 0 6px 28px rgba(255, 77, 79, 0.3);
+  transform: translateY(-1px);
+}
+
+.trading-panel__execute--short {
+  background: linear-gradient(135deg, #ff9900, #cc7a00);
+  color: #0d1117;
+  box-shadow: 0 4px 20px rgba(255, 153, 0, 0.2);
+}
+
+.trading-panel__execute--short:hover {
+  box-shadow: 0 6px 28px rgba(255, 153, 0, 0.3);
+  transform: translateY(-1px);
+}
+
+.trading-panel__execute--cover {
+  background: linear-gradient(135deg, #00aaff, #0088cc);
+  color: #0d1117;
+  box-shadow: 0 4px 20px rgba(0, 170, 255, 0.2);
+}
+
+.trading-panel__execute--cover:hover {
+  box-shadow: 0 6px 28px rgba(0, 170, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+.trading-panel__execute--animating {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.trading-panel__spinner {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(0, 0, 0, 0.2);
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: tpSpin 0.6s linear infinite;
+}
+
+@keyframes tpSpin {
+  to { transform: rotate(360deg); }
+}
+
+/* Cash */
+.trading-panel__cash {
+  padding: 10px 18px 14px;
+  text-align: center;
+  font-size: 0.75rem;
+  color: #484f58;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Toast */
+.trading-toast {
+  position: absolute;
+  top: -52px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  z-index: 10;
+  white-space: nowrap;
+  animation: toastSlide 0.3s ease-out;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.trading-toast--success {
+  background: rgba(0, 255, 136, 0.15);
+  border: 1px solid rgba(0, 255, 136, 0.3);
+  color: #00ff88;
+}
+
+.trading-toast--error {
+  background: rgba(255, 77, 79, 0.15);
+  border: 1px solid rgba(255, 77, 79, 0.3);
+  color: #ff4d4f;
+}
+
+.trading-toast__icon {
+  font-weight: 800;
+}
+
+@keyframes toastSlide {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
