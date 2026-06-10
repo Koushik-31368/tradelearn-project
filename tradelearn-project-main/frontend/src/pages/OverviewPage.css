@@ -1,6 +1,0 @@
-/* src/pages/OverviewPage.css */
-.overview-page-layout {
-  display: flex;
-  flex-direction: column;
-  gap: 30px; /* Space between the screener and the news feed */
-}
