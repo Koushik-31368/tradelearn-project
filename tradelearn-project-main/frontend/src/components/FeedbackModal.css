@@ -1,0 +1,93 @@
+/* src/components/FeedbackModal.css */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background-color: #1f2937;
+  padding: 30px;
+  border-radius: 10px;
+  width: 90%;
+  max-width: 600px;
+  position: relative;
+  box-shadow: 0 5px 25px rgba(0, 0, 0, 0.5);
+}
+
+.close-button {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  background: none;
+  border: none;
+  color: #9ca3af;
+  font-size: 2rem;
+  cursor: pointer;
+}
+
+.modal-content h2 {
+  margin-top: 0;
+  color: var(--primary-green);
+}
+
+.trade-summary .positive {
+  color: var(--primary-green);
+  font-weight: bold;
+}
+
+.trade-summary .negative {
+  color: #EF4444;
+  font-weight: bold;
+}
+
+.feedback-section h3 {
+  border-top: 1px solid #374151;
+  padding-top: 20px;
+  margin-top: 20px;
+}
+
+.news-list-modal {
+  max-height: 250px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.news-article-modal {
+  display: block;
+  background-color: #374151;
+  border-radius: 5px;
+  text-decoration: none;
+  color: var(--text-light);
+  transition: background-color 0.3s ease;
+}
+
+.news-article-modal:hover {
+  background-color: #4b5563;
+}
+
+.article-content-modal {
+  padding: 15px;
+}
+
+.article-source-modal {
+  font-size: 0.8rem;
+  font-weight: bold;
+  color: var(--primary-green);
+  margin-bottom: 5px;
+  display: block;
+}
+
+.article-content-modal h4 {
+  margin: 0;
+  font-size: 1rem;
+}

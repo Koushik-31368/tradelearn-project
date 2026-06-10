@@ -1,0 +1,60 @@
+/* src/components/StockList.css */
+
+/* Add these new styles at the top of StockList.css */
+.stocklist-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.stocklist-header h2 {
+  margin: 0;
+}
+
+.search-bar input {
+  background-color: #374151;
+  border: 1px solid #4b5563;
+  border-radius: 5px;
+  color: var(--text-light);
+  padding: 8px 12px;
+  width: 250px;
+  font-size: 0.9rem;
+}
+
+.search-bar input::placeholder {
+  color: #9ca3af;
+}
+.stocklist-wrapper h2 {
+  margin-top: 0;
+}
+
+.stock-table {
+  width: 100%;
+  border-collapse: collapse;
+  color: var(--text-light);
+}
+
+.stock-table th, .stock-table td {
+  padding: 12px 15px;
+  text-align: left;
+  border-bottom: 1px solid #374151; /* Separator line for rows */
+}
+
+.stock-table th {
+  color: #9ca3af; /* Grey color for headers */
+  font-size: 0.9rem;
+  text-transform: uppercase;
+}
+
+.stock-table td {
+  font-weight: bold;
+}
+
+.stock-table .positive {
+  color: var(--primary-green);
+}
+
+.stock-table .negative {
+  color: #EF4444;
+}
