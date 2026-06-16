@@ -46,7 +46,7 @@ public class GameCleanupService {
 
         if (stale.isEmpty()) return;
 
-        log.info("[GameCleanup] Found {} stale WAITING game(s) older than {} min – cleaning up",
+        log.info("[GameCleanup] Found {} stale WAITING game(s) older than {} min - cleaning up",
                 stale.size(), STALE_MINUTES);
 
         for (Game game : stale) {

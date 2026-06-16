@@ -73,9 +73,9 @@ public class MarketController {
         }
 
         try {
-            List<Map<String, Object>> candles = (start != null && end != null)
-                    ? marketDataService.getHistoricalData(clean, start, end)
-                    : marketDataService.getHistoricalData(clean);
+            java.time.LocalDate startDate = start != null ? java.time.Instant.ofEpochMilli(start).atZone(java.time.ZoneId.systemDefault()).toLocalDate() : java.time.LocalDate.now().minusYears(1);
+            java.time.LocalDate endDate = end != null ? java.time.Instant.ofEpochMilli(end).atZone(java.time.ZoneId.systemDefault()).toLocalDate() : java.time.LocalDate.now();
+            List<com.tradelearn.server.dto.Candle> candles = marketDataService.getHistoricalData(clean, startDate, endDate);
             return ResponseEntity.ok(candles);
         } catch (RuntimeException e) {
             log.warn("[MarketController] History request failed for '{}': {}", clean, e.getMessage());
@@ -102,7 +102,13 @@ public class MarketController {
         }
 
         try {
-            double price = marketDataService.getCurrentPrice(clean);
+            java.time.LocalDate endDate = java.time.LocalDate.now();
+            java.time.LocalDate startDate = endDate.minusDays(5);
+            List<com.tradelearn.server.dto.Candle> candles = marketDataService.getHistoricalData(clean, startDate, endDate);
+            if (candles.isEmpty()) {
+                 return ResponseEntity.badRequest().body(Map.of("error", "No price data found"));
+            }
+            double price = candles.get(candles.size() - 1).getClose();
             return ResponseEntity.ok(Map.of("symbol", clean, "price", price));
         } catch (RuntimeException e) {
             log.warn("[MarketController] Price request failed for '{}': {}", clean, e.getMessage());

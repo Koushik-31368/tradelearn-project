@@ -2,8 +2,6 @@
 import React, { useState, useMemo } from 'react';
 import './TransactionHistory.css';
 
-const SORT_FIELDS = ['date', 'symbol', 'type', 'quantity', 'price', 'total'];
-
 const TransactionHistory = ({ trades = [] }) => {
   const [sortBy, setSortBy] = useState('date');
   const [sortDir, setSortDir] = useState('desc');

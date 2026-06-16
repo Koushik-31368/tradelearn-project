@@ -68,7 +68,7 @@ public class LeaderboardController {
         List<User> allUsers = userRepository.findAllByOrderByRatingDesc();
         List<LeaderboardDTO> dtos = allUsers.stream()
             .map(u -> new LeaderboardDTO(u, rankService.getRankTier(u.getRating())))
-            .filter(dto -> dto.tier().equalsIgnoreCase(tierName))
+            .filter(dto -> dto.getRank().equalsIgnoreCase(tierName))
             .collect(Collectors.toList());
         return ResponseEntity.ok(dtos);
     }

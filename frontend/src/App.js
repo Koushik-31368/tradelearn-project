@@ -11,7 +11,8 @@ import LobbyPage from './pages/LobbyPage';
 import GamePage from './pages/GamePage';
 import SimulatorPage from './pages/SimulatorPage'; // 1. Import
 import PracticePage from './pages/PracticePage';
-import LearnPage from './pages/LearnPage';
+import MissionSelectionPage from './pages/MissionSelectionPage';
+import MissionDashboard from './components/simulator/MissionDashboard';
 import StrategiesPage from './pages/StrategiesPage';
 import MatchResultPage from './pages/MatchResultPage';
 import LeaderboardPage from './pages/LeaderboardPage';
@@ -44,7 +45,8 @@ function AppContent() {
         <Route path="/leaderboard" element={<LeaderboardPage />} />
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/history" element={<MatchHistoryPage />} />
-        <Route path="/learn" element={<LearnPage />} />
+        <Route path="/missions" element={<MissionSelectionPage />} />
+        <Route path="/mission-dashboard/:missionId" element={<MissionDashboard />} />
         <Route path="/strategies" element={<StrategiesPage />} />
         <Route path="/simulator" element={<SimulatorPage />} />
         <Route path="/practice" element={<PracticePage />} />

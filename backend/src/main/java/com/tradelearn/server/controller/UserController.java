@@ -9,8 +9,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.tradelearn.server.model.User;
-import com.tradelearn.server.security.UserPrincipal;
 import com.tradelearn.server.service.UserService;
+import org.springframework.security.core.userdetails.UserDetails;
 
 @RestController
 @RequestMapping("/api/user")
@@ -24,13 +24,14 @@ public class UserController {
 
     @PostMapping("/daily-checkin")
     public ResponseEntity<?> dailyCheckin(Authentication authentication) {
-        if (authentication == null || !(authentication.getPrincipal() instanceof UserPrincipal)) {
+        if (authentication == null || !(authentication.getPrincipal() instanceof UserDetails)) {
             return ResponseEntity.status(401).body(Map.of("message", "Unauthorized"));
         }
 
-        UserPrincipal principal = (UserPrincipal) authentication.getPrincipal();
+        UserDetails principal = (UserDetails) authentication.getPrincipal();
         try {
-            User updatedUser = userService.performDailyCheckin(principal.getId());
+            User user = userService.findByUsername(principal.getUsername());
+            User updatedUser = userService.performDailyCheckin(user.getId());
             return ResponseEntity.ok(Map.of(
                 "xp", updatedUser.getXp(),
                 "loginStreak", updatedUser.getLoginStreak(),

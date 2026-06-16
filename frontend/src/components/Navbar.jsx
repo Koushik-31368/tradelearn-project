@@ -14,10 +14,7 @@ const Navbar = () => {
       </div>
       <ul className="navbar-links">
         <li><NavLink to="/">Home</NavLink></li>
-        <li><NavLink to="/learn">Learn</NavLink></li>
-        <li><NavLink to="/strategies">Strategies</NavLink></li>
-        <li><NavLink to="/simulator">Simulator</NavLink></li>
-        <li><NavLink to="/practice">Practice</NavLink></li>
+        <li><NavLink to="/missions">Missions</NavLink></li>
         <li><NavLink to="/multiplayer">Multiplayer</NavLink></li>
         <li><NavLink to="/leaderboard">Leaderboard</NavLink></li>
       </ul>

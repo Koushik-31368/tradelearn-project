@@ -19,7 +19,7 @@ public class ReadinessScoreService {
         
         // Ensure data exists before casting
         if (baseAnalytics == null || !baseAnalytics.containsKey("metrics")) {
-            return getInsufficientDataResponse();
+            return getInsufficientDataResponse(0, 0);
         }
 
         Map<String, Object> metrics = (Map<String, Object>) baseAnalytics.get("metrics");

@@ -36,6 +36,9 @@ import com.tradelearn.server.util.ScoringUtil;
 @Service
 public class MatchService {
 
+    private static final Logger log = LoggerFactory.getLogger(MatchService.class);
+    private static final int MAX_PLAYERS = 2;
+
     // ── Lua: atomic rematch consent check ──
     // Returns: -1 = new (first requester), -2 = same user, >=0 = mutual consent (first requester userId)
     private static final String REMATCH_CHECK_LUA = """
@@ -53,7 +56,6 @@ public class MatchService {
     private static final String REMATCH_PREFIX = "rematch:";
     private static final Duration REMATCH_TTL = Duration.ofSeconds(120);
 
-    @SuppressWarnings("null")
     @Transactional
     public Game createMatch(CreateMatchRequest request) {
         User creator = userRepository.findById(request.getCreatorId())
@@ -75,9 +77,6 @@ public class MatchService {
         return saved;
     }
 
-    private static final Logger log = LoggerFactory.getLogger(MatchService.class);
-    private static final int MAX_PLAYERS = 2;
-
     private final GameRepository gameRepository;
     private final UserRepository userRepository;
     private final MatchTradeService matchTradeService;
@@ -89,7 +88,8 @@ public class MatchService {
     private final PositionSnapshotStore positionStore;
     private final TradeRateLimiter rateLimiter;
     private final GameMetricsService metrics;
-    @SuppressWarnings("unused")
+    // Retained for Spring bean initialization ordering — ensures degradation manager
+    // is wired before the match lifecycle begins, even if not called from this class directly.
     private final GracefulDegradationManager degradationManager;
     private final StringRedisTemplate redis;
     private final QuestService questService;

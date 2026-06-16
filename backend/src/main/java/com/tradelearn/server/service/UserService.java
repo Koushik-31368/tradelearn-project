@@ -22,6 +22,15 @@ public class UserService {
     }
 
     @Transactional
+    public User findByEmail(String email) {
+        return userRepository.findByEmail(email).orElseThrow();
+    }
+
+    public User findByUsername(String username) {
+        return userRepository.findByUsername(username).orElseThrow(() -> new RuntimeException("User not found"));
+    }
+
+    @Transactional
     public User performDailyCheckin(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));

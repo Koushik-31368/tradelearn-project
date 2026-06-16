@@ -10,6 +10,7 @@ const ReflectionModal = ({ userId, onReflectionsComplete }) => {
 
   useEffect(() => {
     fetchPending();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 
   const fetchPending = async () => {
