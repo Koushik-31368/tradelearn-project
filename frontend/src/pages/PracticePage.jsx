@@ -63,7 +63,7 @@ export default function PracticePage() {
     setIsLoading(true);
 
     try {
-      const data = await fetchMarketHistory(event.symbol);
+      const data = await fetchMarketHistory(event.symbol, event.start, event.end);
 
       if (data.length === 0) {
         setError(`No data available for "${event.title}". The dataset may not be loaded on the server.`);

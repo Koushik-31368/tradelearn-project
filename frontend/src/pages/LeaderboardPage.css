@@ -280,3 +280,35 @@
   line-height: 1.55;
   text-align: center;
 }
+
+/* ══════════════════════════════════════
+   TIER SELECTOR
+   ══════════════════════════════════════ */
+.lb-tier-selector {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 16px;
+  background: #161b22;
+  border-bottom: 1px solid #1e2733;
+}
+
+.lb-tier-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  transition: transform 0.2s;
+  opacity: 0.6;
+}
+
+.lb-tier-btn:hover {
+  opacity: 0.8;
+}
+
+.lb-tier-btn--active {
+  opacity: 1;
+  transform: scale(1.1);
+}

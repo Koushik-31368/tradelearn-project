@@ -301,6 +301,65 @@
 .pf-negative { color: #ef4444; }
 
 /* ══════════════════════════════════════
+   ACHIEVEMENTS
+   ══════════════════════════════════════ */
+.pf-achievements {
+  margin-top: 40px;
+}
+
+.pf-ach-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.pf-ach-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 12px;
+  padding: 16px;
+  animation: slideIn 0.5s ease-out both;
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.pf-ach-icon {
+  font-size: 2.4rem;
+  background: rgba(16, 185, 129, 0.1);
+  width: 60px;
+  height: 60px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 50%;
+  border: 2px solid rgba(16, 185, 129, 0.3);
+}
+
+.pf-ach-info {
+  flex: 1;
+}
+
+.pf-ach-name {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #e5e7eb;
+  margin-bottom: 4px;
+}
+
+.pf-ach-desc {
+  font-size: 0.85rem;
+  color: #8b949e;
+  line-height: 1.4;
+}
+
+/* ══════════════════════════════════════
    RESPONSIVE
    ══════════════════════════════════════ */
 @media (max-width: 768px) {

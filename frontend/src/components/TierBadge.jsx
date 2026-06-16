@@ -12,11 +12,11 @@ const TierBadge = ({ rating, className = '' }) => {
   const tier = getSkillTier(rating);
   const color = getTierColor(tier);
   const borderColor = getTierBorderColor(tier);
-  const isElite = tier === 'Elite';
+  const isElite = tier === 'Grandmaster' || tier === 'Master' || tier === 'Diamond';
 
   return (
     <span
-      className={`tier-badge ${isElite ? 'tier-badge--elite' : ''} ${className}`.trim()}
+      className={`tier-badge ${isElite ? 'tier-badge--elite' : ''} tier-badge--${tier.toLowerCase()} ${className}`.trim()}
       style={{ color, borderColor }}
     >
       {tier}

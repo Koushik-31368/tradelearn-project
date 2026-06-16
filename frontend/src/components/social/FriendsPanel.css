@@ -1,0 +1,123 @@
+.friends-panel {
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 12px;
+  padding: 20px;
+  color: #e5e7eb;
+}
+
+.fp-title {
+  margin: 0 0 16px 0;
+  font-size: 1.2rem;
+  font-weight: 800;
+}
+
+.fp-add-form {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.fp-input {
+  flex: 1;
+  background: #0d1117;
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  padding: 8px 12px;
+  color: #fff;
+  font-size: 0.9rem;
+}
+
+.fp-input:focus {
+  outline: none;
+  border-color: #58a6ff;
+}
+
+.fp-btn {
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 8px 12px;
+  transition: opacity 0.2s;
+}
+
+.fp-btn:hover { opacity: 0.8; }
+
+.fp-btn-add {
+  background: #238636;
+  color: #fff;
+  padding: 8px 16px;
+}
+
+.fp-msg {
+  font-size: 0.8rem;
+  margin-bottom: 16px;
+  padding: 8px;
+  border-radius: 4px;
+}
+
+.fp-msg-success { background: rgba(35, 134, 54, 0.2); color: #3fb950; border: 1px solid #238636; }
+.fp-msg-error { background: rgba(248, 81, 73, 0.2); color: #ff7b72; border: 1px solid #da3633; }
+
+.fp-section {
+  margin-top: 24px;
+}
+
+.fp-section-title {
+  font-size: 0.85rem;
+  color: #8b949e;
+  text-transform: uppercase;
+  margin: 0 0 12px 0;
+}
+
+.fp-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fp-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  background: #0d1117;
+  border: 1px solid #30363d;
+  border-radius: 8px;
+}
+
+.fp-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.fp-name {
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.fp-badge {
+  transform: scale(0.8);
+  margin-left: -8px;
+}
+
+.fp-btn-accept {
+  background: #238636;
+  color: #fff;
+  font-size: 0.8rem;
+  padding: 6px 12px;
+}
+
+.fp-btn-challenge {
+  background: #8b5cf6;
+  color: #fff;
+  font-size: 0.8rem;
+  padding: 6px 12px;
+}
+
+.fp-empty {
+  font-size: 0.85rem;
+  color: #8b949e;
+}

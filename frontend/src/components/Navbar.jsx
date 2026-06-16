@@ -24,7 +24,13 @@ const Navbar = () => {
       <div className="navbar-login">
         {isAuthenticated ? (
           <>
-            {user && <TierBadge rating={user.rating} />}
+            {user && (
+              <div className="nav-stats">
+                <span className="nav-xp">🌟 {user.xp || 0} XP</span>
+                <span className="nav-streak">🔥 {user.loginStreak || 0}</span>
+                <TierBadge rating={user.rating} />
+              </div>
+            )}
             <NavLink to="/profile" className="nav-profile-link">Profile</NavLink>
             <NavLink to="/history" className="nav-profile-link">History</NavLink>
             <button onClick={logout} className="logout-button">Logout</button>

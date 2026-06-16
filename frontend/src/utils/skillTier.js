@@ -3,41 +3,50 @@
 // Every component must import from here; never inline tier mappings.
 
 const TIERS = [
-  { min: 1500, name: 'Elite' },
-  { min: 1300, name: 'Advanced' },
-  { min: 1100, name: 'Intermediate' },
-  { min: 0,    name: 'Beginner' },
+  { min: 2500, name: 'Grandmaster' },
+  { min: 2000, name: 'Master' },
+  { min: 1500, name: 'Diamond' },
+  { min: 1100, name: 'Platinum' },
+  { min: 800,  name: 'Gold' },
+  { min: 500,  name: 'Silver' },
+  { min: 0,    name: 'Bronze' },
 ];
 
 /**
  * Derive the skill tier name from a numeric ELO rating.
- * @param {number} rating
- * @returns {'Beginner'|'Intermediate'|'Advanced'|'Elite'}
  */
 export function getSkillTier(rating) {
   const r = Number(rating) || 0;
   for (const t of TIERS) {
     if (r >= t.min) return t.name;
   }
-  return 'Beginner';
+  return 'Bronze';
 }
 
 /** Border colour for a given tier (used on the pill badge). */
 export function getTierBorderColor(tier) {
   switch (tier) {
-    case 'Elite':        return '#cfaa3c';   // gold
-    case 'Advanced':     return '#00ff88';   // green accent
-    case 'Intermediate': return '#58a6ff';   // blue
-    default:             return '#484f58';   // muted gray
+    case 'Grandmaster': return '#ff0055'; // neon pink/red
+    case 'Master':      return '#cc00ff'; // purple
+    case 'Diamond':     return '#00e5ff'; // cyan
+    case 'Platinum':    return '#00ff88'; // green accent
+    case 'Gold':        return '#ffd700'; // gold
+    case 'Silver':      return '#c0c0c0'; // silver
+    case 'Bronze':      return '#cd7f32'; // bronze
+    default:            return '#484f58'; // muted gray
   }
 }
 
 /** Text colour for a given tier. */
 export function getTierColor(tier) {
   switch (tier) {
-    case 'Elite':        return '#cfaa3c';
-    case 'Advanced':     return '#00ff88';
-    case 'Intermediate': return '#58a6ff';
-    default:             return '#8b949e';
+    case 'Grandmaster': return '#ff0055';
+    case 'Master':      return '#cc00ff';
+    case 'Diamond':     return '#00e5ff';
+    case 'Platinum':    return '#00ff88';
+    case 'Gold':        return '#ffd700';
+    case 'Silver':      return '#c0c0c0';
+    case 'Bronze':      return '#cd7f32';
+    default:            return '#8b949e';
   }
 }

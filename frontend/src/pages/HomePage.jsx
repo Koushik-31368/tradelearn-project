@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { backendUrl } from '../utils/api';
+import DashboardPanel from '../components/DashboardPanel';
 import './HomePage.css';
 
 /* ── Subtle SVG chart line for hero background ─────────── */
@@ -98,6 +99,22 @@ const HomePage = () => {
     })();
     return () => { cancelled = true; };
   }, []);
+
+  const { user } = React.useContext(require('../context/AuthContext').AuthContext);
+
+  if (user) {
+    return (
+      <div className="hp">
+        <section className="hp-hero" style={{ paddingBottom: '2rem' }}>
+          <div className="hp-inner" style={{ textAlign: 'center' }}>
+            <h1 className="hp-hero-title">Welcome back, {user.username}</h1>
+            <p className="hp-hero-sub">Ready to conquer the market today?</p>
+          </div>
+        </section>
+        <DashboardPanel user={user} />
+      </div>
+    );
+  }
 
   return (
     <div className="hp">

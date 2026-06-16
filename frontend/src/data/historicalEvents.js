@@ -1,7 +1,5 @@
 // src/data/historicalEvents.js
-// Historical market events for Practice Mode.
-// Candle data is served from local JSON datasets on the backend.
-// start/end fields are retained for reference but are no longer sent to the API.
+// Historical market scenarios for the Replay Engine.
 
 export const historicalEvents = [
   {
@@ -10,91 +8,82 @@ export const historicalEvents = [
     subtitle:    "Feb – Apr 2020",
     symbol:      "RELIANCE",
     symbolName:  "Reliance Industries",
-    start:       1580515200,   // 2020-02-01
-    end:         1585699200,   // 2020-04-01
+    start:       "2020-02-01",
+    end:         "2020-04-30",
     type:        "crash",
     description: "Global markets collapsed as lockdowns began. Nifty 50 fell ~38% in under 6 weeks.",
+    difficulty:  "Hard",
+    capital:     100000,
   },
   {
-    id:          "postCovidRally",
-    title:       "Post-COVID Bull Run",
-    subtitle:    "Jul – Nov 2020",
-    symbol:      "TCS",
-    symbolName:  "Tata Consultancy Services",
-    start:       1593561600,   // 2020-07-01
-    end:         1604188800,   // 2020-11-01
-    type:        "rally",
-    description: "Massive V-shaped recovery driven by stimulus packages and vaccine optimism.",
+    id:          "dotComCrash",
+    title:       "Dot-Com Crash",
+    subtitle:    "Jan 2000 – Dec 2000",
+    symbol:      "INFY",
+    symbolName:  "Infosys Ltd",
+    start:       "2000-01-01",
+    end:         "2000-12-31",
+    type:        "crash",
+    description: "The burst of the technology bubble. Tech stocks experienced extreme volatility and massive drawdowns.",
+    difficulty:  "Hard",
+    capital:     50000,
   },
   {
     id:          "financialCrisis2008",
     title:       "2008 Global Financial Crisis",
     subtitle:    "Sep 2008 – Feb 2009",
-    symbol:      "INFY",
-    symbolName:  "Infosys Ltd",
-    start:       1220227200,   // 2008-09-01
-    end:         1235865600,   // 2009-03-01
-    type:        "crash",
-    description: "Lehman Brothers collapsed. Global credit markets froze. Nifty fell ~60% peak-to-trough.",
-  },
-  {
-    id:          "budgetRally2021",
-    title:       "Union Budget Rally 2021",
-    subtitle:    "Feb – Apr 2021",
-    symbol:      "HDFCBANK",
-    symbolName:  "HDFC Bank",
-    start:       1612137600,   // 2021-02-01
-    end:         1617235200,   // 2021-04-01
-    type:        "rally",
-    description: "Surprise pro-growth Union Budget 2021. Nifty hit new all-time highs above 15,000.",
-  },
-  {
-    id:          "russiaUkraine2022",
-    title:       "Russia-Ukraine War Sell-off",
-    subtitle:    "Feb – Apr 2022",
     symbol:      "SBIN",
     symbolName:  "State Bank of India",
-    start:       1643673600,   // 2022-02-01
-    end:         1648771200,   // 2022-04-01
+    start:       "2008-09-01",
+    end:         "2009-02-28",
     type:        "crash",
-    description: "War broke out on Feb 24, 2022. Commodity shock, FII outflows, and global risk-off.",
+    description: "Lehman Brothers collapsed. Global credit markets froze. Peak-to-trough drawdowns were severe.",
+    difficulty:  "Extreme",
+    capital:     100000,
+  },
+  {
+    id:          "niftyBullRun2021",
+    title:       "NIFTY Bull Run 2021",
+    subtitle:    "Jan – Oct 2021",
+    symbol:      "HDFCBANK",
+    symbolName:  "HDFC Bank",
+    start:       "2021-01-01",
+    end:         "2021-10-31",
+    type:        "rally",
+    description: "Massive liquidity and post-COVID recovery drove indices to all-time highs.",
+    difficulty:  "Easy",
+    capital:     200000,
+  },
+  {
+    id:          "aiBoom2023",
+    title:       "AI Boom 2023",
+    subtitle:    "Jan – Jul 2023",
+    symbol:      "TCS",
+    symbolName:  "Tata Consultancy Services",
+    start:       "2023-01-01",
+    end:         "2023-07-31",
+    type:        "rally",
+    description: "ChatGPT launched late 2022, sparking a global AI infrastructure rally.",
+    difficulty:  "Medium",
+    capital:     150000,
   },
   {
     id:          "adaniCrisis2023",
     title:       "Adani Group Crisis",
     subtitle:    "Jan – Mar 2023",
-    symbol:      "ITC",
-    symbolName:  "ITC Ltd",
-    start:       1672531200,   // 2023-01-01
-    end:         1680307200,   // 2023-04-01
+    symbol:      "SBIN",
+    symbolName:  "State Bank of India",
+    start:       "2023-01-01",
+    end:         "2023-03-31",
     type:        "crash",
-    description: "Hindenburg Research short report triggered a ₹11 lakh crore Adani Group wipeout in days.",
-  },
-  {
-    id:          "demonetisation2016",
-    title:       "Demonetisation Shock",
-    subtitle:    "Nov 2016 – Jan 2017",
-    symbol:      "MARUTI",
-    symbolName:  "Maruti Suzuki",
-    start:       1478044800,   // 2016-11-02
-    end:         1483228800,   // 2017-01-01
-    type:        "crash",
-    description: "PM Modi announced overnight demonetisation of ₹500/₹1000 notes. Realty and FMCG collapsed.",
-  },
-  {
-    id:          "techBull2023",
-    title:       "IT Sector Bull Run 2023",
-    subtitle:    "Mar – Jul 2023",
-    symbol:      "WIPRO",
-    symbolName:  "Wipro Ltd",
-    start:       1677628800,   // 2023-03-01
-    end:         1690848000,   // 2023-08-01
-    type:        "rally",
-    description: "AI euphoria from ChatGPT drove global tech stocks and Indian IT names sharply higher.",
-  },
+    description: "Hindenburg Research short report triggered massive selloffs in Adani and exposed banking stocks.",
+    difficulty:  "Hard",
+    capital:     100000,
+  }
 ];
 
 /** Quick lookup by id */
 export function findEvent(id) {
   return historicalEvents.find((e) => e.id === id) || historicalEvents[0];
 }
+

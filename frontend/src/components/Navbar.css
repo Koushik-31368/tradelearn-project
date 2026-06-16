@@ -85,3 +85,25 @@
   border-color: var(--primary-green);
   background: rgba(255,255,255,0.05);
 }
+
+.nav-stats {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 4px 12px;
+  border-radius: 20px;
+  margin-right: 10px;
+}
+
+.nav-xp {
+  font-weight: bold;
+  color: #ffd700; /* Gold */
+  font-size: 0.9rem;
+}
+
+.nav-streak {
+  font-weight: bold;
+  color: #ff6b6b; /* Flame red */
+  font-size: 0.9rem;
+}

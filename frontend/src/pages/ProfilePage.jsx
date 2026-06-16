@@ -4,12 +4,14 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { backendUrl, authHeaders } from '../utils/api';
 import TierBadge from '../components/TierBadge';
+import FriendsPanel from '../components/social/FriendsPanel';
 import './ProfilePage.css';
 
 const ProfilePage = () => {
     const { user } = useAuth();
     const navigate = useNavigate();
     const [profile, setProfile] = useState(null);
+    const [achievements, setAchievements] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
@@ -17,9 +19,17 @@ const ProfilePage = () => {
         if (!user) return;
         (async () => {
             try {
-                const res = await fetch(backendUrl(`/api/users/${user.id}/profile`), { headers: authHeaders() });
-                if (!res.ok) throw new Error('Failed to load profile');
-                setProfile(await res.json());
+                const [profileRes, achRes] = await Promise.all([
+                    fetch(backendUrl(`/api/users/${user.id}/profile`), { headers: authHeaders() }),
+                    fetch(backendUrl(`/api/achievements/user`), { headers: authHeaders() })
+                ]);
+                
+                if (!profileRes.ok) throw new Error('Failed to load profile');
+                setProfile(await profileRes.json());
+                
+                if (achRes.ok) {
+                    setAchievements(await achRes.json());
+                }
             } catch (err) {
                 setError(err.message);
             } finally {
@@ -104,6 +114,32 @@ const ProfilePage = () => {
                     <div className="pf-stat-big">{profile.avgScore.toFixed(1)}</div>
                     <div className="pf-stat-sub">Hybrid composite (0–100)</div>
                 </StatCard>
+            </section>
+
+            {/* ── Achievement Showcase ── */}
+            <section className="pf-achievements">
+                <h2 className="pf-section-title">Achievements</h2>
+                {achievements.length === 0 ? (
+                    <p className="pf-empty">No achievements earned yet. Start learning or playing!</p>
+                ) : (
+                    <div className="pf-ach-grid">
+                        {achievements.map((ach, idx) => (
+                            <div key={idx} className="pf-ach-card" style={{ animationDelay: `${idx * 0.1}s` }}>
+                                <div className="pf-ach-icon">{ach.icon}</div>
+                                <div className="pf-ach-info">
+                                    <div className="pf-ach-name">{ach.name}</div>
+                                    <div className="pf-ach-desc">{ach.description}</div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </section>
+
+            {/* ── Friends ── */}
+            <section className="pf-friends">
+                <h2 className="pf-section-title">Friends</h2>
+                <FriendsPanel />
             </section>
 
             {/* ── Recent matches ── */}

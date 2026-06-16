@@ -1,313 +1,216 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import LearnSection from '../components/learn/LearnSection';
-import LearnCard from '../components/learn/LearnCard';
-import QuizCard from '../components/learn/QuizCard';
-import CandleDiagram from '../components/learn/CandleDiagram';
+import { backendUrl, authHeaders } from '../utils/api';
+import { useAuth } from '../context/AuthContext';
 import './LearnPage.css';
 
-/* ─────────── SECTION 1: BASICS ─────────── */
-
-const basicsCards = [
+const PATHS = [
   {
-    icon: '📊',
-    title: 'What is a Stock?',
-    description:
-      'A stock is a fractional ownership unit in a company. Holding shares entitles you to a portion of profits, dividends, and voting rights.',
+    id: 'basics',
+    title: 'Trading Basics',
+    description: 'Learn the foundational concepts of the stock market.',
+    color: '#10b981', // green
+    lessons: [
+      { id: 'basics_1', title: 'What is a Stock?', type: 'lesson', icon: '📊' },
+      { id: 'basics_2', title: 'The Stock Market', type: 'lesson', icon: '🏛️' },
+      { id: 'basics_3', title: 'How Prices Move', type: 'lesson', icon: '📈' },
+      { id: 'basics_4', title: 'Candlesticks', type: 'lesson', icon: '🕯️' },
+      { id: 'basics_5', title: 'Volume', type: 'lesson', icon: '📉' },
+      { id: 'basics_quiz', title: 'Basics Quiz', type: 'quiz', icon: '📝' }
+    ]
   },
   {
-    icon: '🏛️',
-    title: 'What is the Stock Market?',
-    description:
-      'A regulated marketplace where buyers and sellers transact shares of publicly listed companies through exchanges like NYSE, NASDAQ, NSE & BSE.',
+    id: 'realworld',
+    title: 'Real World Market',
+    description: 'Understand how macro factors affect prices.',
+    color: '#3b82f6', // blue
+    lessons: [
+      { id: 'realworld_1', title: 'Interest Rates', type: 'lesson', icon: '🏦' },
+      { id: 'realworld_2', title: 'Inflation', type: 'lesson', icon: '💸' },
+      { id: 'realworld_3', title: 'Bull vs Bear', type: 'lesson', icon: '🐂' },
+      { id: 'realworld_4', title: 'Institutions', type: 'lesson', icon: '🏢' },
+      { id: 'realworld_quiz', title: 'Market Quiz', type: 'quiz', icon: '📝' }
+    ]
   },
   {
-    icon: '📈',
-    title: 'How Prices Move',
-    description:
-      'Prices move based on supply and demand. More buyers push prices up; more sellers push prices down. Every trade requires a counterparty.',
+    id: 'advanced',
+    title: 'Advanced Concepts',
+    description: 'Master risk management and market structure.',
+    color: '#8b5cf6', // purple
+    lessons: [
+      { id: 'advanced_1', title: 'Risk Management', type: 'lesson', icon: '🛡️' },
+      { id: 'advanced_2', title: 'Stop Loss', type: 'lesson', icon: '🚫' },
+      { id: 'advanced_3', title: 'Risk/Reward', type: 'lesson', icon: '⚖️' },
+      { id: 'advanced_4', title: 'Drawdown', type: 'lesson', icon: '📉' },
+      { id: 'advanced_quiz', title: 'Advanced Quiz', type: 'quiz', icon: '📝' }
+    ]
   },
   {
-    icon: '🕯️',
-    title: 'Candlesticks (OHLC)',
-    description:
-      'Each candlestick encodes four data points — Open, High, Low, Close — representing complete price action within a specific time period.',
-    highlight: true,
-  },
-  {
-    icon: '📉',
-    title: 'Volume',
-    description:
-      'Volume measures how many shares were traded in a period. High volume confirms trend strength; low volume signals indecision or exhaustion.',
-  },
-  {
-    icon: '⬆️',
-    title: 'Long vs Short',
-    description:
-      'Going long means buying expecting price to rise. Going short means selling borrowed shares expecting a decline, then buying back cheaper.',
-  },
+    id: 'psychology',
+    title: 'Trading Psychology',
+    description: 'Control your emotions and trade with discipline.',
+    color: '#f59e0b', // orange
+    lessons: [
+      { id: 'psychology_1', title: 'Fear', type: 'lesson', icon: '😨' },
+      { id: 'psychology_2', title: 'Greed', type: 'lesson', icon: '🤑' },
+      { id: 'psychology_3', title: 'Overtrading', type: 'lesson', icon: '🔄' },
+      { id: 'psychology_4', title: 'FOMO', type: 'lesson', icon: '📱' },
+      { id: 'psychology_quiz', title: 'Psychology Quiz', type: 'quiz', icon: '📝' }
+    ]
+  }
 ];
-
-/* ─────────── SECTION 2: REAL WORLD MARKET ─────────── */
-
-const realWorldCards = [
-  {
-    icon: '🏦',
-    title: 'Interest Rates',
-    description:
-      'Central banks set benchmark rates. Rising rates increase borrowing costs, compress valuations, and shift capital from equities to bonds.',
-  },
-  {
-    icon: '💸',
-    title: 'Inflation',
-    description:
-      'Persistent price increases erode purchasing power. High inflation forces central banks to tighten policy, which pressures growth stocks.',
-  },
-  {
-    icon: '🐂',
-    title: 'Bull vs Bear Markets',
-    description:
-      'A bull market sees prices rising 20%+ from lows with optimistic sentiment. A bear market is a 20%+ decline driven by fear and capitulation.',
-  },
-  {
-    icon: '🏢',
-    title: 'Institutional Investors',
-    description:
-      'Hedge funds, mutual funds, and pension funds move massive volumes. Their accumulation and distribution phases create multi-week trends.',
-  },
-  {
-    icon: '⚡',
-    title: 'Global Events Impact',
-    description:
-      'Wars, elections, trade policies, and pandemics create volatility spikes. Markets price in risk — uncertainty drives sharper moves than outcomes.',
-  },
-];
-
-/* ─────────── SECTION 3: ADVANCED CONCEPTS ─────────── */
-
-const advancedCards = [
-  {
-    icon: '🛡️',
-    title: 'Risk Management',
-    description:
-      'The core discipline of profitable trading. Never risk more than 1–2% of capital per trade. Survival is the prerequisite to long-term profit.',
-    highlight: true,
-  },
-  {
-    icon: '🚫',
-    title: 'Stop Loss',
-    description:
-      'A pre-defined exit price that caps your downside. Place stops at logical levels — below support for longs, above resistance for shorts.',
-  },
-  {
-    icon: '⚖️',
-    title: 'Risk/Reward Ratio',
-    description:
-      'Compare potential loss vs. potential gain before every trade. A 1:3 R:R means risking ₹1 to make ₹3. Consistent asymmetry compounds edge.',
-  },
-  {
-    icon: '📉',
-    title: 'Drawdown',
-    description:
-      'Peak-to-trough decline in your portfolio. A 50% drawdown requires a 100% gain to recover. Keeping drawdowns under 15% is professional-grade.',
-  },
-  {
-    icon: '📐',
-    title: 'Position Sizing',
-    description:
-      'Calculate lot size based on stop distance and risk tolerance. Proper sizing ensures no single loss can materially damage your account.',
-  },
-  {
-    icon: '🧱',
-    title: 'Market Structure',
-    description:
-      'Markets move in Wyckoff cycles: accumulation → markup → distribution → markdown. Recognizing structure helps time entries and avoid traps.',
-  },
-];
-
-/* ─────────── SECTION 4: TRADING PSYCHOLOGY ─────────── */
-
-const psychologyCards = [
-  {
-    icon: '😨',
-    title: 'Fear',
-    description:
-      'Fear causes premature exits and missed entries. The fix: predefined rules, mechanical execution. If your plan says enter, you enter.',
-    highlight: true,
-  },
-  {
-    icon: '🤑',
-    title: 'Greed',
-    description:
-      'Greed leads to oversized positions and moved stop-losses. Set profit targets before entering. Let the system decide, not emotions.',
-  },
-  {
-    icon: '🔄',
-    title: 'Overtrading',
-    description:
-      'Taking too many trades dilutes edge and racks up fees. Quality over quantity. Wait for A+ setups that match your system\'s criteria.',
-  },
-  {
-    icon: '📱',
-    title: 'FOMO',
-    description:
-      'Fear of missing out leads to chasing extended moves. If you missed the entry, you missed it. The market offers new setups every day.',
-  },
-  {
-    icon: '🎯',
-    title: 'Discipline',
-    description:
-      'The single trait that separates profitable traders from the rest. Follow your plan, journal every trade, and review weekly. No shortcuts.',
-  },
-];
-
-/* ─────────── QUIZZES ─────────── */
-
-const quizBasics = {
-  question: 'A candlestick with a long lower wick and small body near the top is called:',
-  options: ['Shooting Star', 'Doji', 'Hammer', 'Engulfing'],
-  correctIndex: 2,
-  explanation:
-    'A Hammer forms when sellers push prices sharply lower, but buyers recover the loss by close — signaling potential bullish reversal.',
-};
-
-const quizRealWorld = {
-  question: 'When a central bank raises interest rates, what typically happens to stock valuations?',
-  options: [
-    'They increase because borrowing is encouraged',
-    'They decrease because future earnings are discounted more',
-    'They stay the same',
-    'Only small-cap stocks are affected',
-  ],
-  correctIndex: 1,
-  explanation:
-    'Higher rates raise the discount rate on future cash flows, reducing the present value of earnings and compressing P/E ratios across equities.',
-};
-
-const quizAdvanced = {
-  question: 'If your portfolio drops by 50%, what gain is needed to recover to breakeven?',
-  options: ['50%', '75%', '100%', '150%'],
-  correctIndex: 2,
-  explanation:
-    'From ₹100 to ₹50 is a 50% loss. From ₹50 back to ₹100 requires a 100% gain. This asymmetry is why capital preservation comes first.',
-};
-
-const quizPsychology = {
-  question: 'A trader keeps moving their stop-loss further away to avoid being stopped out. This is primarily driven by:',
-  options: ['Risk management', 'Greed', 'Fear of loss', 'Discipline'],
-  correctIndex: 2,
-  explanation:
-    'Moving stops to avoid losses is fear-driven behavior. It defeats the purpose of risk management and can turn small losses into account-damaging ones.',
-};
-
-/* ─────────── COMPONENT ─────────── */
 
 const LearnPage = () => {
+  const { user } = useAuth();
   const navigate = useNavigate();
+  const [completedLessons, setCompletedLessons] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [xpPopup, setXpPopup] = useState(null);
 
-  const renderCards = (cards) => (
-    <div className="learn-cards-grid">
-      {cards.map((card, i) => (
-        <LearnCard key={i} {...card} />
-      ))}
-    </div>
-  );
+  useEffect(() => {
+    if (user) {
+      fetchProgress();
+    } else {
+      setLoading(false);
+    }
+  }, [user]);
+
+  const fetchProgress = async () => {
+    try {
+      const res = await fetch(backendUrl('/api/learning/progress'), { headers: authHeaders() });
+      if (res.ok) {
+        const data = await res.json();
+        setCompletedLessons(data);
+      }
+    } catch (err) {
+      console.error('Failed to fetch progress', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const completeLesson = async (lessonId, isQuiz) => {
+    if (!user) return navigate('/login');
+    if (completedLessons.includes(lessonId)) return; // Already completed
+
+    try {
+      await fetch(backendUrl(`/api/learning/complete/${lessonId}`), {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({ isQuiz })
+      });
+      setCompletedLessons([...completedLessons, lessonId]);
+      showXpPopup(isQuiz ? 10 : 20);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const showXpPopup = (amount) => {
+    setXpPopup(`+${amount} XP`);
+    setTimeout(() => setXpPopup(null), 2500);
+  };
+
+  if (!user) {
+    return (
+      <div className="learn-map-page">
+        <p style={{ textAlign: 'center', marginTop: '100px' }}>
+          Please <span style={{ color: '#00ff88', cursor: 'pointer' }} onClick={() => navigate('/login')}>log in</span> to start your learning journey.
+        </p>
+      </div>
+    );
+  }
+
+  if (loading) return <div className="learn-map-page"><div className="learn-spinner"></div></div>;
+
+  let globalLessonIndex = 0;
+  let firstLockedEncountered = false;
 
   return (
-    <div className="learn-page">
-      {/* Hero */}
-      <header className="learn-hero">
-        <div className="learn-hero__inner">
-          <span className="learn-hero__tag">Trading Academy</span>
-          <h1 className="learn-hero__heading">
-            Build Your Foundation.<br />
-            <span className="learn-hero__accent">Understand the Markets.</span>
-          </h1>
-          <p className="learn-hero__sub">
-            Master the core concepts every trader needs before deploying capital.
-            No strategies here — just the knowledge that makes strategies work.
-          </p>
-          <div className="learn-hero__stats">
-            <div className="learn-hero__stat">
-              <span className="learn-hero__stat-value">4</span>
-              <span className="learn-hero__stat-label">Modules</span>
-            </div>
-            <div className="learn-hero__stat-divider" />
-            <div className="learn-hero__stat">
-              <span className="learn-hero__stat-value">22</span>
-              <span className="learn-hero__stat-label">Topics</span>
-            </div>
-            <div className="learn-hero__stat-divider" />
-            <div className="learn-hero__stat">
-              <span className="learn-hero__stat-value">4</span>
-              <span className="learn-hero__stat-label">Quizzes</span>
-            </div>
-          </div>
+    <div className="learn-map-page">
+      {xpPopup && (
+        <div className="xp-popup-overlay">
+          <div className="xp-popup-content">{xpPopup}</div>
         </div>
-      </header>
+      )}
 
-      {/* Journey Breadcrumb */}
-      <div className="learn-journey">
-        <div className="learn-journey__inner">
-          <span className="learn-journey__step learn-journey__step--active">Learn</span>
-          <span className="learn-journey__arrow">→</span>
-          <span className="learn-journey__step">Strategies</span>
-          <span className="learn-journey__arrow">→</span>
-          <span className="learn-journey__step">Simulator</span>
-          <span className="learn-journey__arrow">→</span>
-          <span className="learn-journey__step">Multiplayer</span>
+      <div className="learn-header">
+        <h1 className="learn-title">Your Journey</h1>
+        <div className="learn-progress">
+          <div className="learn-progress-bar">
+            <div 
+              className="learn-progress-fill" 
+              style={{ width: `${(completedLessons.length / 20) * 100}%` }}
+            ></div>
+          </div>
+          <span className="learn-progress-text">{completedLessons.length} / 20</span>
         </div>
       </div>
 
-      {/* Main Content */}
-      <main className="learn-main">
-        {/* Section 1: Basics */}
-        <LearnSection id="basics" number={1} title="Basics of Trading" icon="📘" defaultOpen>
-          {renderCards(basicsCards)}
-          <CandleDiagram />
-          <QuizCard {...quizBasics} />
-        </LearnSection>
+      <div className="learn-map-container">
+        {PATHS.map((path, pathIndex) => {
+          return (
+            <div key={path.id} className="learn-path-section">
+              <div className="path-header" style={{ borderBottomColor: path.color }}>
+                <h2 style={{ color: path.color }}>Unit {pathIndex + 1}: {path.title}</h2>
+                <p>{path.description}</p>
+              </div>
 
-        {/* Section 2: Real World Market */}
-        <LearnSection id="real-world" number={2} title="Real World Market" icon="🌐">
-          {renderCards(realWorldCards)}
-          <QuizCard {...quizRealWorld} />
-        </LearnSection>
+              <div className="path-nodes">
+                {path.lessons.map((lesson, lessonIndex) => {
+                  const isCompleted = completedLessons.includes(lesson.id);
+                  let isLocked = false;
+                  
+                  if (!isCompleted) {
+                    if (!firstLockedEncountered) {
+                      firstLockedEncountered = true; // This is the current active lesson
+                    } else {
+                      isLocked = true;
+                    }
+                  }
 
-        {/* Section 3: Advanced Concepts */}
-        <LearnSection id="advanced" number={3} title="Advanced Concepts" icon="🎯">
-          {renderCards(advancedCards)}
-          <QuizCard {...quizAdvanced} />
-        </LearnSection>
+                  const isActive = !isCompleted && !isLocked;
+                  globalLessonIndex++;
 
-        {/* Section 4: Trading Psychology */}
-        <LearnSection id="psychology" number={4} title="Trading Psychology" icon="🧠">
-          {renderCards(psychologyCards)}
-          <QuizCard {...quizPsychology} />
-        </LearnSection>
+                  // Calculate alternating positions
+                  const offsetX = Math.sin(lessonIndex * 1.5) * 60;
 
-        {/* CTA → Strategies */}
-        <section className="learn-cta">
-          <div className="learn-cta__inner">
-            <div className="learn-cta__icon">🎯</div>
-            <h3 className="learn-cta__heading">Ready to Apply This Knowledge?</h3>
-            <p className="learn-cta__sub">
-              You've built the foundation. Now learn proven trading strategies with
-              detailed entry/exit rules, risk parameters, and real chart examples.
-            </p>
-            <button
-              className="learn-cta__btn"
-              onClick={() => navigate('/strategies')}
-            >
-              Explore Trading Strategies →
-            </button>
-            <div className="learn-cta__hint">
-              <span className="learn-cta__hint-icon">💡</span>
-              Each strategy includes a "Try in Simulator" button for hands-on practice
+                  return (
+                    <div 
+                      key={lesson.id} 
+                      className={`path-node-wrapper ${isLocked ? 'locked' : ''} ${isActive ? 'active' : ''}`}
+                      style={{ transform: `translateX(${offsetX}px)` }}
+                    >
+                      <button 
+                        className="path-node-btn"
+                        style={{
+                          backgroundColor: isCompleted ? path.color : (isLocked ? '#1e2733' : '#2d3748'),
+                          borderColor: isCompleted ? path.color : (isLocked ? '#30363d' : path.color),
+                          boxShadow: isActive ? `0 0 0 6px rgba(255,255,255,0.1), 0 0 20px ${path.color}` : 'none'
+                        }}
+                        onClick={() => {
+                          if (!isLocked) {
+                            // In a real app, this would open a modal with content.
+                            // For this MVP, clicking it just "completes" it.
+                            completeLesson(lesson.id, lesson.type === 'quiz');
+                          }
+                        }}
+                      >
+                        <span className="node-icon">{isLocked ? '🔒' : lesson.icon}</span>
+                      </button>
+                      <div className="node-tooltip">{lesson.title}</div>
+                      {/* Connection line */}
+                      {lessonIndex < path.lessons.length - 1 && (
+                        <div className="path-line" style={{ backgroundColor: isCompleted ? path.color : '#30363d' }}></div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
-          </div>
-        </section>
-      </main>
+          );
+        })}
+      </div>
     </div>
   );
 };

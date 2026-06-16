@@ -1,0 +1,15 @@
+{
+  "short_name": "TradeLearn",
+  "name": "TradeLearn - Learn to Trade",
+  "icons": [
+    {
+      "src": "logo.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml"
+    }
+  ],
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#0d1117",
+  "background_color": "#0d1117"
+}

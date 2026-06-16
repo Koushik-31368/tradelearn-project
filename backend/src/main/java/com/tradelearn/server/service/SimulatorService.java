@@ -21,6 +21,10 @@ public class SimulatorService {
     @Autowired
     private TradeService tradeService;
 
+    @Autowired
+    @org.springframework.context.annotation.Lazy
+    private QuestService questService;
+
     @Transactional
     public Portfolio executeTrade(TradeRequest tradeRequest) throws Exception {
         Portfolio portfolio = portfolioRepository.findByUser_Id(tradeRequest.getUserId())
@@ -92,6 +96,13 @@ public class SimulatorService {
         trade.setPrice(tradeRequest.getPrice());
         trade.setTimestamp(LocalDateTime.now());
         tradeService.createTrade(trade);
+
+        // Trigger SIMULATOR_TRADE quest
+        try {
+            questService.updateQuestProgress(tradeRequest.getUserId(), "SIMULATOR_TRADE", 1);
+        } catch (Exception e) {
+            // Ignore if quest service fails to avoid blocking trade
+        }
 
         return portfolioRepository.save(portfolio);
     }
