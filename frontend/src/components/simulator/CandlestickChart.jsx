@@ -1,13 +1,6 @@
 // src/components/simulator/CandlestickChart.jsx
-// Candlestick chart with optional live market simulation engine.
-import React, { useMemo, useState, useEffect, useRef, useCallback } from 'react';
-import {
-  createMarketSimulator,
-  generateInitialCandles,
-  computeLiveSMA,
-  PHASE_LABELS,
-  PHASE_CLASSES,
-} from '../../utils/marketSimulator';
+// Candlestick chart for Historical Market Replay.
+import React, { useMemo, useState } from 'react';
 import './CandlestickChart.css';
 
 // ── Static (historical) timeframes ──────────────────────────────────────────
@@ -15,17 +8,8 @@ const STATIC_TIMEFRAMES = [
   { label: '1D',  count: 1  },
   { label: '5D',  count: 5  },
   { label: '1M',  count: 30 },
+  { label: '3M',  count: 90 },
 ];
-
-// ── Live-mode timeframes (last N candles) ────────────────────────────────────
-const LIVE_TIMEFRAMES = [
-  { label: '30',   count: 30  },
-  { label: '60',   count: 60  },
-  { label: '100',  count: 100 },
-];
-
-const MAX_CANDLES = 300; // sliding-window cap
-const TICK_MS     = 2000; // new candle every 2 seconds
 
 // ── SVG layout constants ──────────────────────────────────────────────────────
 const CHART_W  = 700;
@@ -37,72 +21,23 @@ const GRID_CNT = 5;
 /**
  * CandlestickChart
  * Props:
- *   candles    {Array}   – static candle data (used when liveMode=false)
- *   smaData    {Array}   – pre-computed SMA for static mode
+ *   candles    {Array}   – static candle data from Historical Replay
+ *   smaData    {Array}   – pre-computed SMA
  *   symbol     {string}  – ticker displayed in the header
- *   basePrice  {number}  – starting price for live simulation (default 1400)
- *   liveMode   {boolean} – when true, runs the market simulator (default true)
  */
 const CandlestickChart = ({
-  candles: staticCandles = [],
-  smaData: staticSMA = [],
+  candles = [],
+  smaData = [],
   symbol,
-  basePrice = 1400,
-  liveMode = true,
 }) => {
-  const simulatorRef  = useRef(null);
-  const [liveCandles,  setLiveCandles]  = useState([]);
-  const [isRunning,    setIsRunning]    = useState(true);
-  const [marketPhase,  setMarketPhase]  = useState('UPTREND');
   const [showSMA,      setShowSMA]      = useState(false);
-  const [timeframe,    setTimeframe]    = useState(liveMode ? '60' : '1M');
-  const [lastPattern,  setLastPattern]  = useState(null);
-
-  // Initialise simulator + seed 100 historical candles on mount / symbol change
-  useEffect(() => {
-    if (!liveMode) return;
-    const startPrice = basePrice && basePrice > 0 ? basePrice : 1400;
-    simulatorRef.current = createMarketSimulator(startPrice);
-    setLiveCandles(generateInitialCandles(startPrice, 100));
-    setMarketPhase(simulatorRef.current.getState().phase);
-    setLastPattern(null);
-    setIsRunning(true);
-  }, [liveMode, symbol, basePrice]);
-
-  // Append one new candle every TICK_MS while running
-  const appendCandle = useCallback(() => {
-    if (!simulatorRef.current) return;
-    const candle = simulatorRef.current.nextCandle(Date.now());
-    const state  = simulatorRef.current.getState();
-    setLiveCandles((prev) => {
-      const next = prev.length >= MAX_CANDLES
-        ? [...prev.slice(1), candle]
-        : [...prev, candle];
-      return next;
-    });
-    setMarketPhase(state.phase);
-    if (candle.pattern) setLastPattern(candle.pattern);
-  }, []);
-
-  useEffect(() => {
-    if (!liveMode || !isRunning) return;
-    const id = setInterval(appendCandle, TICK_MS);
-    return () => clearInterval(id);
-  }, [liveMode, isRunning, appendCandle]);
+  const [timeframe,    setTimeframe]    = useState('1M');
 
   // Select active data source + timeframe list
-  const allCandles     = liveMode ? liveCandles    : staticCandles;
-  const timeframes     = liveMode ? LIVE_TIMEFRAMES : STATIC_TIMEFRAMES;
-  const activeTF       = timeframes.find((t) => t.label === timeframe) || timeframes[1];
-  const visibleCandles = allCandles.slice(-activeTF.count);
+  const activeTF       = STATIC_TIMEFRAMES.find((t) => t.label === timeframe) || STATIC_TIMEFRAMES[2];
+  const visibleCandles = candles.slice(-activeTF.count);
 
-  // SMA
-  const liveSMA    = useMemo(
-    () => (liveMode && allCandles.length > 0 ? computeLiveSMA(allCandles, 14) : []),
-    [liveMode, allCandles]
-  );
-  const smaSeries  = liveMode ? liveSMA : staticSMA;
-  const visibleSMA = smaSeries.slice(-activeTF.count);
+  const visibleSMA = smaData.slice(-activeTF.count);
 
   // SVG layout — memoised so React only recomputes when visible candles change
   const chartData = useMemo(() => {
@@ -155,11 +90,11 @@ const CandlestickChart = ({
   }, [visibleCandles, visibleSMA, showSMA]);
 
   // Empty / loading guard
-  if (allCandles.length === 0) {
+  if (candles.length === 0) {
     return (
       <div className="candlestick-chart">
         <div className="candlestick-chart__empty">
-          {liveMode ? 'Initialising market engine…' : 'Select a stock to view chart'}
+          {'Select a stock to view chart'}
         </div>
       </div>
     );
@@ -183,23 +118,11 @@ const CandlestickChart = ({
           <span className={`candlestick-chart__day-change ${isUp ? 'up' : 'down'}`}>
             {isUp ? '+' : ''}{dayChange.toFixed(2)}&nbsp;({isUp ? '+' : ''}{dayChangePct}%)
           </span>
-          {liveMode && (
-            <span className={`candlestick-chart__phase-badge phase--${PHASE_CLASSES[marketPhase]}`}>
-              {PHASE_LABELS[marketPhase]}
-            </span>
-          )}
-          {liveMode && lastPattern && (
-            <span className="candlestick-chart__pattern-flash" key={lastPattern}>
-              {lastPattern === 'bullish_engulfing' && '🟢 Bullish Engulfing'}
-              {lastPattern === 'breakout'          && '⚡ Breakout'}
-              {lastPattern === 'double_top'        && '🔴 Double Top'}
-            </span>
-          )}
         </div>
 
         <div className="candlestick-chart__controls">
           <div className="candlestick-chart__timeframes">
-            {timeframes.map((t) => (
+            {STATIC_TIMEFRAMES.map((t) => (
               <button
                 key={t.label}
                 className={`candlestick-chart__tf-btn ${timeframe === t.label ? 'candlestick-chart__tf-btn--active' : ''}`}
@@ -216,15 +139,6 @@ const CandlestickChart = ({
           >
             SMA
           </button>
-          {liveMode && (
-            <button
-              className={`candlestick-chart__live-btn ${isRunning ? 'candlestick-chart__live-btn--running' : ''}`}
-              onClick={() => setIsRunning((r) => !r)}
-              title={isRunning ? 'Pause simulation' : 'Resume simulation'}
-            >
-              {isRunning ? '⏸ LIVE' : '▶ PAUSED'}
-            </button>
-          )}
         </div>
       </div>
 
@@ -275,15 +189,6 @@ const CandlestickChart = ({
                 fill={c.isGreen ? 'rgba(0,255,136,0.14)' : 'rgba(255,77,79,0.14)'}
                 rx="1"
               />
-              {/* Golden highlight ring on pattern candles */}
-              {c.pattern && (
-                <rect
-                  x={c.x - 1} y={c.bodyTop - 1}
-                  width={c.candleW + 2}
-                  height={Math.max(c.bodyBot - c.bodyTop, 1) + 2}
-                  fill="none" stroke="#f0b429" strokeWidth="1.5" rx="2" opacity="0.7"
-                />
-              )}
             </g>
           ))}
 
@@ -308,9 +213,6 @@ const CandlestickChart = ({
         <span><b>L</b> {lastCandle.low.toFixed(2)}</span>
         <span><b>C</b> {lastCandle.close.toFixed(2)}</span>
         <span><b>V</b> {(lastCandle.volume / 1e6).toFixed(2)}M</span>
-        {liveMode && (
-          <span className="candlestick-chart__ohlcv-count">{allCandles.length} candles</span>
-        )}
       </div>
     </div>
   );

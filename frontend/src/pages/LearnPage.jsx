@@ -123,7 +123,6 @@ const LearnPage = () => {
 
   if (loading) return <div className="learn-map-page"><div className="learn-spinner"></div></div>;
 
-  let globalLessonIndex = 0;
   let firstLockedEncountered = false;
 
   return (
@@ -170,7 +169,6 @@ const LearnPage = () => {
                   }
 
                   const isActive = !isCompleted && !isLocked;
-                  globalLessonIndex++;
 
                   // Calculate alternating positions
                   const offsetX = Math.sin(lessonIndex * 1.5) * 60;

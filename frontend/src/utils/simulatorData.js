@@ -275,4 +275,3 @@ export function executeDemoTrade({ symbol, price, quantity, type, journalId }) {
   return { success: true, message: `${type} ${quantity} ${symbol} @ ₹${price.toFixed(2)}`, portfolio };
 }
 
-}

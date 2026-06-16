@@ -1,22 +1,55 @@
-# Ignore local database config
+# ============================================================
+# TradeLearn — Root .gitignore
+# ============================================================
+
+# ── Local dev config (contains real credentials) ──────────
 backend/src/main/resources/application-local.properties
 
-# Node modules
+# ── Environment files ──────────────────────────────────────
+.env
+*.env
+!.env.example
+
+# ── Node ──────────────────────────────────────────────────
 node_modules/
 
-# IDE and Editor
+# ── Maven build output ─────────────────────────────────────
+backend/target/
+**/target/
+
+# ── React production build ─────────────────────────────────
+frontend/build/
+
+# ── Log files ──────────────────────────────────────────────
+*.log
+backend/logs/
+
+# ── IDE and Editor ─────────────────────────────────────────
 .idea/
 .vscode/
+*.iml
+*.iws
+*.ipr
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
 
-# Environment files and Keys
-.env
+# ── Accidentally committed personal files ─────────────────
+backend/settings.json
+backend/errors.txt
+
+# ── Key material ──────────────────────────────────────────
 *.pem
+*.p12
+*.jks
+*.keystore
 
-# Archives and build artifacts
+# ── Archives / temp ───────────────────────────────────────
 *.zip
 *.tar.gz
+*.tmp
 
-# Generated reports/dumps
+# ── Generated reports / dumps ─────────────────────────────
 project_structure.txt
 code_verification.txt
-errors.txt

@@ -1,4 +1,3 @@
-// src/pages/GamePage.jsx
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import './GamePage.css';
@@ -7,6 +6,45 @@ import { backendUrl, authHeaders } from '../utils/api';
 import StockChart from '../components/StockChart';
 import LiveScoreboard from '../components/LiveScoreboard';
 import useGameSocket, { GamePhase, SocketState } from '../hooks/useGameSocket';
+
+// ── Trade Controls sub-component ──
+// Extracted from GamePage to improve readability and testability.
+const TradingControls = ({ onTrade, disabled, cooldown }) => (
+    <>
+        <div className="trade-input-group">
+            {/* Shares input is managed by GamePage state via the onTrade callback */}
+        </div>
+        <button
+            className={`trade-btn buy${cooldown ? ' cooldown' : ''}`}
+            onClick={() => onTrade('BUY')}
+            disabled={disabled}
+        >
+            Buy
+        </button>
+        <button
+            className={`trade-btn sell${cooldown ? ' cooldown' : ''}`}
+            onClick={() => onTrade('SELL')}
+            disabled={disabled}
+        >
+            Sell
+        </button>
+        <button
+            className={`trade-btn short${cooldown ? ' cooldown' : ''}`}
+            onClick={() => onTrade('SHORT')}
+            disabled={disabled}
+        >
+            Short
+        </button>
+        <button
+            className={`trade-btn cover${cooldown ? ' cooldown' : ''}`}
+            onClick={() => onTrade('COVER')}
+            disabled={disabled}
+        >
+            Cover
+        </button>
+        {cooldown && <span className="cooldown-indicator">⏳</span>}
+    </>
+);
 
 const GamePage = () => {
     const { gameId } = useParams();
@@ -361,28 +399,21 @@ const GamePage = () => {
 
             {/* ── Trade panel ── */}
             <footer className="trade-panel">
-                {(() => {
-                    const tradesDisabled = gameOver || gamePhase !== GamePhase.ACTIVE || remaining <= 0 || tradeCooldown || !isConnected;
-                    return (
-                        <>
-                            <div className="trade-input-group">
-                                <label>Shares</label>
-                                <input
-                                    type="number"
-                                    value={tradeAmount}
-                                    onChange={(e) => setTradeAmount(Math.max(1, parseInt(e.target.value, 10) || 1))}
-                                    min="1"
-                                    disabled={tradesDisabled}
-                                />
-                            </div>
-                            <button className={`trade-btn buy${tradeCooldown ? ' cooldown' : ''}`}   onClick={() => handleTrade('BUY')}   disabled={tradesDisabled}>Buy</button>
-                            <button className={`trade-btn sell${tradeCooldown ? ' cooldown' : ''}`}   onClick={() => handleTrade('SELL')}  disabled={tradesDisabled}>Sell</button>
-                            <button className={`trade-btn short${tradeCooldown ? ' cooldown' : ''}`}  onClick={() => handleTrade('SHORT')} disabled={tradesDisabled}>Short</button>
-                            <button className={`trade-btn cover${tradeCooldown ? ' cooldown' : ''}`}  onClick={() => handleTrade('COVER')} disabled={tradesDisabled}>Cover</button>
-                            {tradeCooldown && <span className="cooldown-indicator">⏳</span>}
-                        </>
-                    );
-                })()}
+                <div className="trade-input-group">
+                    <label>Shares</label>
+                    <input
+                        type="number"
+                        value={tradeAmount}
+                        onChange={(e) => setTradeAmount(Math.max(1, parseInt(e.target.value, 10) || 1))}
+                        min="1"
+                        disabled={gameOver || gamePhase !== GamePhase.ACTIVE || remaining <= 0 || !isConnected}
+                    />
+                </div>
+                <TradingControls
+                    onTrade={handleTrade}
+                    disabled={gameOver || gamePhase !== GamePhase.ACTIVE || remaining <= 0 || tradeCooldown || !isConnected}
+                    cooldown={tradeCooldown}
+                />
             </footer>
         </div>
     );

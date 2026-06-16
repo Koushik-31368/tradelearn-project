@@ -19,7 +19,7 @@ import {
   getTradeHistory,
   executeDemoTrade,
 } from '../../utils/simulatorData';
-import { generateInitialCandles } from '../../utils/marketSimulator';
+
 import './SimulatorDashboard.css';
 
 /* ── Strategy slug → display name mapping ── */
@@ -43,8 +43,8 @@ const SimulatorDashboard = () => {
   const [selectedSymbol, setSelectedSymbol] = useState('RELIANCE');
   const [portfolio, setPortfolio] = useState(() => getPortfolio());
   const [trades, setTrades] = useState(() => getTradeHistory());
-  const [equityCurve, setEquityCurve] = useState(() => generateEquityCurve());
-  const [tick, setTick] = useState(0); // For forcing re-renders
+  const [equityCurve] = useState(() => generateEquityCurve());
+  const [, setTick] = useState(0); // For forcing re-renders
   const [activeTab, setActiveTab] = useState('analytics'); // 'analytics' or 'readiness'
 
   const [candles, setCandles] = useState([]);
@@ -61,7 +61,7 @@ const SimulatorDashboard = () => {
     });
   }, [selectedSymbol]);
 
-  const equityCurve = useMemo(() => generateEquityCurve(), []);
+
 
   const selectedStock = useMemo(
     () => stocks.find((s) => s.symbol === selectedSymbol) || { symbol: selectedSymbol, price: 0 },

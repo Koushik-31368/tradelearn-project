@@ -7,7 +7,7 @@ import './PracticePage.css';
 import { detectStrategies, expectedDecision } from '../utils/strategyDetector';
 import { aiDecision, aiDecisionLabel } from '../utils/aiTrader';
 import { useAuth } from '../context/AuthContext';
-import { backendUrl } from '../utils/api';
+import { api } from '../utils/api';
 
 // ── Replay speed options (ms per candle) ────────────────────────────────────
 const SPEEDS = [
@@ -164,9 +164,8 @@ export default function PracticePage() {
     if (user?.username) {
       const delta = isRight ? 8 : -4;
       try {
-        await fetch(
-          backendUrl(`/api/leaderboard/update?username=${encodeURIComponent(user.username)}&scoreDelta=${delta}`),
-          { method: 'POST' }
+        await api.post(
+          `/api/leaderboard/update?username=${encodeURIComponent(user.username)}&scoreDelta=${delta}`
         );
       } catch {
         // Non-critical — silently swallow network errors
