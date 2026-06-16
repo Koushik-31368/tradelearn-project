@@ -64,7 +64,9 @@ public class AuthController {
                     "id", saved.getId(),
                     "username", saved.getUsername(),
                     "email", saved.getEmail(),
-                    "rating", saved.getRating()
+                    "rating", saved.getRating(),
+                    "xp", saved.getXp(),
+                    "loginStreak", saved.getLoginStreak()
             ));
         } catch (Exception e) {
             return ResponseEntity.internalServerError()
@@ -95,6 +97,8 @@ public class AuthController {
                     response.put("username", user.getUsername());
                     response.put("email", user.getEmail());
                     response.put("rating", user.getRating());
+                    response.put("xp", user.getXp());
+                    response.put("loginStreak", user.getLoginStreak());
 
                     return ResponseEntity.ok((Object) response);
                 })

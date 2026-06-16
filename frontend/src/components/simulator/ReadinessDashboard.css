@@ -1,0 +1,188 @@
+/* src/components/simulator/ReadinessDashboard.css */
+.readiness-dashboard {
+  padding: 20px;
+  color: #c9d1d9;
+  font-family: inherit;
+  background-color: #0d1117;
+  border-radius: 8px;
+  border: 1px solid #30363d;
+}
+
+.readiness-header {
+  margin-top: 0;
+  margin-bottom: 20px;
+  color: #d2a8ff; /* Purple for Coaching/Readiness */
+  border-bottom: 1px solid #30363d;
+  padding-bottom: 10px;
+}
+
+/* Insufficient Data State */
+.insufficient-data {
+  text-align: center;
+  padding: 40px 20px;
+}
+.readiness-msg {
+  color: #8b949e;
+  margin-bottom: 20px;
+}
+.requirements-box {
+  background-color: #161b22;
+  border: 1px solid #30363d;
+  display: inline-block;
+  padding: 15px 30px;
+  border-radius: 8px;
+  text-align: left;
+}
+.requirements-box h4 {
+  margin-top: 0;
+  color: #e6edf3;
+}
+.requirements-box ul {
+  padding-left: 20px;
+  color: #8b949e;
+  margin-bottom: 0;
+}
+
+/* Main Dashboard */
+.tier-banner {
+  background: linear-gradient(145deg, #161b22, #0d1117);
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  padding: 20px;
+  text-align: center;
+  margin-bottom: 25px;
+}
+
+.tier-label {
+  font-size: 12px;
+  text-transform: uppercase;
+  color: #8b949e;
+  letter-spacing: 1px;
+}
+
+.tier-value {
+  margin: 10px 0;
+  font-size: 32px;
+  color: #58a6ff;
+}
+
+.tier-subtitle {
+  font-size: 13px;
+  color: #3fb950;
+  font-weight: bold;
+}
+
+.readiness-content-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 25px;
+}
+
+.coaching-box {
+  background-color: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  padding: 15px;
+  margin-bottom: 15px;
+}
+
+.coaching-box h3 {
+  margin-top: 0;
+  margin-bottom: 12px;
+  font-size: 15px;
+  color: #c9d1d9;
+  border-bottom: 1px solid #21262d;
+  padding-bottom: 8px;
+}
+
+.coaching-box ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.coaching-box li {
+  font-size: 13px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.check-icon {
+  color: #3fb950;
+  font-weight: bold;
+}
+
+.x-icon {
+  color: #f85149;
+  font-weight: bold;
+}
+
+.recommendation-box {
+  background-color: #1f2428;
+  border-left: 4px solid #58a6ff;
+}
+.recommendation-box p {
+  margin: 0;
+  font-size: 14px;
+  color: #e6edf3;
+  font-weight: 500;
+}
+
+/* Pillars Section */
+.pillars-section {
+  background-color: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.pillars-section h3 {
+  margin-top: 0;
+  font-size: 16px;
+  border-bottom: 1px solid #21262d;
+  padding-bottom: 10px;
+}
+
+.pillars-desc {
+  font-size: 12px;
+  color: #8b949e;
+  margin-bottom: 20px;
+}
+
+.pillar-row {
+  margin-bottom: 15px;
+}
+
+.pillar-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+
+.weight-label {
+  font-size: 11px;
+  color: #8b949e;
+}
+
+.pillar-bar-bg {
+  width: 100%;
+  height: 12px;
+  background-color: #010409;
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.pillar-bar-fill {
+  height: 100%;
+  border-radius: 6px;
+}
+
+.discipline-fill { background-color: #58a6ff; }
+.learning-fill { background-color: #d2a8ff; }
+.process-fill { background-color: #f0883e; }
+.results-fill { background-color: #3fb950; }

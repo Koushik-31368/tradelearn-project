@@ -10,6 +10,7 @@ public class RankService {
         if (rating < 1100) return "Gold";
         if (rating < 1500) return "Platinum";
         if (rating < 2000) return "Diamond";
-        return "Master";
+        if (rating < 2500) return "Master";
+        return "Grandmaster";
     }
 }

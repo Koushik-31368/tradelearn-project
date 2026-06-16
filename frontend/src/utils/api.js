@@ -90,5 +90,16 @@ api.interceptors.response.use(
   }
 );
 
+export const dailyCheckin = async () => {
+  return await api.post('/api/user/daily-checkin');
+};
+
+export const fetchDailyQuests = async () => {
+  return await api.get('/api/quests/daily');
+};
+
+export const fetchWeeklyChallenges = async () => {
+  return await api.get('/api/quests/weekly');
+};
 
 export default API_URL;

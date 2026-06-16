@@ -15,7 +15,17 @@
   vertical-align: middle;
 }
 
-/* Elite only — subtle gold glow */
-.tier-badge--elite {
-  box-shadow: 0 0 8px rgba(207, 170, 60, 0.25);
+.tier-badge--grandmaster {
+  box-shadow: 0 0 10px rgba(255, 0, 85, 0.5);
+  background: linear-gradient(90deg, rgba(255, 0, 85, 0.1), rgba(0, 0, 0, 0));
+}
+
+.tier-badge--master {
+  box-shadow: 0 0 8px rgba(204, 0, 255, 0.4);
+  background: linear-gradient(90deg, rgba(204, 0, 255, 0.1), rgba(0, 0, 0, 0));
+}
+
+.tier-badge--diamond {
+  box-shadow: 0 0 8px rgba(0, 229, 255, 0.3);
+  background: linear-gradient(90deg, rgba(0, 229, 255, 0.05), rgba(0, 0, 0, 0));
 }

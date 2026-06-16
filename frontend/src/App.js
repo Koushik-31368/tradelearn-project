@@ -21,6 +21,8 @@ import TermsPage from './pages/TermsPage';
 import PrivacyPage from './pages/PrivacyPage';
 import RiskDisclosurePage from './pages/RiskDisclosurePage';
 import Footer from './components/Footer';
+import DailyCheckinModal from './components/DailyCheckinModal';
+import ChallengeListener from './components/social/ChallengeListener';
 
 const AUTH_PATHS = ['/login', '/register', '/forgot-password'];
 
@@ -52,6 +54,8 @@ function AppContent() {
       </Routes>
       {!hideTickerOnAuth && <StockTicker />}
       {!hideTickerOnAuth && <Footer />}
+      <DailyCheckinModal />
+      <ChallengeListener />
     </div>
   );
 }

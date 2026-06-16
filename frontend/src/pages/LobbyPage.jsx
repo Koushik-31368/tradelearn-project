@@ -8,6 +8,7 @@ import Modal from '../components/Modal';
 import CreateGameForm from '../components/CreateGameForm';
 import { useAuth } from '../context/AuthContext';
 import TierBadge from '../components/TierBadge';
+import FriendsPanel from '../components/social/FriendsPanel';
 import { backendUrl, wsBase, getToken, authHeaders } from '../utils/api';
 
 const LobbyPage = () => {
@@ -313,6 +314,17 @@ const LobbyPage = () => {
           </div>
         </div>
       </div>
+
+      {/* ── Friends & Challenges ── */}
+      {user && (
+        <div style={{ marginBottom: '40px', maxWidth: '600px', width: '100%', alignSelf: 'center' }}>
+          <FriendsPanel onChallenge={(friendUsername) => {
+            if (window.sendChallenge) {
+              window.sendChallenge(friendUsername);
+            }
+          }} />
+        </div>
+      )}
 
       {/* ── Custom Games Section ── */}
       <div className="custom-section">

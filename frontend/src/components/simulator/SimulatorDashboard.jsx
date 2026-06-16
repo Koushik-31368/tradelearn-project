@@ -5,10 +5,12 @@ import { useSearchParams } from 'react-router-dom';
 import PortfolioSummary from './PortfolioSummary';
 import Watchlist from './Watchlist';
 import CandlestickChart from './CandlestickChart';
-import TradingPanel from './TradingPanel';
-import PerformanceChart from './PerformanceChart';
+import OrderTicket from './OrderTicket';
+import AnalyticsDashboard from './AnalyticsDashboard';
 import TransactionHistory from './TransactionHistory';
 import MarketSentiment from './MarketSentiment';
+import ReflectionModal from './ReflectionModal';
+import ReadinessDashboard from './ReadinessDashboard';
 import {
   getDailyStocks,
   generateEquityCurve,
@@ -38,28 +40,36 @@ const SimulatorDashboard = () => {
   const strategyName = strategySlug ? STRATEGY_NAMES[strategySlug] || strategySlug : null;
 
   const [stocks] = useState(() => getDailyStocks());
-  const [selectedSymbol, setSelectedSymbol] = useState(stocks[0]?.symbol || '');
+  const [selectedSymbol, setSelectedSymbol] = useState('RELIANCE');
   const [portfolio, setPortfolio] = useState(() => getPortfolio());
   const [trades, setTrades] = useState(() => getTradeHistory());
-  const [, setTick] = useState(0); // force re-render after trades
+  const [equityCurve, setEquityCurve] = useState(() => generateEquityCurve());
+  const [tick, setTick] = useState(0); // For forcing re-renders
+  const [activeTab, setActiveTab] = useState('analytics'); // 'analytics' or 'readiness'
+
+  const [candles, setCandles] = useState([]);
+  const [visibleCount, setVisibleCount] = useState(0);
+
+  // Load historical data for selected symbol (Default to 2020 crash scenario as a test)
+  React.useEffect(() => {
+    import('../../services/marketApi').then(({ fetchMarketHistory }) => {
+      // Hardcode COVID crash dates for now until Scenario UI is built in Dashboard
+      fetchMarketHistory(selectedSymbol, '2020-02-01', '2020-04-30').then(data => {
+        setCandles(data);
+        setVisibleCount(10); // show first 10 candles
+      }).catch(err => console.error("Failed to load historical data", err));
+    });
+  }, [selectedSymbol]);
 
   const equityCurve = useMemo(() => generateEquityCurve(), []);
 
   const selectedStock = useMemo(
-    () => stocks.find((s) => s.symbol === selectedSymbol) || null,
+    () => stocks.find((s) => s.symbol === selectedSymbol) || { symbol: selectedSymbol, price: 0 },
     [stocks, selectedSymbol]
   );
 
-  // Seed the candle generator from the daily-seeded static price.
-  const effectiveBasePrice = selectedStock?.price ?? 1400;
-
-  const candles = useMemo(
-    () => selectedSymbol ? generateInitialCandles(effectiveBasePrice, 30) : [],
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [selectedSymbol, effectiveBasePrice]
-  );
-
-  const smaData = useMemo(() => (candles.length > 0 ? computeSMA(candles, 7) : []), [candles]);
+  const visibleCandles = useMemo(() => candles.slice(0, visibleCount), [candles, visibleCount]);
+  const smaData = useMemo(() => (visibleCandles.length > 0 ? computeSMA(visibleCandles, 7) : []), [visibleCandles]);
 
   const handleSelect = useCallback((symbol) => {
     setSelectedSymbol(symbol);
@@ -80,6 +90,9 @@ const SimulatorDashboard = () => {
 
   return (
     <div className="sim-dashboard">
+      {/* Post-Trade Reflection Modal (Blocks UI if there are pending reflections) */}
+      <ReflectionModal userId={1} onReflectionsComplete={() => setTick((t) => t + 1)} />
+
       {/* Strategy Mode Banner */}
       {strategyName && (
         <div className="sim-dashboard__strategy-banner">
@@ -106,7 +119,7 @@ const SimulatorDashboard = () => {
         {/* Center — Chart */}
         <section className="sim-dashboard__center">
           <CandlestickChart
-            candles={candles}
+            candles={visibleCandles}
             smaData={smaData}
             symbol={selectedSymbol}
             basePrice={selectedStock?.price}
@@ -114,19 +127,37 @@ const SimulatorDashboard = () => {
           />
         </section>
 
-        {/* Right — Sentiment + Trading Panel */}
+        {/* Right — Sentiment + Order Ticket */}
         <aside className="sim-dashboard__right">
-          <MarketSentiment candles={candles} />
-          <TradingPanel stock={selectedStock} portfolio={portfolio} onTrade={handleTrade} />
+          <MarketSentiment candles={visibleCandles} />
+          <OrderTicket stock={selectedStock} portfolio={portfolio} onTrade={handleTrade} />
         </aside>
       </div>
 
-      {/* Bottom — Performance + History */}
-      <div className="sim-dashboard__bottom">
-        <div className="sim-dashboard__bottom-left">
-          <PerformanceChart data={equityCurve} />
+      {/* Bottom — Analytics / Readiness + History */}
+      <div className="sim-dashboard__bottom" style={{ display: 'block' }}>
+        <div style={{ marginBottom: '15px', display: 'flex', gap: '10px' }}>
+          <button 
+            style={{ padding: '8px 16px', backgroundColor: activeTab === 'analytics' ? '#21262d' : 'transparent', color: activeTab === 'analytics' ? '#c9d1d9' : '#8b949e', border: '1px solid #30363d', borderRadius: '6px', cursor: 'pointer' }}
+            onClick={() => setActiveTab('analytics')}
+          >
+            Performance Analytics
+          </button>
+          <button 
+            style={{ padding: '8px 16px', backgroundColor: activeTab === 'readiness' ? '#21262d' : 'transparent', color: activeTab === 'readiness' ? '#d2a8ff' : '#8b949e', border: '1px solid #30363d', borderRadius: '6px', cursor: 'pointer' }}
+            onClick={() => setActiveTab('readiness')}
+          >
+            Readiness Coaching
+          </button>
         </div>
-        <div className="sim-dashboard__bottom-right">
+
+        {activeTab === 'analytics' ? (
+          <AnalyticsDashboard userId={1} />
+        ) : (
+          <ReadinessDashboard userId={1} />
+        )}
+        
+        <div style={{ marginTop: '20px' }}>
           <TransactionHistory trades={trades} />
         </div>
       </div>

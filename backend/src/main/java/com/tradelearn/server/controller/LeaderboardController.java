@@ -63,6 +63,16 @@ public class LeaderboardController {
 	return ResponseEntity.ok(dtos);
     }
 
+    @GetMapping("/leaderboard/tier/{tierName}")
+    public ResponseEntity<List<LeaderboardDTO>> getLeaderboardByTier(@PathVariable String tierName) {
+        List<User> allUsers = userRepository.findAllByOrderByRatingDesc();
+        List<LeaderboardDTO> dtos = allUsers.stream()
+            .map(u -> new LeaderboardDTO(u, rankService.getRankTier(u.getRating())))
+            .filter(dto -> dto.tier().equalsIgnoreCase(tierName))
+            .collect(Collectors.toList());
+        return ResponseEntity.ok(dtos);
+    }
+
     @GetMapping("/leaderboard/all")
     public ResponseEntity<List<LeaderboardDTO>> getAllLeaderboard() {
 	List<User> allUsers = userRepository.findAllByOrderByRatingDesc();

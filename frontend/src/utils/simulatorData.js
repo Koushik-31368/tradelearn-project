@@ -194,20 +194,24 @@ export function saveTradeHistory(history) {
  * Execute a trade (buy/sell/short/cover) and update local portfolio + history.
  * Returns { success, message, portfolio }
  */
-export function executeDemoTrade({ symbol, price, quantity, type }) {
+export function executeDemoTrade({ symbol, price, quantity, type, journalId }) {
   const portfolio = getPortfolio();
   const history = getTradeHistory();
   const total = price * quantity;
   const now = new Date().toISOString();
 
+  let pnl = null;
+  let closedJournalId = null;
+
   switch (type) {
     case 'BUY': {
       if (total > portfolio.cash) return { success: false, message: 'Insufficient funds' };
       portfolio.cash -= total;
-      const existing = portfolio.holdings[symbol] || { qty: 0, avgPrice: 0 };
+      const existing = portfolio.holdings[symbol] || { qty: 0, avgPrice: 0, journalId };
       const newQty = existing.qty + quantity;
       existing.avgPrice = +((existing.avgPrice * existing.qty + total) / newQty).toFixed(2);
       existing.qty = newQty;
+      // If adding to position, keep the original journalId (simplified)
       portfolio.holdings[symbol] = existing;
       break;
     }
@@ -215,6 +219,11 @@ export function executeDemoTrade({ symbol, price, quantity, type }) {
       const holding = portfolio.holdings[symbol];
       if (!holding || holding.qty < quantity) return { success: false, message: 'Insufficient holdings' };
       portfolio.cash += total;
+      
+      // Calculate PnL for the sold portion
+      pnl = +((price - holding.avgPrice) * quantity).toFixed(2);
+      closedJournalId = holding.journalId;
+
       holding.qty -= quantity;
       if (holding.qty === 0) delete portfolio.holdings[symbol];
       break;
@@ -222,7 +231,7 @@ export function executeDemoTrade({ symbol, price, quantity, type }) {
     case 'SHORT': {
       // Simplified: credit cash, create negative holding
       portfolio.cash += total;
-      const existing = portfolio.holdings[symbol] || { qty: 0, avgPrice: 0 };
+      const existing = portfolio.holdings[symbol] || { qty: 0, avgPrice: 0, journalId };
       const newQty = existing.qty - quantity;
       existing.avgPrice = price;
       existing.qty = newQty;
@@ -233,6 +242,11 @@ export function executeDemoTrade({ symbol, price, quantity, type }) {
       const holding = portfolio.holdings[symbol];
       if (!holding || holding.qty >= 0) return { success: false, message: 'No short position to cover' };
       portfolio.cash -= total;
+
+      // Calculate PnL for the covered portion
+      pnl = +((holding.avgPrice - price) * quantity).toFixed(2);
+      closedJournalId = holding.journalId;
+
       holding.qty += quantity;
       if (holding.qty === 0) delete portfolio.holdings[symbol];
       break;
@@ -245,5 +259,20 @@ export function executeDemoTrade({ symbol, price, quantity, type }) {
   savePortfolio(portfolio);
   saveTradeHistory(history);
 
+  // Sync PnL to backend asynchronously if a position was closed
+  if (pnl !== null && closedJournalId) {
+    let status = 'BREAKEVEN';
+    if (pnl > 0) status = 'WIN';
+    if (pnl < 0) status = 'LOSS';
+
+    fetch(`/api/journals/close/${closedJournalId}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pnl, outcomeStatus: status })
+    }).catch(err => console.error("Failed to sync PnL", err));
+  }
+
   return { success: true, message: `${type} ${quantity} ${symbol} @ ₹${price.toFixed(2)}`, portfolio };
+}
+
 }

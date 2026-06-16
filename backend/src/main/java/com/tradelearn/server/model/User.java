@@ -38,6 +38,18 @@ public class User {
     @Column(columnDefinition = "INT DEFAULT 0")
     private int winStreak = 0;
 
+    @Column(columnDefinition = "INT DEFAULT 0")
+    private int xp = 0;
+
+    @Column(name = "login_streak", columnDefinition = "INT DEFAULT 0")
+    private int loginStreak = 0;
+
+    @Column(name = "longest_login_streak", columnDefinition = "INT DEFAULT 0")
+    private int longestLoginStreak = 0;
+
+    @Column(name = "last_login_date")
+    private java.sql.Date lastLoginDate;
+
     @Column(name = "created_at", updatable = false)
     private Timestamp createdAt;
 
@@ -66,6 +78,15 @@ public class User {
     public void setLosses(int losses) { this.losses = losses; }
     public int getWinStreak() { return winStreak; }
     public void setWinStreak(int winStreak) { this.winStreak = winStreak; }
+
+    public int getXp() { return xp; }
+    public void setXp(int xp) { this.xp = xp; }
+    public int getLoginStreak() { return loginStreak; }
+    public void setLoginStreak(int loginStreak) { this.loginStreak = loginStreak; }
+    public int getLongestLoginStreak() { return longestLoginStreak; }
+    public void setLongestLoginStreak(int longestLoginStreak) { this.longestLoginStreak = longestLoginStreak; }
+    public java.sql.Date getLastLoginDate() { return lastLoginDate; }
+    public void setLastLoginDate(java.sql.Date lastLoginDate) { this.lastLoginDate = lastLoginDate; }
 
     public Timestamp getCreatedAt() { return createdAt; }
     public void setCreatedAt(Timestamp createdAt) { this.createdAt = createdAt; }

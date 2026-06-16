@@ -92,6 +92,7 @@ public class MatchService {
     @SuppressWarnings("unused")
     private final GracefulDegradationManager degradationManager;
     private final StringRedisTemplate redis;
+    private final QuestService questService;
 
     public MatchService(GameRepository gameRepository,
                         UserRepository userRepository,
@@ -105,7 +106,8 @@ public class MatchService {
                         TradeRateLimiter rateLimiter,
                         GameMetricsService metrics,
                         GracefulDegradationManager degradationManager,
-                        StringRedisTemplate redis) {
+                        StringRedisTemplate redis,
+                        @Lazy QuestService questService) {
         this.gameRepository = gameRepository;
         this.userRepository = userRepository;
         this.matchTradeService = matchTradeService;
@@ -119,6 +121,7 @@ public class MatchService {
         this.metrics = metrics;
         this.degradationManager = degradationManager;
         this.redis = redis;
+        this.questService = questService;
     }
 
     /**
@@ -566,6 +569,16 @@ public class MatchService {
         int opponentNewRating = EloUtil.calculateNewRating(opponentRatingBefore, creatorRatingBefore, opponentActual);
         int creatorRatingDelta = creatorNewRating - creatorRatingBefore;
         int opponentRatingDelta = opponentNewRating - opponentRatingBefore;
+        if (winner != null) {
+            if (winner.getId().equals(creator.getId())) {
+                creator.setWins(creator.getWins() + 1);
+                opponent.setLosses(opponent.getLosses() + 1);
+            } else {
+                opponent.setWins(opponent.getWins() + 1);
+                creator.setLosses(creator.getLosses() + 1);
+            }
+        }
+
         creator.setRating(creatorNewRating);
         opponent.setRating(opponentNewRating);
         userRepository.save(creator);
@@ -580,6 +593,14 @@ public class MatchService {
         game.setOpponentRatingDelta(opponentRatingDelta);
         game.setWinner(winner);
         gameRepository.save(game);
+
+        if (winner != null) {
+            try {
+                questService.updateChallengeProgress(winner.getId(), "WIN_MATCHES", 1);
+            } catch (Exception e) {
+                // Ignore
+            }
+        }
 
         // Build result while inside TX (entity data is available)
         double startingBalance = game.getStartingBalance();
@@ -706,6 +727,14 @@ public class MatchService {
         int creatorRatingDelta = creatorNewRating - creatorRatingBefore;
         int opponentRatingDelta = opponentNewRating - opponentRatingBefore;
 
+        if (winner.getId().equals(creator.getId())) {
+            creator.setWins(creator.getWins() + 1);
+            opponent.setLosses(opponent.getLosses() + 1);
+        } else {
+            opponent.setWins(opponent.getWins() + 1);
+            creator.setLosses(creator.getLosses() + 1);
+        }
+
         creator.setRating(creatorNewRating);
         opponent.setRating(opponentNewRating);
         userRepository.save(creator);
@@ -721,6 +750,12 @@ public class MatchService {
         game.setOpponentRatingDelta(opponentRatingDelta);
         game.setWinner(winner);
         gameRepository.save(game);
+
+        try {
+            questService.updateChallengeProgress(winner.getId(), "WIN_MATCHES", 1);
+        } catch (Exception e) {
+            // Ignore
+        }
 
         // Schedule cache evictions AFTER DB commit to prevent stale state on rollback
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {

@@ -6,13 +6,18 @@ import TierBadge from '../components/TierBadge';
 import './LeaderboardPage.css';
 
 const TAB_MULTI    = 'multiplayer';
+const TAB_LEAGUES  = 'leagues';
 const TAB_PRACTICE = 'practice';
+
+const ALL_TIERS = ['Grandmaster', 'Master', 'Diamond', 'Platinum', 'Gold', 'Silver', 'Bronze'];
 
 const LeaderboardPage = () => {
     const { user } = useAuth();
     const [activeTab,       setActiveTab]       = useState(TAB_MULTI);
     const [entries,         setEntries]         = useState([]);
     const [practiceEntries, setPracticeEntries] = useState([]);
+    const [leagueEntries,   setLeagueEntries]   = useState([]);
+    const [selectedTier,    setSelectedTier]    = useState('Gold');
     const [loading,         setLoading]         = useState(true);
     const [error,           setError]           = useState(null);
 
@@ -49,6 +54,24 @@ const LeaderboardPage = () => {
         })();
     }, [activeTab]);
 
+    // ── Load leagues leaderboard ──────────────────────────────────────────
+    useEffect(() => {
+        if (activeTab !== TAB_LEAGUES) return;
+        (async () => {
+            setLoading(true);
+            try {
+                const res = await fetch(backendUrl(`/api/users/leaderboard/tier/${selectedTier}`));
+                if (!res.ok) throw new Error('Failed to load league');
+                const data = await res.json();
+                setLeagueEntries(data);
+            } catch (err) {
+                console.error(err);
+            } finally {
+                setLoading(false);
+            }
+        })();
+    }, [activeTab, selectedTier]);
+
     if (loading) {
         return (
             <div className="lb-page">
@@ -84,13 +107,19 @@ const LeaderboardPage = () => {
                     className={`lb-tab${activeTab === TAB_MULTI ? ' lb-tab--active' : ''}`}
                     onClick={() => setActiveTab(TAB_MULTI)}
                 >
-                    ⚔️ Multiplayer
+                    🌍 Global
+                </button>
+                <button
+                    className={`lb-tab${activeTab === TAB_LEAGUES ? ' lb-tab--active' : ''}`}
+                    onClick={() => setActiveTab(TAB_LEAGUES)}
+                >
+                    🛡️ Leagues
                 </button>
                 <button
                     className={`lb-tab${activeTab === TAB_PRACTICE ? ' lb-tab--active' : ''}`}
                     onClick={() => setActiveTab(TAB_PRACTICE)}
                 >
-                    📈 Practice Mode
+                    📈 Practice
                 </button>
             </div>
 
@@ -137,6 +166,70 @@ const LeaderboardPage = () => {
                             {entries.length === 0 && (
                                 <tr>
                                     <td colSpan={5} className="lb-empty">No players yet. Be the first!</td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            )}
+
+            {/* ── Leagues leaderboard table ── */}
+            {activeTab === TAB_LEAGUES && (
+                <div className="lb-table-wrapper">
+                    <div className="lb-tier-selector">
+                        {ALL_TIERS.map(tier => (
+                            <button
+                                key={tier}
+                                className={`lb-tier-btn ${selectedTier === tier ? 'lb-tier-btn--active' : ''}`}
+                                onClick={() => setSelectedTier(tier)}
+                            >
+                                <TierBadge rating={
+                                    tier === 'Grandmaster' ? 2600 :
+                                    tier === 'Master' ? 2100 :
+                                    tier === 'Diamond' ? 1600 :
+                                    tier === 'Platinum' ? 1200 :
+                                    tier === 'Gold' ? 900 :
+                                    tier === 'Silver' ? 600 : 100
+                                } />
+                            </button>
+                        ))}
+                    </div>
+                    <table className="lb-table">
+                        <thead>
+                            <tr>
+                                <th className="lb-th lb-th-rank">#</th>
+                                <th className="lb-th lb-th-user">Trader</th>
+                                <th className="lb-th lb-th-rating">Rating</th>
+                                <th className="lb-th lb-th-matches">Matches</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {leagueEntries.map((e, i) => {
+                                const isMe = user && String(e.userId) === String(user.id);
+                                return (
+                                    <tr
+                                        key={e.userId}
+                                        className={`lb-row ${isMe ? 'lb-row-me' : ''} ${i < 3 ? `lb-top-${i + 1}` : ''}`}
+                                    >
+                                        <td className="lb-cell lb-cell-rank">
+                                            <RankBadge rank={i + 1} />
+                                        </td>
+                                        <td className="lb-cell lb-cell-user">
+                                            <span className="lb-username">{e.username}</span>
+                                            {isMe && <span className="lb-you-tag">YOU</span>}
+                                        </td>
+                                        <td className="lb-cell lb-cell-rating">
+                                            <span className="lb-rating-value">{e.rating}</span>
+                                        </td>
+                                        <td className="lb-cell lb-cell-matches">
+                                            {e.totalMatches}
+                                        </td>
+                                    </tr>
+                                );
+                            })}
+                            {leagueEntries.length === 0 && (
+                                <tr>
+                                    <td colSpan={4} className="lb-empty">No players in this league yet.</td>
                                 </tr>
                             )}
                         </tbody>
