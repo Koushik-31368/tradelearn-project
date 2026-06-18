@@ -9,7 +9,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
-import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.stereotype.Controller;
 
@@ -386,33 +385,6 @@ public class GameWebSocketHandler {
                 }
             }
         }
-    }
-
-    // ===== HELPERS =====
-
-    @SuppressWarnings("unused")
-    private GameStateSnapshot buildGameState(Game game) {
-        GameStateSnapshot snapshot = new GameStateSnapshot();
-
-        MatchTradeService.PlayerPosition p1 = matchTradeService.getPlayerPosition(
-                game.getId(), game.getCreator().getId(), game.getStartingBalance()
-        );
-        snapshot.player1 = new PlayerStateSnapshot(p1);
-
-        if (game.getOpponent() != null) {
-            MatchTradeService.PlayerPosition p2 = matchTradeService.getPlayerPosition(
-                    game.getId(), game.getOpponent().getId(), game.getStartingBalance()
-            );
-            snapshot.player2 = new PlayerStateSnapshot(p2);
-        }
-
-        return snapshot;
-    }
-
-    @MessageMapping("/hello")
-    @SendTo("/topic/greetings")
-    public String hello(String msg) {
-        return "Hello from server";
     }
 
     // ===== TRADE PAYLOAD VALIDATION =====

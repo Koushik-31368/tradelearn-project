@@ -1,6 +1,4 @@
-
 package com.tradelearn.server.controller;
-
 
 import java.util.Comparator;
 import java.util.List;
@@ -73,16 +71,6 @@ public class LeaderboardController {
         return ResponseEntity.ok(dtos);
     }
 
-    @GetMapping("/leaderboard/all")
-    public ResponseEntity<List<LeaderboardDTO>> getAllLeaderboard() {
-	List<User> allUsers = userRepository.findAllByOrderByRatingDesc();
-
-	List<LeaderboardDTO> dtos = allUsers.stream()
-		.map(u -> new LeaderboardDTO(u, rankService.getRankTier(u.getRating())))
-		.collect(Collectors.toList());
-
-	return ResponseEntity.ok(dtos);
-    }
 
     // ================= PROFILE =================
 

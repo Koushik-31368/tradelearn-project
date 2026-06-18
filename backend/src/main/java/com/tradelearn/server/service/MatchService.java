@@ -90,12 +90,7 @@ public class MatchService {
     private final PositionSnapshotStore positionStore;
     private final TradeRateLimiter rateLimiter;
     private final GameMetricsService metrics;
-    // Retained for Spring bean initialization ordering — ensures degradation manager
-    // is wired before the match lifecycle begins, even if not called from this class directly.
-    @SuppressWarnings("unused")
-    private final GracefulDegradationManager degradationManager;
     // Optional — null when redis.enabled is not set (MVP / no-Redis deployment).
-    // Injected via setter so the main constructor stays simple.
     @Autowired(required = false)
     private StringRedisTemplate redis;
     private final QuestService questService;
@@ -111,7 +106,6 @@ public class MatchService {
                         PositionSnapshotStore positionStore,
                         TradeRateLimiter rateLimiter,
                         GameMetricsService metrics,
-                        GracefulDegradationManager degradationManager,
                         @Lazy QuestService questService) {
         this.gameRepository = gameRepository;
         this.userRepository = userRepository;
@@ -124,10 +118,9 @@ public class MatchService {
         this.positionStore = positionStore;
         this.rateLimiter = rateLimiter;
         this.metrics = metrics;
-        this.degradationManager = degradationManager;
-        // redis is injected via @Autowired(required=false) setter — not set here
         this.questService = questService;
     }
+
 
     /**
      * Request a rematch for a finished/abandoned game.

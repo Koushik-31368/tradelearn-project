@@ -1,6 +1,4 @@
-
-
-    package com.tradelearn.server.controller;
+package com.tradelearn.server.controller;
 
 import java.util.List;
 import java.util.Map;
