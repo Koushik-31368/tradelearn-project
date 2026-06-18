@@ -5,6 +5,7 @@ import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -59,7 +60,9 @@ public class CrashRecoveryService {
     private final RoomManager roomManager;
     private final MatchSchedulerService schedulerService;
     private final CandleService candleService;
-    private final StringRedisTemplate redis;
+    // Optional — null when redis.enabled is not set (MVP / no-Redis deployment).
+    @Autowired(required = false)
+    private StringRedisTemplate redis;
     private final GracefulDegradationManager degradationManager;
 
     private volatile int recoveredGames = 0;
@@ -79,7 +82,6 @@ public class CrashRecoveryService {
                                 RoomManager roomManager,
                                 MatchSchedulerService schedulerService,
                                 CandleService candleService,
-                                StringRedisTemplate redis,
                                 GracefulDegradationManager degradationManager) {
         this.gameRepository = gameRepository;
         this.tradeRepository = tradeRepository;
@@ -87,7 +89,7 @@ public class CrashRecoveryService {
         this.roomManager = roomManager;
         this.schedulerService = schedulerService;
         this.candleService = candleService;
-        this.redis = redis;
+        // redis injected via @Autowired(required=false) — not set here
         this.degradationManager = degradationManager;
     }
 
@@ -196,6 +198,7 @@ public class CrashRecoveryService {
     @Scheduled(fixedDelay = 5_000)
     public void probeRedis() {
         if (!startupComplete) return;
+        if (redis == null) return; // Redis not configured — skip probe
 
         try {
             redis.opsForValue().get("tl:health:probe");

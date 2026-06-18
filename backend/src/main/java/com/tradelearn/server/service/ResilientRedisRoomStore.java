@@ -8,6 +8,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.redis.RedisConnectionFailureException;
 import org.springframework.stereotype.Service;
 
@@ -39,6 +40,7 @@ import jakarta.annotation.PostConstruct;
  * Shadow maps are {@link ConcurrentHashMap}. WAL is a CHM of pending ops.
  */
 @Service
+@ConditionalOnProperty(name = "redis.enabled", havingValue = "true", matchIfMissing = false)
 public class ResilientRedisRoomStore {
 
     private static final Logger log = LoggerFactory.getLogger(ResilientRedisRoomStore.class);
