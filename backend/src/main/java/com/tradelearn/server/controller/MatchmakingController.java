@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.tradelearn.server.dto.PlayerTicket;
@@ -34,6 +35,7 @@ import com.tradelearn.server.service.MatchmakingService;
  */
 @RestController
 @RequestMapping("/api/matchmaking")
+@ConditionalOnProperty(name = "redis.enabled", havingValue = "true", matchIfMissing = false)
 public class MatchmakingController {
 
     private final MatchmakingService matchmakingService;

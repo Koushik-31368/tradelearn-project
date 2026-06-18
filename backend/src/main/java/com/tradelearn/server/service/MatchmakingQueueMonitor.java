@@ -2,11 +2,13 @@ package com.tradelearn.server.service;
 
 import jakarta.annotation.PostConstruct;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import io.micrometer.core.instrument.MeterRegistry;
 
 @Component
+@ConditionalOnProperty(name = "redis.enabled", havingValue = "true", matchIfMissing = false)
 public class MatchmakingQueueMonitor {
     private final QueueSizeProvider queueSizeProvider;
     private final MeterRegistry registry;
