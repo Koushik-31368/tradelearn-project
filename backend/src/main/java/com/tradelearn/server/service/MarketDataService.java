@@ -1,7 +1,6 @@
 package com.tradelearn.server.service;
 
 import com.tradelearn.server.dto.Candle;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -13,12 +12,11 @@ import java.util.concurrent.ConcurrentHashMap;
 public class MarketDataService {
 
     private final MarketDataProvider provider;
-    
+
     // Simple in-memory cache: "SYMBOL_START_END" -> List<Candle>
     private final Map<String, List<Candle>> cache = new ConcurrentHashMap<>();
 
-    @Autowired
-    public MarketDataService(YahooFinanceProvider provider) {
+    public MarketDataService(MarketDataProvider provider) {
         this.provider = provider;
     }
 

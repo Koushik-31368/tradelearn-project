@@ -8,7 +8,7 @@ import RegisterPage from './pages/RegisterPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import LobbyPage from './pages/LobbyPage';
 import GamePage from './pages/GamePage';
-import SimulatorPage from './pages/SimulatorPage'; // 1. Import
+import SimulatorPage from './pages/SimulatorPage';
 import PracticePage from './pages/PracticePage';
 import MissionSelectionPage from './pages/MissionSelectionPage';
 import MissionDashboard from './components/simulator/MissionDashboard';
