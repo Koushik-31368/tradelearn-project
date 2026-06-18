@@ -5,6 +5,7 @@ import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.tradelearn.server.service.MarketDataService;
+import java.time.LocalDate;
 
 /**
  * REST controller that exposes historical market data for Practice Mode.
@@ -50,37 +52,34 @@ public class MarketController {
     @GetMapping("/history")
     public ResponseEntity<?> getMarketHistory(
             @RequestParam String symbol,
-            @RequestParam(required = false) Long start,
-            @RequestParam(required = false) Long end) {
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate start,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate end) {
 
         if (symbol == null || symbol.isBlank()) {
             return ResponseEntity.badRequest().body(Map.of("error", "symbol parameter is required"));
         }
 
-        String clean = symbol.trim().toUpperCase().replaceAll("[^A-Z0-9]", "");
-        if (clean.isEmpty()) {
+        String querySymbol = symbol.trim().toUpperCase().replaceAll("[^A-Z0-9.]", "");
+        if (querySymbol.isEmpty()) {
             return ResponseEntity.badRequest().body(Map.of("error", "invalid symbol"));
         }
 
-        // Validate timestamps when provided
-        if ((start == null) != (end == null)) {
-            return ResponseEntity.badRequest()
-                    .body(Map.of("error", "Both start and end must be provided together"));
-        }
-        if (start != null && end != null && end <= start) {
-            return ResponseEntity.badRequest()
-                    .body(Map.of("error", "end must be greater than start"));
-        }
-
         try {
-            java.time.LocalDate startDate = start != null ? java.time.Instant.ofEpochMilli(start).atZone(java.time.ZoneId.systemDefault()).toLocalDate() : java.time.LocalDate.now().minusYears(1);
-            java.time.LocalDate endDate = end != null ? java.time.Instant.ofEpochMilli(end).atZone(java.time.ZoneId.systemDefault()).toLocalDate() : java.time.LocalDate.now();
-            List<com.tradelearn.server.dto.Candle> candles = marketDataService.getHistoricalData(clean, startDate, endDate);
+            // Append .NS if it's a common Indian stock without suffix for Yahoo Finance
+            if (!querySymbol.contains(".") && isIndianStock(querySymbol)) {
+                querySymbol += ".NS";
+            }
+            
+            List<com.tradelearn.server.dto.Candle> candles = marketDataService.getHistoricalData(querySymbol, start, end);
             return ResponseEntity.ok(candles);
-        } catch (RuntimeException e) {
-            log.warn("[MarketController] History request failed for '{}': {}", clean, e.getMessage());
+        } catch (Exception e) {
+            log.warn("[MarketController] History request failed for '{}': {}", querySymbol, e.getMessage());
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
+    }
+    
+    private boolean isIndianStock(String symbol) {
+        return List.of("TCS", "RELIANCE", "INFY", "HDFCBANK", "SBIN", "ITC", "WIPRO", "MARUTI", "KOTAKBANK", "LT", "AXISBANK", "HINDUNILVR", "TATASTEEL", "BHARTIARTL").contains(symbol);
     }
 
     /**

@@ -10,6 +10,8 @@ import org.springframework.stereotype.Service;
 
 import jakarta.annotation.PostConstruct;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
 /**
  * Centralised degradation state machine that coordinates all disaster
  * recovery components.
@@ -64,14 +66,15 @@ public class GracefulDegradationManager {
     // ===================== DEPENDENCIES =====================
 
     private final DatabaseFailoverHandler dbFailover;
+    
+    @Autowired(required = false)
     @SuppressWarnings("unused")
-    private final ResilientRedisRoomStore resilientRedis;
+    private ResilientRedisRoomStore resilientRedis;
+    
     private volatile GameFreezeService freezeService;
 
-    public GracefulDegradationManager(DatabaseFailoverHandler dbFailover,
-                                      ResilientRedisRoomStore resilientRedis) {
+    public GracefulDegradationManager(DatabaseFailoverHandler dbFailover) {
         this.dbFailover = dbFailover;
-        this.resilientRedis = resilientRedis;
     }
 
     @PostConstruct
