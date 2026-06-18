@@ -20,6 +20,7 @@ public class YahooFinanceProvider implements MarketDataProvider {
     }
 
     @Override
+    @SuppressWarnings("null")
     public List<Candle> getHistoricalData(String symbol, LocalDate start, LocalDate end) {
         long period1 = start.atStartOfDay(ZoneOffset.UTC).toEpochSecond();
         long period2 = end.atStartOfDay(ZoneOffset.UTC).toEpochSecond();
