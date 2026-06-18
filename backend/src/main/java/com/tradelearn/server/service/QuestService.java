@@ -37,6 +37,7 @@ public class QuestService {
     }
 
     @Transactional
+    @SuppressWarnings("null")
     public List<QuestDTO> getTodayQuests(Long userId) {
         Date today = Date.valueOf(LocalDate.now());
         User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
@@ -76,6 +77,7 @@ public class QuestService {
     }
 
     @Transactional
+    @SuppressWarnings("null")
     public List<ChallengeDTO> getThisWeekChallenges(Long userId) {
         LocalDate startOfWeekLocal = LocalDate.now().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
         Date startOfWeek = Date.valueOf(startOfWeekLocal);
@@ -118,6 +120,7 @@ public class QuestService {
     }
 
     @Transactional
+    @SuppressWarnings("null")
     public void updateQuestProgress(Long userId, String questType, int amount) {
         Date today = Date.valueOf(LocalDate.now());
         User user = userRepository.findById(userId).orElse(null);
@@ -148,6 +151,7 @@ public class QuestService {
     }
 
     @Transactional
+    @SuppressWarnings("null")
     public void updateChallengeProgress(Long userId, String challengeType, int amount) {
         LocalDate startOfWeekLocal = LocalDate.now().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
         Date startOfWeek = Date.valueOf(startOfWeekLocal);

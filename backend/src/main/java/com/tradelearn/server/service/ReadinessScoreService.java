@@ -14,6 +14,7 @@ public class ReadinessScoreService {
     @Autowired
     private AnalyticsService analyticsService;
 
+    @SuppressWarnings("unchecked")
     public Map<String, Object> evaluateReadiness(Long userId) {
         Map<String, Object> baseAnalytics = analyticsService.getUserAnalytics(userId);
         

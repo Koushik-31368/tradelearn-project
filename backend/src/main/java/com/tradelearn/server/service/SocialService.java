@@ -7,7 +7,6 @@ import com.tradelearn.server.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class SocialService {
@@ -35,6 +34,7 @@ public class SocialService {
         friendshipRepository.save(friendship);
     }
 
+    @SuppressWarnings("null")
     public void acceptRequest(User user, Long requestId) throws Exception {
         Friendship friendship = friendshipRepository.findById(requestId)
             .orElseThrow(() -> new Exception("Request not found"));
@@ -47,6 +47,7 @@ public class SocialService {
         friendshipRepository.save(friendship);
     }
 
+    @SuppressWarnings("null")
     public void rejectRequest(User user, Long requestId) throws Exception {
         Friendship friendship = friendshipRepository.findById(requestId)
             .orElseThrow(() -> new Exception("Request not found"));
