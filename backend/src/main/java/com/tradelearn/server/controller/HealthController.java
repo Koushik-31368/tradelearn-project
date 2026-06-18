@@ -12,9 +12,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.tradelearn.server.config.WebSocketEventListener;
-import com.tradelearn.server.service.MatchSchedulerService;
-import com.tradelearn.server.service.RoomManager;
+import com.tradelearn.server.websocket.config.WebSocketEventListener;
+import com.tradelearn.server.infrastructure.scheduling.MatchSchedulerService;
+import com.tradelearn.server.infrastructure.redis.room.RoomManager;
 
 /**
  * Production health and diagnostics endpoint.

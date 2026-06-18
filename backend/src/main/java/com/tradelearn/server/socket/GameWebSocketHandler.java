@@ -12,20 +12,20 @@ import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.stereotype.Controller;
 
-import com.tradelearn.server.config.WebSocketEventListener;
+import com.tradelearn.server.websocket.config.WebSocketEventListener;
 import com.tradelearn.server.dto.MatchTradeRequest;
 import com.tradelearn.server.model.Game;
 import com.tradelearn.server.model.Trade;
 import com.tradelearn.server.repository.GameRepository;
 import com.tradelearn.server.security.WebSocketChannelInterceptor;
-import com.tradelearn.server.service.GameFreezeService;
-import com.tradelearn.server.service.GameMetricsService;
-import com.tradelearn.server.service.GracefulDegradationManager;
+import com.tradelearn.server.infrastructure.resilience.GameFreezeService;
+import com.tradelearn.server.infrastructure.pipeline.GameMetricsService;
+import com.tradelearn.server.infrastructure.resilience.GracefulDegradationManager;
 import com.tradelearn.server.service.MatchTradeService;
-import com.tradelearn.server.service.PositionSnapshotStore;
-import com.tradelearn.server.service.RoomManager;
-import com.tradelearn.server.service.TradeProcessingPipeline;
-import com.tradelearn.server.service.TradeRateLimiter;
+import com.tradelearn.server.infrastructure.redis.store.PositionSnapshotStore;
+import com.tradelearn.server.infrastructure.redis.room.RoomManager;
+import com.tradelearn.server.infrastructure.ratelimit.TradeProcessingPipeline;
+import com.tradelearn.server.infrastructure.ratelimit.TradeRateLimiter;
 import com.tradelearn.server.util.GameLogger;
 
 /**

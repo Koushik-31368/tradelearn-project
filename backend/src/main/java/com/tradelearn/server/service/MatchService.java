@@ -1,5 +1,12 @@
 package com.tradelearn.server.service;
 
+import com.tradelearn.server.infrastructure.scheduling.MatchSchedulerService;
+import com.tradelearn.server.infrastructure.redis.store.PositionSnapshotStore;
+import com.tradelearn.server.infrastructure.ratelimit.TradeRateLimiter;
+import com.tradelearn.server.infrastructure.redis.room.RoomManager;
+import com.tradelearn.server.market.service.CandleService;
+import com.tradelearn.server.infrastructure.pipeline.GameMetricsService;
+
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;

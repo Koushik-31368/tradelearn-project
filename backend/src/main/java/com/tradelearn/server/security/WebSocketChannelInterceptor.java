@@ -17,7 +17,7 @@ import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.stereotype.Component;
 
-import com.tradelearn.server.service.RoomManager;
+import com.tradelearn.server.infrastructure.redis.room.RoomManager;
 
 /**
  * STOMP channel interceptor that:
