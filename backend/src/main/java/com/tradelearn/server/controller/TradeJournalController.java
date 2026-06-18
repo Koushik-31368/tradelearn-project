@@ -31,6 +31,7 @@ public class TradeJournalController {
     }
 
     @PostMapping("/reflect/{id}")
+    @SuppressWarnings("null")
     public ResponseEntity<?> submitReflection(@PathVariable Long id, @RequestBody Map<String, String> reflection) {
         Optional<TradeJournal> optJournal = tradeJournalRepository.findById(id);
         if (optJournal.isEmpty()) {
@@ -48,6 +49,7 @@ public class TradeJournalController {
     }
 
     @PostMapping("/close/{id}")
+    @SuppressWarnings("null")
     public ResponseEntity<?> closeJournal(@PathVariable Long id, @RequestBody Map<String, Object> closingData) {
         Optional<TradeJournal> optJournal = tradeJournalRepository.findById(id);
         if (optJournal.isEmpty()) {

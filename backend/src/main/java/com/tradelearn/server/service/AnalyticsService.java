@@ -28,7 +28,6 @@ public class AnalyticsService {
         // --- Core Calculations ---
         int totalTrades = journals.size();
         int wins = 0;
-        int losses = 0;
         double grossProfit = 0;
         double grossLoss = 0;
         
@@ -60,7 +59,6 @@ public class AnalyticsService {
                     grossProfit += j.getPnl();
                     thesisWins.put(category, thesisWins.getOrDefault(category, 0) + 1);
                 } else if (j.getPnl() < 0) {
-                    losses++;
                     grossLoss += Math.abs(j.getPnl());
                 }
             }

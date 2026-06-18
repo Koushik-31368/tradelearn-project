@@ -6,7 +6,7 @@ import com.tradelearn.server.model.User;
 import com.tradelearn.server.repository.GameChallengeRepository;
 import com.tradelearn.server.repository.GameRepository;
 import com.tradelearn.server.repository.UserRepository;
-import com.tradelearn.server.service.MatchmakingService;
+import com.tradelearn.server.service.QuestService;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
@@ -15,8 +15,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Map;
-import java.util.UUID;
-import com.tradelearn.server.service.QuestService;
 
 @Controller
 public class ChallengeWebSocketController {
@@ -41,7 +39,9 @@ public class ChallengeWebSocketController {
 
     @MessageMapping("/challenge.send")
     @Transactional
+    @SuppressWarnings({"null", "unchecked"})
     public void sendChallenge(@Payload Map<String, Object> payload, SimpMessageHeaderAccessor headerAccessor) {
+        if (headerAccessor.getUser() == null) return;
         String challengerUsername = headerAccessor.getUser().getName();
         String challengedUsername = (String) payload.get("challengedUsername");
 
@@ -75,7 +75,9 @@ public class ChallengeWebSocketController {
 
     @MessageMapping("/challenge.respond")
     @Transactional
+    @SuppressWarnings({"null", "unchecked"})
     public void respondChallenge(@Payload Map<String, Object> payload, SimpMessageHeaderAccessor headerAccessor) {
+        if (headerAccessor.getUser() == null) return;
         String responderUsername = headerAccessor.getUser().getName();
         Long challengeId = Long.valueOf(payload.get("challengeId").toString());
         boolean accepted = (Boolean) payload.get("accepted");
