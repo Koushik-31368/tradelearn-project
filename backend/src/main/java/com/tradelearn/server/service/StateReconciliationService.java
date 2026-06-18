@@ -7,6 +7,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -42,6 +43,7 @@ import com.tradelearn.server.repository.GameRepository;
  * The async execution ensures it doesn't block the health-check thread.
  */
 @Service
+@ConditionalOnProperty(name = "redis.enabled", havingValue = "true", matchIfMissing = false)
 public class StateReconciliationService {
 
     private static final Logger log = LoggerFactory.getLogger(StateReconciliationService.class);

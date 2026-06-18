@@ -2,6 +2,7 @@ package com.tradelearn.server.socket;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
 
@@ -29,12 +30,12 @@ public class GameBroadcaster {
     private static final Logger log = LoggerFactory.getLogger(GameBroadcaster.class);
 
     private final SimpMessagingTemplate messagingTemplate;
-    private final RedisWebSocketRelay redisRelay;
+    
+    @Autowired(required = false)
+    private RedisWebSocketRelay redisRelay;
 
-    public GameBroadcaster(SimpMessagingTemplate messagingTemplate,
-                           RedisWebSocketRelay redisRelay) {
+    public GameBroadcaster(SimpMessagingTemplate messagingTemplate) {
         this.messagingTemplate = messagingTemplate;
-        this.redisRelay = redisRelay;
     }
 
     /**
@@ -51,12 +52,14 @@ public class GameBroadcaster {
         messagingTemplate.convertAndSend(destination, payload);
 
         // Cross-instance delivery via Redis
-        try {
-            redisRelay.broadcast(destination, payload);
-        } catch (Exception e) {
-            log.warn("[Broadcaster] Redis relay failed for game {} event {}: {}",
-                    gameId, eventType, e.getMessage());
-            // Local delivery already happened — game still works on this instance
+        if (redisRelay != null) {
+            try {
+                redisRelay.broadcast(destination, payload);
+            } catch (Exception e) {
+                log.warn("[Broadcaster] Redis relay failed for game {} event {}: {}",
+                        gameId, eventType, e.getMessage());
+                // Local delivery already happened — game still works on this instance
+            }
         }
     }
 
@@ -81,10 +84,12 @@ public class GameBroadcaster {
     public void broadcastLobbyUpdate() {
         java.util.Map<String, Object> payload = java.util.Map.of("event", "LOBBY_UPDATED");
         messagingTemplate.convertAndSend("/topic/lobby/refresh", payload);
-        try {
-            redisRelay.broadcast("/topic/lobby/refresh", payload);
-        } catch (Exception e) {
-            log.warn("[Broadcaster] Redis relay failed for lobby refresh: {}", e.getMessage());
+        if (redisRelay != null) {
+            try {
+                redisRelay.broadcast("/topic/lobby/refresh", payload);
+            } catch (Exception e) {
+                log.warn("[Broadcaster] Redis relay failed for lobby refresh: {}", e.getMessage());
+            }
         }
     }
 
@@ -103,11 +108,13 @@ public class GameBroadcaster {
         messagingTemplate.convertAndSend(destination, payload);
 
         // Cross-instance delivery via Redis
-        try {
-            redisRelay.broadcast(destination, payload);
-        } catch (Exception e) {
-            log.warn("[Broadcaster] Redis relay failed for user {} event {}: {}",
-                    userId, eventType, e.getMessage());
+        if (redisRelay != null) {
+            try {
+                redisRelay.broadcast(destination, payload);
+            } catch (Exception e) {
+                log.warn("[Broadcaster] Redis relay failed for user {} event {}: {}",
+                        userId, eventType, e.getMessage());
+            }
         }
     }
 
