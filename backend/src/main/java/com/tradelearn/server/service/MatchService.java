@@ -9,6 +9,7 @@ import java.util.concurrent.ThreadLocalRandom;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
@@ -56,6 +57,7 @@ public class MatchService {
     private static final String REMATCH_PREFIX = "rematch:";
     private static final Duration REMATCH_TTL = Duration.ofSeconds(120);
 
+    @SuppressWarnings("null")
     @Transactional
     public Game createMatch(CreateMatchRequest request) {
         User creator = userRepository.findById(request.getCreatorId())
@@ -92,7 +94,10 @@ public class MatchService {
     // is wired before the match lifecycle begins, even if not called from this class directly.
     @SuppressWarnings("unused")
     private final GracefulDegradationManager degradationManager;
-    private final StringRedisTemplate redis;
+    // Optional — null when redis.enabled is not set (MVP / no-Redis deployment).
+    // Injected via setter so the main constructor stays simple.
+    @Autowired(required = false)
+    private StringRedisTemplate redis;
     private final QuestService questService;
 
     public MatchService(GameRepository gameRepository,
@@ -107,7 +112,6 @@ public class MatchService {
                         TradeRateLimiter rateLimiter,
                         GameMetricsService metrics,
                         GracefulDegradationManager degradationManager,
-                        StringRedisTemplate redis,
                         @Lazy QuestService questService) {
         this.gameRepository = gameRepository;
         this.userRepository = userRepository;
@@ -121,7 +125,7 @@ public class MatchService {
         this.rateLimiter = rateLimiter;
         this.metrics = metrics;
         this.degradationManager = degradationManager;
-        this.redis = redis;
+        // redis is injected via @Autowired(required=false) setter — not set here
         this.questService = questService;
     }
 
@@ -157,7 +161,11 @@ public class MatchService {
 
         long opponentId = isCreator ? oldGame.getOpponent().getId() : oldGame.getCreator().getId();
 
-        // Atomic distributed consent check via Lua
+        // Atomic distributed consent check via Lua (requires Redis)
+        if (redis == null) {
+            return Map.of("status", "UNAVAILABLE",
+                    "message", "Rematch requires Redis — not available in this deployment");
+        }
         String rematchKey = REMATCH_PREFIX + oldGameId;
         DefaultRedisScript<Long> script = new DefaultRedisScript<>(REMATCH_CHECK_LUA, Long.class);
         Long result = redis.execute(script,

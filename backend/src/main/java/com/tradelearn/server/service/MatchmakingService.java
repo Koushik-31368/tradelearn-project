@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
 import com.tradelearn.server.dto.PlayerTicket;
@@ -72,6 +73,7 @@ import jakarta.annotation.PreDestroy;
  * Designed for 10,000+ concurrent users across 5+ backend instances.
  */
 @Service
+@ConditionalOnProperty(name = "redis.enabled", havingValue = "true", matchIfMissing = false)
 public class MatchmakingService implements QueueSizeProvider {
 
     private static final Logger log = LoggerFactory.getLogger(MatchmakingService.class);
