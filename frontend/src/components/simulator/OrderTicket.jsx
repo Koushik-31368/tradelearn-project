@@ -13,8 +13,7 @@ const OrderTicket = ({ stock, portfolio, onTrade }) => {
   const [toast, setToast] = useState(null);
   const toastTimer = useRef(null);
 
-  const holding = stock && portfolio.holdings[stock.symbol];
-  
+
   // Calculate dynamic total and risk
   const price = stock ? stock.price : 0;
   const totalCost = price * quantity;

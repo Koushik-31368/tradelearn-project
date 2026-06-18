@@ -90,6 +90,7 @@ public class MatchService {
     private final GameMetricsService metrics;
     // Retained for Spring bean initialization ordering — ensures degradation manager
     // is wired before the match lifecycle begins, even if not called from this class directly.
+    @SuppressWarnings("unused")
     private final GracefulDegradationManager degradationManager;
     private final StringRedisTemplate redis;
     private final QuestService questService;

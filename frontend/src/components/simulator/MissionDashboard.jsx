@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { MISSIONS } from '../../utils/missions';
 import MissionDebriefModal from './MissionDebriefModal';
-import TradingChart from './TradingChart';
+import CandlestickChart from './CandlestickChart';
 import OrderTicket from './OrderTicket';
 import './SimulatorDashboard.css';
 
@@ -71,6 +71,7 @@ const MissionDashboard = () => {
     }, 2000); // 2 second ticks
 
     return () => clearInterval(timer);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isFinished, mission, balance, position, maxDrawdown]);
 
   const endMission = (forcedFail = false) => {
@@ -128,7 +129,6 @@ const MissionDashboard = () => {
   if (!mission) return null;
 
   const currentPrice = candles.length > 0 ? candles[candles.length - 1].close : 0;
-  const equity = balance + (position.qty * currentPrice);
 
   return (
     <div className="simulator-dashboard">
@@ -153,7 +153,7 @@ const MissionDashboard = () => {
 
       <div className="dashboard-content">
         <div className="dashboard-left">
-          <TradingChart candles={candles} />
+          <CandlestickChart candles={candles} />
         </div>
         
         <div className="dashboard-right">

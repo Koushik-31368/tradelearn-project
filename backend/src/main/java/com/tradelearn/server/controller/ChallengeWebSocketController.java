@@ -39,7 +39,7 @@ public class ChallengeWebSocketController {
 
     @MessageMapping("/challenge.send")
     @Transactional
-    @SuppressWarnings({"null", "unchecked"})
+    @SuppressWarnings("null")
     public void sendChallenge(@Payload Map<String, Object> payload, SimpMessageHeaderAccessor headerAccessor) {
         if (headerAccessor.getUser() == null) return;
         String challengerUsername = headerAccessor.getUser().getName();
@@ -75,7 +75,7 @@ public class ChallengeWebSocketController {
 
     @MessageMapping("/challenge.respond")
     @Transactional
-    @SuppressWarnings({"null", "unchecked"})
+    @SuppressWarnings("null")
     public void respondChallenge(@Payload Map<String, Object> payload, SimpMessageHeaderAccessor headerAccessor) {
         if (headerAccessor.getUser() == null) return;
         String responderUsername = headerAccessor.getUser().getName();
