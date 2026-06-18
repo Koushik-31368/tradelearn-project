@@ -24,10 +24,10 @@ import com.tradelearn.server.model.MatchStats;
 import com.tradelearn.server.model.Trade;
 import com.tradelearn.server.model.User;
 import com.tradelearn.server.repository.MatchStatsRepository;
-import com.tradelearn.server.service.CandleService;
+import com.tradelearn.server.market.service.CandleService;
 import com.tradelearn.server.service.MatchService;
 import com.tradelearn.server.service.MatchTradeService;
-import com.tradelearn.server.service.RoomManager;
+import com.tradelearn.server.infrastructure.redis.room.RoomManager;
 
 import jakarta.validation.Valid;
 
