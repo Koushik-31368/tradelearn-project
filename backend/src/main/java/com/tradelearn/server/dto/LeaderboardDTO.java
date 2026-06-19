@@ -1,6 +1,6 @@
 package com.tradelearn.server.dto;
 
-import com.tradelearn.server.model.User;
+import com.tradelearn.server.user.model.User;
 
 public class LeaderboardDTO {
     private String username;

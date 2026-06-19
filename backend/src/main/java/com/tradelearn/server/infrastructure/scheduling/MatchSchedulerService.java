@@ -6,8 +6,8 @@ import com.tradelearn.server.infrastructure.redis.room.RoomManager;
 import com.tradelearn.server.market.service.CandleService;
 import com.tradelearn.server.infrastructure.resilience.GameFreezeService;
 import com.tradelearn.server.infrastructure.pipeline.GameMetricsService;
-import com.tradelearn.server.service.MatchService;
-import com.tradelearn.server.service.MatchTradeService;
+import com.tradelearn.server.game.service.MatchService;
+import com.tradelearn.server.game.service.MatchTradeService;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -27,18 +27,18 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
-import com.tradelearn.server.model.Game;
-import com.tradelearn.server.model.MatchStats;
-import com.tradelearn.server.model.Trade;
-import com.tradelearn.server.model.User;
-import com.tradelearn.server.repository.GameRepository;
-import com.tradelearn.server.repository.MatchStatsRepository;
-import com.tradelearn.server.repository.TradeRepository;
-import com.tradelearn.server.repository.UserRepository;
-import com.tradelearn.server.socket.GameBroadcaster;
-import com.tradelearn.server.util.EloUtil;
-import com.tradelearn.server.util.GameLogger;
-import com.tradelearn.server.util.ScoringUtil;
+import com.tradelearn.server.game.model.Game;
+import com.tradelearn.server.game.model.MatchStats;
+import com.tradelearn.server.game.model.Trade;
+import com.tradelearn.server.user.model.User;
+import com.tradelearn.server.game.repository.GameRepository;
+import com.tradelearn.server.game.repository.MatchStatsRepository;
+import com.tradelearn.server.game.repository.TradeRepository;
+import com.tradelearn.server.user.repository.UserRepository;
+import com.tradelearn.server.websocket.GameBroadcaster;
+import com.tradelearn.server.common.util.EloUtil;
+import com.tradelearn.server.common.util.GameLogger;
+import com.tradelearn.server.common.util.ScoringUtil;
 
 /**
  * Manages per-game scheduled candle progression.

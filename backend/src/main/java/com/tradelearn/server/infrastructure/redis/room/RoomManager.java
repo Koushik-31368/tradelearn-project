@@ -1,7 +1,7 @@
 package com.tradelearn.server.infrastructure.redis.room;
 
 import com.tradelearn.server.infrastructure.scheduling.MatchSchedulerService;
-import com.tradelearn.server.service.MatchService;
+import com.tradelearn.server.game.service.MatchService;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -16,7 +16,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.tradelearn.server.util.GameLogger;
+import com.tradelearn.server.common.util.GameLogger;
 
 /**
  * Centralised room state manager — cluster-safe via {@link RedisRoomStore}.

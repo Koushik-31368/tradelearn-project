@@ -14,8 +14,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.tradelearn.server.dto.PlayerTicket;
-import com.tradelearn.server.model.Game;
-import com.tradelearn.server.model.User;
+import com.tradelearn.server.game.model.Game;
+import com.tradelearn.server.user.model.User;
 import com.tradelearn.server.matchmaking.service.MatchmakingService;
 
 /**

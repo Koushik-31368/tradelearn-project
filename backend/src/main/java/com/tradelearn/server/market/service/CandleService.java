@@ -11,8 +11,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.tradelearn.server.model.Game;
-import com.tradelearn.server.repository.GameRepository;
+import com.tradelearn.server.game.model.Game;
+import com.tradelearn.server.game.repository.GameRepository;
 
 /**
  * Manages server-authoritative candle data for 1v1 matches.

@@ -14,15 +14,15 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.socket.messaging.SessionConnectEvent;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 
-import com.tradelearn.server.model.Game;
-import com.tradelearn.server.repository.GameRepository;
+import com.tradelearn.server.game.model.Game;
+import com.tradelearn.server.game.repository.GameRepository;
 import com.tradelearn.server.market.service.CandleService;
 import com.tradelearn.server.infrastructure.pipeline.GameMetricsService;
 import com.tradelearn.server.infrastructure.scheduling.MatchSchedulerService;
-import com.tradelearn.server.service.MatchService;
+import com.tradelearn.server.game.service.MatchService;
 import com.tradelearn.server.infrastructure.redis.store.PositionSnapshotStore;
 import com.tradelearn.server.infrastructure.redis.room.RoomManager;
-import com.tradelearn.server.socket.GameBroadcaster;
+import com.tradelearn.server.websocket.GameBroadcaster;
 
 /**
  * Listens for WebSocket connect/disconnect events.

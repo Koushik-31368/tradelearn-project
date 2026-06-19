@@ -1,6 +1,6 @@
 package com.tradelearn.server.matchmaking.service;
 
-import com.tradelearn.server.service.MatchService;
+import com.tradelearn.server.game.service.MatchService;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -23,8 +23,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
 import com.tradelearn.server.dto.PlayerTicket;
-import com.tradelearn.server.model.Game;
-import com.tradelearn.server.socket.GameBroadcaster;
+import com.tradelearn.server.game.model.Game;
+import com.tradelearn.server.websocket.GameBroadcaster;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
