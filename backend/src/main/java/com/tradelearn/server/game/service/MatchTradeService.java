@@ -1,0 +1,333 @@
+package com.tradelearn.server.game.service;
+
+import com.tradelearn.server.user.model.User;
+import com.tradelearn.server.infrastructure.redis.store.PositionSnapshotStore;
+import com.tradelearn.server.market.service.CandleService;
+import com.tradelearn.server.infrastructure.pipeline.GameMetricsService;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.tradelearn.server.dto.MatchTradeRequest;
+import com.tradelearn.server.common.exception.InvalidGameStateException;
+import com.tradelearn.server.common.exception.TradeValidationException;
+import com.tradelearn.server.game.model.Game;
+import com.tradelearn.server.game.model.Trade;
+import com.tradelearn.server.game.repository.GameRepository;
+import com.tradelearn.server.game.repository.TradeRepository;
+import com.tradelearn.server.common.util.GameLogger;
+
+@Service
+public class MatchTradeService {
+
+    private static final Logger log = LoggerFactory.getLogger(MatchTradeService.class);
+
+    private final TradeRepository tradeRepository;
+    private final GameRepository gameRepository;
+    private final CandleService candleService;
+    private final PositionSnapshotStore positionStore;
+    private final GameMetricsService metrics;
+
+    public MatchTradeService(TradeRepository tradeRepository,
+                             GameRepository gameRepository,
+                             CandleService candleService,
+                             PositionSnapshotStore positionStore,
+                             GameMetricsService metrics) {
+        this.tradeRepository = tradeRepository;
+        this.gameRepository = gameRepository;
+        this.candleService = candleService;
+        this.positionStore = positionStore;
+        this.metrics = metrics;
+    }
+
+    // ==================== PLACE TRADE IN A MATCH ====================
+    // Uses PESSIMISTIC_WRITE lock on the Game row to prevent the
+    // ghost-trade race: a trade arriving during the exact instant
+    // the game transitions to FINISHED will block until the finish
+    // commits, then the status check rejects it cleanly.
+
+    @Transactional
+    public Trade placeTrade(MatchTradeRequest request) {
+        long startNanos = System.nanoTime();
+        GameLogger.setGameContext(request.getGameId());
+        GameLogger.setUserContext(request.getUserId());
+        
+        try {
+            Game game = gameRepository.findByIdForUpdate(request.getGameId())
+                    .orElseThrow(() -> new IllegalArgumentException("Game not found"));
+
+            // ---- Guard: game must be ACTIVE ----
+            if (!"ACTIVE".equals(game.getStatus())) {
+                GameLogger.logTradeRejected(log, request.getGameId(), request.getUserId(), 
+                    request.getType(), request.getQuantity(), "Game is not active");
+                throw new InvalidGameStateException(request.getGameId(), game.getStatus(), "ACTIVE");
+            }
+
+            // ---- Guard: candles must not be exhausted ----
+            if (game.getCurrentCandleIndex() >= game.getTotalCandles()) {
+                GameLogger.logTradeRejected(log, request.getGameId(), request.getUserId(), 
+                    request.getType(), request.getQuantity(), "No more candles");
+                throw new IllegalStateException("No more candles — game should be ended");
+            }
+
+            // ---- Verify the user is a participant ----
+            Long userId = request.getUserId();
+            if (!game.getCreator().getId().equals(userId) &&
+                (game.getOpponent() == null || !game.getOpponent().getId().equals(userId))) {
+                GameLogger.logTradeRejected(log, request.getGameId(), userId, 
+                    request.getType(), request.getQuantity(), "User is not a participant");
+                throw new IllegalArgumentException("User is not a participant in this game");
+            }
+
+            // ---- Validate trade type ----
+            String type = request.getType().toUpperCase();
+            if (!List.of("BUY", "SELL", "SHORT", "COVER").contains(type)) {
+                GameLogger.logTradeRejected(log, request.getGameId(), userId, 
+                    type, request.getQuantity(), "Invalid trade type");
+                throw new IllegalArgumentException("Invalid trade type: " + type);
+            }
+
+            if (request.getQuantity() <= 0) {
+                GameLogger.logTradeRejected(log, request.getGameId(), userId, 
+                    type, request.getQuantity(), "Quantity must be positive");
+                throw new IllegalArgumentException("Quantity must be positive");
+            }
+
+            // ---- Server-authoritative price from CandleService ----
+            double price = candleService.getCurrentPrice(request.getGameId());
+
+            // ---- Validate against player's current position (O(1) snapshot) ----
+            PlayerPosition position = positionStore.getPosition(request.getGameId(), userId);
+            if (position == null) {
+                // Snapshot missing (server restart?) — rebuild from trade replay
+                position = calculatePosition(request.getGameId(), userId, game.getStartingBalance());
+                positionStore.putPosition(request.getGameId(), userId, position);
+            }
+
+            double cost = request.getQuantity() * price;
+
+            switch (type) {
+                case "BUY" -> {
+                    if (position.cash < cost) {
+                        String reason = String.format("Insufficient funds. Have: %.2f, Need: %.2f", position.cash, cost);
+                        GameLogger.logTradeRejected(log, request.getGameId(), userId, type, request.getQuantity(), reason);
+                        throw new TradeValidationException(request.getGameId(), userId, type, request.getQuantity(), reason);
+                    }
+                }
+                case "SELL" -> {
+                    int longShares = position.shares.getOrDefault(request.getSymbol(), 0);
+                    if (longShares < request.getQuantity()) {
+                        String reason = String.format("Insufficient shares. Have: %d, Trying to sell: %d", longShares, request.getQuantity());
+                        GameLogger.logTradeRejected(log, request.getGameId(), userId, type, request.getQuantity(), reason);
+                        throw new TradeValidationException(request.getGameId(), userId, type, request.getQuantity(), reason);
+                    }
+                }
+                case "SHORT" -> {
+                    // Short selling: receive cash upfront, no cash requirement check needed
+                }
+                case "COVER" -> {
+                    int shortShares = position.shortShares.getOrDefault(request.getSymbol(), 0);
+                    if (shortShares < request.getQuantity()) {
+                        String reason = String.format("Insufficient short position. Short: %d, Trying to cover: %d", shortShares, request.getQuantity());
+                        GameLogger.logTradeRejected(log, request.getGameId(), userId, type, request.getQuantity(), reason);
+                        throw new TradeValidationException(request.getGameId(), userId, type, request.getQuantity(), reason);
+                    }
+                    if (position.cash < cost) {
+                        String reason = String.format("Insufficient funds to cover. Have: %.2f, Need: %.2f", position.cash, cost);
+                        GameLogger.logTradeRejected(log, request.getGameId(), userId, type, request.getQuantity(), reason);
+                        throw new TradeValidationException(request.getGameId(), userId, type, request.getQuantity(), reason);
+                    }
+                }
+            }
+
+            // ---- Record the trade with server-side price ----
+            Trade trade = new Trade();
+            trade.setGameId(request.getGameId());
+            trade.setUserId(userId);
+            trade.setSymbol(request.getSymbol());
+            trade.setName(request.getSymbol()); // use symbol as name for match trades
+            trade.setType(type);
+            trade.setQuantity(request.getQuantity());
+            trade.setPrice(price); // server-authoritative
+
+            Trade saved = tradeRepository.save(trade);
+
+            GameLogger.logTradePlaced(log, request.getGameId(), userId, type, 
+                request.getQuantity(), request.getSymbol(), price);
+
+            // Update position snapshot incrementally (O(1) instead of O(n) replay)
+            positionStore.applyTrade(request.getGameId(), userId, type,
+                    request.getSymbol(), request.getQuantity(), price);
+
+            metrics.recordTrade();
+            metrics.recordTradeTime(System.nanoTime() - startNanos);
+
+            return saved;
+            
+        } catch (Exception e) {
+            if (!(e instanceof TradeValidationException)) {
+                GameLogger.logError(log, "placeTrade", request.getGameId(), e, Map.of(
+                    "userId", request.getUserId(),
+                    "type", request.getType(),
+                    "quantity", request.getQuantity(),
+                    "symbol", request.getSymbol()
+                ));
+            }
+            throw e;
+        } finally {
+            GameLogger.clearContext();
+        }
+    }
+
+    // ==================== POSITION TRACKING ====================
+
+    public static class PlayerPosition {
+        public double cash;
+        public Map<String, Integer> shares = new HashMap<>();       // long positions
+        public Map<String, Integer> shortShares = new HashMap<>();  // short positions
+        public Map<String, Double> avgShortPrice = new HashMap<>(); // avg short entry price
+        public Map<String, Double> avgCostBasis = new HashMap<>();  // avg buy price for longs
+
+        // ---- Risk / performance stats ----
+        public double peakEquity;
+        public double maxDrawdown;     // 0.0 – 1.0 (percentage)
+        public int totalTrades;
+        public int profitableTrades;
+    }
+
+    /**
+     * Replays all trades for a player in a game to compute current position
+     * and risk statistics (peak equity, max drawdown, trade counts).
+     */
+    @SuppressWarnings("null")
+    public PlayerPosition calculatePosition(long gameId, long userId, double startingBalance) {
+        List<Trade> trades = tradeRepository.findByGameIdAndUserId(gameId, userId);
+
+        PlayerPosition pos = new PlayerPosition();
+        pos.cash = startingBalance;
+        pos.peakEquity = startingBalance;
+        pos.maxDrawdown = 0.0;
+        pos.totalTrades = 0;
+        pos.profitableTrades = 0;
+
+        for (Trade t : trades) {
+            double cost = t.getQuantity() * t.getPrice();
+            String symbol = t.getSymbol();
+            pos.totalTrades++;
+
+            switch (t.getType().toUpperCase()) {
+                case "BUY" -> {
+                    pos.cash -= cost;
+                    int prevShares = pos.shares.getOrDefault(symbol, 0);
+                    double prevBasis = pos.avgCostBasis.getOrDefault(symbol, 0.0);
+                    int newShares = prevShares + t.getQuantity();
+                    pos.avgCostBasis.put(symbol, newShares > 0 ? (prevBasis * prevShares + cost) / newShares : 0.0);
+                    pos.shares.put(symbol, newShares);
+                }
+                case "SELL" -> {
+                    pos.cash += cost;
+                    double avgBasis = pos.avgCostBasis.getOrDefault(symbol, 0.0);
+                    if (t.getPrice() > avgBasis && avgBasis > 0) {
+                        pos.profitableTrades++;
+                    }
+                    pos.shares.merge(symbol, -t.getQuantity(), Integer::sum);
+                    if (pos.shares.getOrDefault(symbol, 0) <= 0) {
+                        pos.shares.remove(symbol);
+                        pos.avgCostBasis.remove(symbol);
+                    }
+                }
+                case "SHORT" -> {
+                    pos.cash += cost;
+                    int prevShort = pos.shortShares.getOrDefault(symbol, 0);
+                    double prevAvg = pos.avgShortPrice.getOrDefault(symbol, 0.0);
+                    double totalValue = (prevAvg * prevShort) + cost;
+                    int newShort = prevShort + t.getQuantity();
+                    pos.shortShares.put(symbol, newShort);
+                    pos.avgShortPrice.put(symbol, totalValue / newShort);
+                }
+                case "COVER" -> {
+                    pos.cash -= cost;
+                    double avgEntry = pos.avgShortPrice.getOrDefault(symbol, t.getPrice());
+                    // Profit if covered below the entry price
+                    if (t.getPrice() < avgEntry) {
+                        pos.profitableTrades++;
+                    }
+                    int newShort = pos.shortShares.getOrDefault(symbol, 0) - t.getQuantity();
+                    if (newShort <= 0) {
+                        pos.shortShares.remove(symbol);
+                        pos.avgShortPrice.remove(symbol);
+                    } else {
+                        pos.shortShares.put(symbol, newShort);
+                    }
+                }
+            }
+
+            // ---- Update equity tracking after each trade ----
+            // Approximate equity using the trade's price as mark price
+            double equity = snapshotEquity(pos, t.getPrice());
+
+            if (equity > pos.peakEquity) {
+                pos.peakEquity = equity;
+            }
+            if (pos.peakEquity > 0) {
+                double drawdown = (pos.peakEquity - equity) / pos.peakEquity;
+                if (drawdown > pos.maxDrawdown) {
+                    pos.maxDrawdown = drawdown;
+                }
+            }
+        }
+
+        return pos;
+    }
+
+    /**
+     * Quick equity snapshot: cash + longs×price − shorts×price.
+     * Uses a single mark price (good enough for single-symbol matches).
+     */
+    private static double snapshotEquity(PlayerPosition pos, double markPrice) {
+        double equity = pos.cash;
+        for (int qty : pos.shares.values())      equity += qty * markPrice;
+        for (int qty : pos.shortShares.values()) equity -= qty * markPrice;
+        return equity;
+    }
+
+    // ==================== FINAL BALANCE CALCULATION ====================
+
+    /**
+     * Calculates a player's total worth at end of match:
+     * cash + (long shares × current price) - (short shares × current price)
+     */
+    public double calculateFinalBalance(long gameId, long userId,
+                                         double startingBalance, double currentStockPrice) {
+        PlayerPosition pos = positionStore.getPosition(gameId, userId);
+        if (pos == null) {
+            pos = calculatePosition(gameId, userId, startingBalance);
+        }
+        return PositionSnapshotStore.snapshotEquity(pos, currentStockPrice);
+    }
+
+    // ==================== QUERIES ====================
+
+    public List<Trade> getGameTrades(long gameId) {
+        return tradeRepository.findByGameIdOrderByTimestampAsc(gameId);
+    }
+
+    public List<Trade> getPlayerGameTrades(long gameId, long userId) {
+        return tradeRepository.findByGameIdAndUserId(gameId, userId);
+    }
+
+    public PlayerPosition getPlayerPosition(long gameId, long userId, double startingBalance) {
+        PlayerPosition pos = positionStore.getPosition(gameId, userId);
+        if (pos != null) return pos;
+        // Fallback: rebuild from trade replay (server restart scenario)
+        pos = calculatePosition(gameId, userId, startingBalance);
+        positionStore.putPosition(gameId, userId, pos);
+        return pos;
+    }
+}

@@ -2,7 +2,7 @@ package com.tradelearn.server.dto;
 
 import com.tradelearn.server.market.service.CandleService;
 
-import com.tradelearn.server.validation.ValidStockSymbol;
+import com.tradelearn.server.common.validation.ValidStockSymbol;
 
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;

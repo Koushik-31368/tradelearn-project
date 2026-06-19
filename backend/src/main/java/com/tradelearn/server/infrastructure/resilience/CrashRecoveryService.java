@@ -4,7 +4,7 @@ import com.tradelearn.server.infrastructure.scheduling.MatchSchedulerService;
 import com.tradelearn.server.infrastructure.redis.store.PositionSnapshotStore;
 import com.tradelearn.server.infrastructure.redis.room.RoomManager;
 import com.tradelearn.server.market.service.CandleService;
-import com.tradelearn.server.service.MatchTradeService;
+import com.tradelearn.server.game.service.MatchTradeService;
 
 import java.util.List;
 import java.util.Map;
@@ -18,10 +18,10 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import com.tradelearn.server.model.Game;
-import com.tradelearn.server.model.Trade;
-import com.tradelearn.server.repository.GameRepository;
-import com.tradelearn.server.repository.TradeRepository;
+import com.tradelearn.server.game.model.Game;
+import com.tradelearn.server.game.model.Trade;
+import com.tradelearn.server.game.repository.GameRepository;
+import com.tradelearn.server.game.repository.TradeRepository;
 
 /**
  * Crash recovery: runs on application startup to restore interrupted games.

@@ -7,8 +7,21 @@ on:
     branches: [ main ]
 
 jobs:
-  build:
+  # ── Backend: compile + test ───────────────────────────────────────────────
+  backend:
+    name: Backend — Java 21 / Maven
     runs-on: ubuntu-latest
+
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     steps:
       - name: Checkout
@@ -21,13 +34,50 @@ jobs:
           java-version: '21'
           cache: maven
 
-      - name: Build and test (backend)
+      - name: Compile (fail fast, no tests)
         working-directory: backend
-        run: mvn -B -U clean verify
+        run: mvn -B -q clean compile
 
-      - name: Build frontend (optional)
+      - name: Run tests + package
+        working-directory: backend
+        run: mvn -B verify
+        env:
+          # Use in-memory H2 for tests — real DB not needed in CI
+          SPRING_PROFILES_ACTIVE: test
+          REDIS_HOST: localhost
+          REDIS_PORT: 6379
+          # Dummy JWT secret for test profile
+          JWT_SECRET: test-secret-key-for-ci-only-not-used-in-prod
+
+  # ── Frontend: install + test + build ─────────────────────────────────────
+  frontend:
+    name: Frontend — Node 20 / React
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
         working-directory: frontend
-        run: |
-          if [ -f package.json ]; then
-            npm ci && npm run build || true
-          fi
+        run: npm ci
+
+      - name: Run tests
+        working-directory: frontend
+        run: npm test -- --watchAll=false --passWithNoTests
+        env:
+          CI: true
+
+      - name: Build (validate bundle)
+        working-directory: frontend
+        run: npm run build
+        env:
+          # Use a relative base URL for CI builds (no real backend needed)
+          REACT_APP_API_URL: ''

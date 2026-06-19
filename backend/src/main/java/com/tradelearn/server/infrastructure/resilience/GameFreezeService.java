@@ -10,7 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import com.tradelearn.server.socket.GameBroadcaster;
+import com.tradelearn.server.websocket.GameBroadcaster;
 
 import jakarta.annotation.PostConstruct;
 

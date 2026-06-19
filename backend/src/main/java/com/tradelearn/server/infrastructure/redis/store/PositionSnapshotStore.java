@@ -1,6 +1,6 @@
 package com.tradelearn.server.infrastructure.redis.store;
 
-import com.tradelearn.server.service.MatchTradeService;
+import com.tradelearn.server.game.service.MatchTradeService;
 
 import java.util.HashMap;
 import java.util.Map;

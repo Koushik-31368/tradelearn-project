@@ -2,9 +2,9 @@ package com.tradelearn.server.infrastructure.scheduling;
 
 import com.tradelearn.server.infrastructure.redis.room.RoomManager;
 
-import com.tradelearn.server.model.Game;
-import com.tradelearn.server.repository.GameRepository;
-import com.tradelearn.server.socket.GameBroadcaster;
+import com.tradelearn.server.game.model.Game;
+import com.tradelearn.server.game.repository.GameRepository;
+import com.tradelearn.server.websocket.GameBroadcaster;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;

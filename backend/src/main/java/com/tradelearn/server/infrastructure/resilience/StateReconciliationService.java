@@ -15,8 +15,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
-import com.tradelearn.server.model.Game;
-import com.tradelearn.server.repository.GameRepository;
+import com.tradelearn.server.game.model.Game;
+import com.tradelearn.server.game.repository.GameRepository;
 
 /**
  * Reconciles local fallback state with authoritative Redis/DB state

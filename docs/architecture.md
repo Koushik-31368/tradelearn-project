@@ -2,55 +2,160 @@
 
 ## Overview
 
-TradeLearn is a full-stack competitive trading simulation platform built on Java 21 / Spring Boot 3.2 (backend) and React 19 (frontend), communicating over REST and WebSocket.
+TradeLearn is a full-stack competitive trading simulation platform built on Java 21 / Spring Boot 3.2 (backend) and React 19 (frontend), communicating over REST and WebSocket (STOMP/SockJS over Redis Pub/Sub for multi-instance support).
 
 ---
 
-## Layers
+## Backend Domain Package Structure
+
+The backend follows a **domain-driven package layout**. Each domain owns its controllers, services, repositories, and models in one place — making it easy to find, change, and test related code together.
 
 ```
-┌──────────────────────────────────────────────────────────────────┐
-│                       Frontend (React SPA)                       │
-│                                                                  │
-│  pages/          — full-page route components                    │
-│  components/     — reusable UI components (feature-grouped)      │
-│  hooks/          — useGameSocket (STOMP lifecycle manager)       │
-│  context/        — AuthContext (JWT + user state)               │
-│  services/       — marketApi.js (backend HTTP calls)            │
-│  utils/          — api.js, skillTier.js, strategyDetector.js    │
-│  styles/         — theme.css (single design token source)       │
-└──────────────────────────┬──────────────────────────────────────┘
-                           │
-               REST (Axios) │  WebSocket (STOMP/SockJS)
-                           │
-┌──────────────────────────▼──────────────────────────────────────┐
-│                   Backend (Spring Boot)                         │
-│                                                                  │
-│  controller/     — REST endpoints (thin, delegate to service)   │
-│  service/        — business logic (stateless where possible)    │
-│  repository/     — Spring Data JPA (PostgreSQL)                 │
-│  socket/         — WebSocket handlers + GameBroadcaster         │
-│  security/       — JWT filter, WebSocket auth interceptors      │
-│  middleware/     — Rate limiting, CORS headers, correlation ID  │
-│  config/         — Spring beans (Security, WebSocket, Redis)    │
-│  dto/            — Request/response shapes (no entity leakage)  │
-│  exception/      — Custom exceptions + GlobalExceptionHandler   │
-│  util/           — EloUtil, ScoringUtil, GameLogger             │
-│  validation/     — Custom @ValidStockSymbol, @ValidTradeType    │
-└──────────────┬─────────────────────────────┬────────────────────┘
-               │                             │
-        JPA (Hibernate)                Spring Data Redis
-               │                             │
-    ┌──────────▼─────────┐       ┌───────────▼──────────┐
-    │     PostgreSQL      │       │        Redis          │
-    │                     │       │                       │
-    │  users              │       │  room:{gameId}        │
-    │  games              │       │  candle:{gameId}      │
-    │  trades             │       │  position:{gameId}    │
-    │  match_stats        │       │  scheduler:{gameId}   │
-    │  achievements       │       │  rematch:{gameId}     │
-    │  daily_quests       │       │  (Pub/Sub relay)      │
-    └─────────────────────┘       └───────────────────────┘
+com.tradelearn.server/
+│
+├── auth/                     # JWT authentication & Spring Security
+│   ├── config/               #   SecurityConfig
+│   ├── controller/           #   AuthController
+│   └── security/             #   JwtUtil, JwtAuthenticationFilter,
+│                             #   WebSocketAuthInterceptor, ...
+│
+├── game/                     # Multiplayer match engine
+│   ├── controller/           #   MatchController, TradeController
+│   ├── model/                #   Game, Trade, MatchStats, PlayerPosition
+│   ├── repository/           #   GameRepository, TradeRepository, MatchStatsRepository
+│   └── service/
+│       ├── MatchService           (façade — delegates to the three below)
+│       ├── MatchLifecycleService  (create/join/start/cancel)
+│       ├── MatchScoringService    (end/abandon/ELO/rematch)
+│       ├── MatchQueryService      (read-only queries)
+│       ├── MatchTradeService      (trade execution, position snapshots)
+│       └── TradeService           (simulator trade helpers)
+│
+├── market/                   # Yahoo Finance proxy & candle management
+│   ├── controller/           #   MarketDataController
+│   ├── provider/             #   MarketDataProvider (interface), YahooFinanceProvider
+│   └── service/              #   CandleService, HistoricalCandleService,
+│                             #   MarketDataService (LRU-cached, max 200 entries)
+│
+├── matchmaking/              # Distributed Redis-backed ELO matchmaking
+│   ├── controller/           #   MatchmakingController
+│   └── service/              #   MatchmakingService (Redis ZSET + Lua + Redisson lock),
+│                             #   MatchmakingQueueMonitor (Micrometer gauge)
+│
+├── infrastructure/           # Cross-cutting platform concerns
+│   ├── redis/
+│   │   ├── config/           #   RedisConfig
+│   │   ├── room/             #   RoomManager, RedisRoomStore, ResilientRedisRoomStore
+│   │   └── store/            #   PositionSnapshotStore
+│   ├── resilience/           #   CircuitBreakerRegistry, GracefulDegradationManager,
+│   │                         #   GameFreezeService, DatabaseFailoverHandler,
+│   │                         #   CrashRecoveryService, StateReconciliationService
+│   ├── scheduling/           #   MatchSchedulerService, GameCleanupService
+│   ├── ratelimit/            #   TradeRateLimiter, TradeProcessingPipeline
+│   └── pipeline/             #   GameMetricsService
+│
+├── websocket/                # STOMP WebSocket layer
+│   ├── config/               #   WebSocketConfig
+│   ├── GameWebSocketHandler  #   STOMP message routing + auth validation
+│   ├── GameWebSocketController
+│   ├── GameBroadcaster       #   sendToGame(), sendToUser(), broadcastLobbyUpdate()
+│   └── RedisWebSocketRelay   #   Redis Pub/Sub → STOMP broadcast (multi-instance)
+│
+├── user/                     # User account management
+│   ├── controller/           #   UserController
+│   ├── model/                #   User
+│   ├── repository/           #   UserRepository
+│   └── service/              #   UserService
+│
+├── leaderboard/              # Rankings, user profiles
+│   ├── controller/           #   LeaderboardController, PracticeLeaderboardController
+│   ├── model/                #   LeaderboardEntry
+│   ├── repository/           #   LeaderboardRepository
+│   └── service/              #   LeaderboardService, RankService
+│
+├── social/                   # Friends & challenge system
+│   ├── controller/           #   SocialController, ChallengeWebSocketController
+│   ├── model/                #   Friendship, GameChallenge
+│   ├── repository/           #   FriendshipRepository, GameChallengeRepository
+│   └── service/              #   SocialService
+│
+├── quests/                   # Daily quests, weekly challenges, achievements
+│   ├── controller/           #   QuestController, AchievementController
+│   ├── model/                #   DailyQuest, WeeklyChallenge, Achievement, ...
+│   ├── repository/           #   (6 repositories)
+│   └── service/              #   QuestService, QuestCleanupService, AchievementService
+│
+├── simulator/                # Practice mode portfolio simulation
+│   ├── controller/           #   SimulatorController, TradeJournalController
+│   ├── model/                #   Portfolio, Holding, TradeJournal
+│   ├── repository/           #   PortfolioRepository, HoldingRepository, TradeJournalRepository
+│   └── service/              #   SimulatorService
+│
+├── analytics/                # Strategy analysis, backtesting, readiness score
+│   ├── controller/           #   AnalyticsController, StrategyController
+│   └── service/              #   AnalyticsService, BacktestService, ReadinessScoreService
+│
+├── learning/                 # Lesson progress tracking
+│   ├── controller/           #   LearningController
+│   ├── model/                #   UserLessonProgress
+│   ├── repository/           #   UserLessonProgressRepository
+│   └── service/              #   LearningService
+│
+├── common/                   # Shared, domain-agnostic concerns
+│   ├── config/               #   WebConfig (CORS)
+│   ├── controller/           #   HealthController
+│   ├── exception/            #   GlobalExceptionHandler + custom exceptions
+│   ├── middleware/           #   RateLimitFilter, SecurityHeadersFilter, RequestCorrelationFilter
+│   ├── util/                 #   EloUtil, ScoringUtil, GameLogger
+│   └── validation/           #   @ValidStockSymbol, @ValidTradeType validators
+│
+└── dto/                      # Shared request/response DTOs (no entity leakage)
+    # CreateMatchRequest, MatchResult, TradeRequest, Candle, CandleDto, ...
+```
+
+---
+
+## Frontend Feature Structure
+
+```
+frontend/src/
+│
+├── api/                      # HTTP client & domain API modules
+│   ├── client.js             #   Canonical axios instance (auth + error interceptors)
+│   ├── auth.api.js           #   register(), login(), forgotPassword()
+│   ├── game.api.js           #   createMatch(), joinMatch(), matchmakingQueue, ...
+│   ├── leaderboard.api.js    #   getLeaderboard(), getUserProfile(), ...
+│   ├── market.api.js         #   fetchMarketHistory(), fetchSymbols()
+│   ├── user.api.js           #   dailyCheckin(), fetchDailyQuests(), ...
+│   └── marketApi.js          #   Legacy (re-exports from market.api.js)
+│
+├── features/                 # Feature-grouped pages & components
+│   ├── auth/                 #   Login, Register, ForgotPassword, AuthContext
+│   ├── game/                 #   GamePage, MatchResultPage
+│   ├── simulator/            #   SimulatorPage, MissionSelectionPage, MissionDashboard
+│   ├── matchmaking/          #   LobbyPage, CreateGameForm
+│   ├── leaderboard/          #   LeaderboardPage, TierBadge
+│   ├── dashboard/            #   HomePage, ProfilePage, MatchHistoryPage
+│   ├── social/               #   FriendsPanel, ChallengeListener
+│   ├── practice/             #   PracticePage
+│   ├── strategies/           #   StrategiesPage
+│   ├── learn/                #   Learning modules
+│   ├── legal/                #   Terms, Privacy, RiskDisclosure
+│   └── quests/               #   Quest/Achievement UI
+│
+├── layout/                   # Global layout components
+│   └── components/           #   Navbar, Footer, Modal, StockTicker, Hero
+│
+├── hooks/                    # Custom React hooks
+│   └── useGameSocket.js      #   STOMP WebSocket lifecycle manager
+│
+└── utils/                    # Feature-agnostic utilities
+    ├── api.js                #   Legacy bridge → re-exports from api/client.js
+    ├── skillTier.js
+    ├── strategyDetector.js
+    ├── simulatorData.js
+    ├── missions.js
+    └── aiTrader.js
 ```
 
 ---
@@ -59,13 +164,13 @@ TradeLearn is a full-stack competitive trading simulation platform built on Java
 
 ```
 User A creates game (REST POST /api/match)
-    → MatchService.createMatch()
+    → MatchLifecycleService.createMatch()
     → DB: Game{status=WAITING}
     → RoomManager.createRoom()
     → User A is on GamePage, WebSocket connected
 
 User B joins game (REST POST /api/match/{id}/join)
-    → MatchService.joinMatch() [atomic CAS: WAITING→ACTIVE]
+    → MatchLifecycleService.joinMatch() [atomic CAS: WAITING→ACTIVE]
     → @Transactional.afterCommit():
         - RoomManager.joinRoom()
         - CandleService.loadCandles()
@@ -88,7 +193,7 @@ Trade (WebSocket STOMP)
 
 Match ends (time runs out or all candles consumed)
     → MatchSchedulerService triggers endMatch
-    → MatchService.endMatch()
+    → MatchScoringService.endMatch()
     → ScoringUtil.calculate() for both players
     → EloUtil.calculateNewRating() for both players
     → DB: Game{status=FINISHED}, MatchStats saved
@@ -110,6 +215,8 @@ Match ends (time runs out or all candles consumed)
 | `position:{gameId}:{userId}` | 2h | Player position snapshot (equity, drawdown, trades) |
 | `rematch:{gameId}` | 120s | Rematch consent (atomic Lua set-if-absent) |
 | `rl:{userId}` | 1m | Rate limiter token bucket |
+| `matchmaking:queue` | — | ZSET: score=rating, member=userId |
+| `matchmaking:ticket:{userId}` | 180s | Player metadata hash (username, rating, joinTime) |
 
 ---
 
@@ -117,23 +224,30 @@ Match ends (time runs out or all candles consumed)
 
 ### Redis Circuit Breaker (`ResilientRedisRoomStore`)
 
-The `ResilientRedisRoomStore` wraps `RedisRoomStore` with a custom circuit breaker:
-
+Wraps `RedisRoomStore` with a custom circuit breaker:
 - **Closed** → all calls go to Redis normally
-- **Open** (after 5 consecutive failures, 30s cooldown) → fallback to in-memory `shadowRooms` ConcurrentHashMap
+- **Open** (after 5 consecutive failures, 30s cooldown) → fallback to in-memory `shadowRooms`
 - **Half-Open** → probe allowed; success → Close, failure → stay Open
-
-This ensures the multiplayer system can continue serving games during transient Redis outages.
 
 ### Transactional Side Effects (`afterCommit`)
 
-All Redis/WebSocket mutations are registered as `TransactionSynchronization.afterCommit()` hooks. This guarantees:
+All Redis/WebSocket mutations are registered as `TransactionSynchronization.afterCommit()` hooks:
 - Side effects only fire if the DB transaction commits successfully
-- No stale Redis state if DB rolls back (deadlock, validation failure, etc.)
+- No stale Redis state if DB rolls back
 
 ### Trade Processing Pipeline (`TradeProcessingPipeline`)
 
-Trades from WebSocket arrive on STOMP inbound threads (~100µs each) and are immediately submitted to an async `ExecutorService` queue. This prevents slow trade processing from blocking WebSocket thread pools.
+Trades arrive on STOMP inbound threads and are immediately submitted to an async `ExecutorService` queue, preventing slow trade processing from blocking WebSocket thread pools.
+
+### GracefulDegradationManager
+
+Centralised state machine coordinating all disaster recovery:
+```
+NORMAL → DEGRADED_REDIS (Redis down, local fallback)
+NORMAL → DEGRADED_DB (DB down, trades suspended)
+DEGRADED_* + other failure → FROZEN (all games paused)
+FROZEN → RECOVERING → NORMAL (reconciliation)
+```
 
 ---
 
@@ -148,7 +262,7 @@ All REST requests: Authorization: Bearer <jwt>
 WebSocket: token passed as ?token= query param on SockJS URL
 ```
 
-JWT validation happens in two places:
+JWT validation happens in:
 - `JwtAuthenticationFilter` — for REST requests
 - `WebSocketAuthInterceptor` + `WebSocketChannelInterceptor` — for STOMP frames
 

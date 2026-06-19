@@ -5,7 +5,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import SockJS from 'sockjs-client';
 import { Client } from '@stomp/stompjs';
-import { wsBase, getToken } from '../utils/api';
+import { wsBase, getToken } from '../api/api';
 
 /* ──────── public enums ──────── */
 export const SocketState = Object.freeze({

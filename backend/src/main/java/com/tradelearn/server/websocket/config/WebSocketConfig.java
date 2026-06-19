@@ -14,8 +14,8 @@ import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 import org.springframework.web.socket.config.annotation.WebSocketTransportRegistration;
 
-import com.tradelearn.server.security.WebSocketAuthInterceptor;
-import com.tradelearn.server.security.WebSocketChannelInterceptor;
+import com.tradelearn.server.auth.security.WebSocketAuthInterceptor;
+import com.tradelearn.server.auth.security.WebSocketChannelInterceptor;
 
 @Configuration
 @EnableWebSocketMessageBroker
