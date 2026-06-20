@@ -20,4 +20,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     List<User> findTop10ByOrderByRatingDesc();
 
     List<User> findAllByOrderByRatingDesc();
+
+    long countByRatingGreaterThan(int rating);
 }

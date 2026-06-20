@@ -12,6 +12,7 @@ import com.tradelearn.server.user.model.User;
 import com.tradelearn.server.dto.ChallengeDTO;
 import com.tradelearn.server.dto.QuestDTO;
 import com.tradelearn.server.user.repository.UserRepository;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,17 +32,20 @@ public class QuestService {
     private final WeeklyChallengeRepository weeklyChallengeRepository;
     private final UserWeeklyChallengeRepository userWeeklyChallengeRepository;
     private final UserRepository userRepository;
+    private final AchievementService achievementService;
 
     public QuestService(DailyQuestRepository dailyQuestRepository,
                         UserDailyQuestRepository userDailyQuestRepository,
                         WeeklyChallengeRepository weeklyChallengeRepository,
                         UserWeeklyChallengeRepository userWeeklyChallengeRepository,
-                        UserRepository userRepository) {
+                        UserRepository userRepository,
+                        @Lazy AchievementService achievementService) {
         this.dailyQuestRepository = dailyQuestRepository;
         this.userDailyQuestRepository = userDailyQuestRepository;
         this.weeklyChallengeRepository = weeklyChallengeRepository;
         this.userWeeklyChallengeRepository = userWeeklyChallengeRepository;
         this.userRepository = userRepository;
+        this.achievementService = achievementService;
     }
 
     @Transactional
@@ -178,8 +182,13 @@ public class QuestService {
                             userChallenge.setProgress(challenge.getTargetValue());
                             userChallenge.setCompleted(true);
                             user.setXp(user.getXp() + challenge.getXpReward());
-                            // TODO: Add badge reward to UserAchievements if necessary
                             userRepository.save(user);
+                            // Evaluate XP-based achievements after XP grant
+                            achievementService.evaluateAchievements(user, "XP_REACHED", user.getXp());
+                            // Evaluate badge achievements if this challenge has a badge reward
+                            if (challenge.getBadgeReward() != null && !challenge.getBadgeReward().isBlank()) {
+                                achievementService.evaluateAchievements(user, "CHALLENGE_COMPLETED", 1);
+                            }
                         }
                         userWeeklyChallengeRepository.save(userChallenge);
                     }
