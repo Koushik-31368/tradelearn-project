@@ -40,5 +40,14 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "jest": {
+    "moduleNameMapper": {
+      "^react-router-dom$": "<rootDir>/node_modules/react-router-dom/dist/index.js",
+      "^react-router$": "<rootDir>/node_modules/react-router/dist/development/index.js",
+      "^react-router/dom$": "<rootDir>/node_modules/react-router/dist/development/dom-export.js",
+      "^axios$": "<rootDir>/node_modules/axios/dist/node/axios.cjs",
+      "^lightweight-charts$": "<rootDir>/node_modules/lightweight-charts/dist/lightweight-charts.standalone.development.js"
+    }
   }
 }

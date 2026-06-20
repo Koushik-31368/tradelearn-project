@@ -33,7 +33,7 @@ jest.mock('./hooks/useGameSocket', () => ({
 }));
 
 // Mock market API to avoid network calls
-jest.mock('./services/marketApi', () => ({
+jest.mock('./api/market.api.js', () => ({
   fetchMarketHistory: jest.fn().mockResolvedValue([]),
 }));
 
