@@ -17,7 +17,7 @@ import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 import com.tradelearn.server.game.model.Game;
 import com.tradelearn.server.game.repository.GameRepository;
 import com.tradelearn.server.market.service.CandleService;
-import com.tradelearn.server.infrastructure.pipeline.GameMetricsService;
+import com.tradelearn.server.infrastructure.scheduling.GameMetricsService;
 import com.tradelearn.server.infrastructure.scheduling.MatchSchedulerService;
 import com.tradelearn.server.game.service.MatchService;
 import com.tradelearn.server.infrastructure.redis.store.PositionSnapshotStore;
