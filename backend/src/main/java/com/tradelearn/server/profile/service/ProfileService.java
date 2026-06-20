@@ -87,6 +87,7 @@ public class ProfileService {
      * @param userId the target user's database ID
      * @return an {@link Optional} containing the profile, or empty
      */
+    @SuppressWarnings("null")
     public Optional<ProfileResponse> getProfile(Long userId) {
         return userRepository.findById(userId)
                 .map(user -> buildProfile(userId, user));

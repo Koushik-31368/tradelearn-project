@@ -32,6 +32,7 @@ public class UserService {
     }
 
     @Transactional
+    @SuppressWarnings("null")
     public User performDailyCheckin(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
