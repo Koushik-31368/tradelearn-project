@@ -55,7 +55,7 @@ public final class ScoringUtil {
      * −100% → 0, 0% → 50, +100% → 100.
      * Clamped so extreme outliers don't distort the curve.
      */
-    static double profitScore(double finalBalance, double startingBalance) {
+    public static double profitScore(double finalBalance, double startingBalance) {
         if (startingBalance <= 0) return 0;
 
         double profitPct = ((finalBalance - startingBalance) / startingBalance) * 100.0;
@@ -72,7 +72,7 @@ public final class ScoringUtil {
      * maxDrawdown is 0.0–1.0 (percentage).
      * 0% drawdown → 100, 100% drawdown → 0.
      */
-    static double riskScore(double maxDrawdown) {
+    public static double riskScore(double maxDrawdown) {
         double clamped = Math.max(0.0, Math.min(1.0, maxDrawdown));
         return (1.0 - clamped) * 100.0;
     }
@@ -81,7 +81,7 @@ public final class ScoringUtil {
      * Trade accuracy: profitable / total × 100.
      * 0 trades → 0 score (no activity is not rewarded).
      */
-    static double accuracyScore(int totalTrades, int profitableTrades) {
+    public static double accuracyScore(int totalTrades, int profitableTrades) {
         if (totalTrades <= 0) return 0;
         return ((double) profitableTrades / totalTrades) * 100.0;
     }
