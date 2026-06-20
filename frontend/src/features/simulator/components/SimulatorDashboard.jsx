@@ -18,7 +18,7 @@ import {
   getPortfolio,
   getTradeHistory,
   executeDemoTrade,
-} from '../../utils/simulatorData';
+} from '../utils/simulatorData';
 
 import './SimulatorDashboard.css';
 
@@ -52,7 +52,7 @@ const SimulatorDashboard = () => {
 
   // Load historical data for selected symbol (Default to 2020 crash scenario as a test)
   React.useEffect(() => {
-    import('../../services/marketApi').then(({ fetchMarketHistory }) => {
+    import('../../../api/market.api').then(({ fetchMarketHistory }) => {
       // Hardcode COVID crash dates for now until Scenario UI is built in Dashboard
       fetchMarketHistory(selectedSymbol, '2020-02-01', '2020-04-30').then(data => {
         setCandles(data);

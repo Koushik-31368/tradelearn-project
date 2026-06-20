@@ -1,7 +1,8 @@
 // src/pages/HomePage.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { backendUrl } from '../../../api/api';
+import { useAuth } from '../../auth/AuthContext';
+import { backendUrl } from '../../../api/client';
 import DashboardPanel from '../components/DashboardPanel';
 import './HomePage.css';
 
@@ -100,7 +101,7 @@ const HomePage = () => {
     return () => { cancelled = true; };
   }, []);
 
-  const { user } = React.useContext(require('../context/AuthContext').AuthContext);
+  const { user } = useAuth();
 
   if (user) {
     return (

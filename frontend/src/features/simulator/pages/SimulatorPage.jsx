@@ -1,7 +1,7 @@
 // src/pages/SimulatorPage.jsx
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import SimulatorDashboard from '../components/simulator/SimulatorDashboard';
+import SimulatorDashboard from '../components/SimulatorDashboard';
 import { useAuth } from '../../auth/AuthContext';
 
 /**

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { MISSIONS } from '../../utils/missions';
+import { MISSIONS } from '../utils/missions';
 import MissionDebriefModal from './MissionDebriefModal';
 import CandlestickChart from './CandlestickChart';
 import OrderTicket from './OrderTicket';

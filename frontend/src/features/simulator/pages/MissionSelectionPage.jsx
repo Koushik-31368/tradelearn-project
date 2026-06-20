@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MISSIONS } from '../utils/missions';
-import './LearnPage.css'; // Reusing some base styling
+import '../../learn/pages/LearnPage.css'; // Reusing some base styling
 
 const MissionSelectionPage = () => {
   const navigate = useNavigate();

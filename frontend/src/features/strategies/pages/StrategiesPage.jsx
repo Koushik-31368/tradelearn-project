@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import StrategyCard from '../components/strategies/StrategyCard';
-import StrategyDetail from '../components/strategies/StrategyDetail';
+import StrategyCard from '../components/StrategyCard';
+import StrategyDetail from '../components/StrategyDetail';
 import './StrategiesPage.css';
 
 /* ═══════════════════════════════════════

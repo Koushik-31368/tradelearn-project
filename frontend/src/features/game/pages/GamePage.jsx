@@ -5,7 +5,7 @@ import { useAuth } from '../../auth/AuthContext';
 import { backendUrl, authHeaders } from '../../../api/api';
 import StockChart from '../components/StockChart';
 import LiveScoreboard from '../components/LiveScoreboard';
-import useGameSocket, { GamePhase, SocketState } from '../hooks/useGameSocket';
+import useGameSocket, { GamePhase, SocketState } from '../../../hooks/useGameSocket';
 
 // ── Trade Controls sub-component ──
 // Extracted from GamePage to improve readability and testability.

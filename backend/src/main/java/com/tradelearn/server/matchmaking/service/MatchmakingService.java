@@ -22,6 +22,8 @@ import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
+import io.micrometer.core.instrument.MeterRegistry;
+
 import com.tradelearn.server.dto.PlayerTicket;
 import com.tradelearn.server.game.model.Game;
 import com.tradelearn.server.websocket.GameBroadcaster;
@@ -76,7 +78,7 @@ import jakarta.annotation.PreDestroy;
  */
 @Service
 @ConditionalOnProperty(name = "redis.enabled", havingValue = "true", matchIfMissing = false)
-public class MatchmakingService implements QueueSizeProvider {
+public class MatchmakingService {
 
     private static final Logger log = LoggerFactory.getLogger(MatchmakingService.class);
 
@@ -128,17 +130,20 @@ public class MatchmakingService implements QueueSizeProvider {
     private final GameBroadcaster broadcaster;
     private final RedissonClient redisson;
     private final StringRedisTemplate redis;
+    private final MeterRegistry meterRegistry;
 
     private ScheduledExecutorService housekeeper;
 
     public MatchmakingService(MatchService matchService,
                               GameBroadcaster broadcaster,
                               RedissonClient redisson,
-                              StringRedisTemplate redis) {
+                              StringRedisTemplate redis,
+                              MeterRegistry meterRegistry) {
         this.matchService = matchService;
         this.broadcaster = broadcaster;
         this.redisson = redisson;
         this.redis = redis;
+        this.meterRegistry = meterRegistry;
     }
 
     @PostConstruct
@@ -152,6 +157,8 @@ public class MatchmakingService implements QueueSizeProvider {
         housekeeper.scheduleWithFixedDelay(this::expansionSweep, 10, 10, TimeUnit.SECONDS);
         // Remove tickets older than 2 minutes
         housekeeper.scheduleWithFixedDelay(this::cleanupExpired, 30, 30, TimeUnit.SECONDS);
+        // Register Micrometer gauge — absorbed from the former MatchmakingQueueMonitor
+        meterRegistry.gauge("matchmaking.queue.size", this, MatchmakingService::queueSize);
         log.info("[MM] Distributed Redis-backed matchmaking engine started");
     }
 
@@ -225,7 +232,6 @@ public class MatchmakingService implements QueueSizeProvider {
     /**
      * Get the current queue size (global across all instances).
      */
-    @Override
     public int queueSize() {
         Long size = redis.opsForZSet().zCard(QUEUE_KEY);
         return size != null ? size.intValue() : 0;
