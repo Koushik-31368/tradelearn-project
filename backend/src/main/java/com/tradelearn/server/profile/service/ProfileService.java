@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+
 /**
  * Service responsible for assembling a user's public profile.
  *
@@ -192,19 +193,13 @@ public class ProfileService {
 
     /**
      * Compute the 1-based global rank of a user by counting how many users
-     * have a higher rating.
-     *
-     * <p>TODO: Replace with a single SQL COUNT(*) query for O(1) performance
-     * once the user base warrants it.
+     * have a higher rating, using a single SQL COUNT(*) query for O(1) performance.
      */
     @SuppressWarnings("null")
     private int computeRank(Long userId) {
-        List<User> top = userRepository.findAllByOrderByRatingDesc();
-        for (int i = 0; i < top.size(); i++) {
-            if (top.get(i).getId().equals(userId)) {
-                return i + 1;
-            }
-        }
-        return 0;
+        User user = userRepository.findById(userId).orElse(null);
+        if (user == null) return 0;
+        long higherRatedCount = userRepository.countByRatingGreaterThan(user.getRating());
+        return (int) higherRatedCount + 1;
     }
 }
