@@ -1,7 +1,5 @@
 package com.tradelearn.server.simulator.model;
 
-import com.tradelearn.server.user.model.User;
-import com.tradelearn.server.simulator.model.Portfolio;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 

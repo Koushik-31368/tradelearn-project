@@ -1,6 +1,5 @@
 package com.tradelearn.server.game.model;
 
-import com.tradelearn.server.user.model.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;

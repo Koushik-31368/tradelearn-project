@@ -1,7 +1,5 @@
 package com.tradelearn.server.game.repository;
 
-import com.tradelearn.server.user.model.User;
-import com.tradelearn.server.infrastructure.scheduling.GameCleanupService;
 
 import java.util.List;
 import java.util.Optional;

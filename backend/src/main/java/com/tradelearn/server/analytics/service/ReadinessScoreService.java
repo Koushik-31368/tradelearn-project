@@ -1,8 +1,4 @@
 package com.tradelearn.server.analytics.service;
-import com.tradelearn.server.user.model.User;
-import com.tradelearn.server.game.model.Game;
-import com.tradelearn.server.user.repository.UserRepository;
-import com.tradelearn.server.game.repository.GameRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

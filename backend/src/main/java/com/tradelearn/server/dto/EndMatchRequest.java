@@ -1,6 +1,5 @@
 package com.tradelearn.server.dto;
 
-import com.tradelearn.server.market.service.CandleService;
 
 public class EndMatchRequest {
 

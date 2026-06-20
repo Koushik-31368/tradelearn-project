@@ -1,6 +1,5 @@
 package com.tradelearn.server.simulator.service;
 
-import com.tradelearn.server.user.model.User;
 import com.tradelearn.server.dto.TradeRequest;
 import com.tradelearn.server.simulator.model.Holding;
 import com.tradelearn.server.simulator.model.Portfolio;

@@ -1,7 +1,5 @@
 package com.tradelearn.server.infrastructure.redis.room;
 
-import com.tradelearn.server.infrastructure.scheduling.MatchSchedulerService;
-import com.tradelearn.server.game.service.MatchService;
 
 import java.util.Collection;
 import java.util.Collections;

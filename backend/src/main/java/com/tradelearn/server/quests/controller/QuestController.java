@@ -1,8 +1,4 @@
 package com.tradelearn.server.quests.controller;
-import com.tradelearn.server.quests.model.DailyQuest;
-import com.tradelearn.server.quests.model.UserDailyQuest;
-import com.tradelearn.server.quests.model.WeeklyChallenge;
-import com.tradelearn.server.quests.model.UserWeeklyChallenge;
 
 import com.tradelearn.server.dto.ChallengeDTO;
 import com.tradelearn.server.dto.QuestDTO;

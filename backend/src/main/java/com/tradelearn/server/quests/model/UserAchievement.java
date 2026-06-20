@@ -1,6 +1,5 @@
 package com.tradelearn.server.quests.model;
 import com.tradelearn.server.user.model.User;
-import com.tradelearn.server.quests.model.Achievement;
 
 import jakarta.persistence.*;
 import java.sql.Timestamp;

@@ -1,5 +1,4 @@
 package com.tradelearn.server.social.controller;
-import com.tradelearn.server.social.model.GameChallenge;
 
 import com.tradelearn.server.dto.FriendDTO;
 import com.tradelearn.server.social.model.Friendship;

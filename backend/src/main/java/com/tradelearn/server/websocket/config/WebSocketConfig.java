@@ -1,7 +1,5 @@
 package com.tradelearn.server.websocket.config;
 
-import com.tradelearn.server.infrastructure.ratelimit.TradeProcessingPipeline;
-
 import java.util.Arrays;
 
 import org.springframework.beans.factory.annotation.Value;

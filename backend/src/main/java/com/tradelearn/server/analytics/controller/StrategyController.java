@@ -1,6 +1,5 @@
 // src/main/java/com/tradelearn/server/analytics/controller/StrategyController.java
 package com.tradelearn.server.analytics.controller;
-import com.tradelearn.server.analytics.service.ReadinessScoreService;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;

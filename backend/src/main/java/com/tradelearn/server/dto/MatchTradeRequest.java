@@ -1,7 +1,5 @@
 package com.tradelearn.server.dto;
 
-import com.tradelearn.server.market.service.CandleService;
-
 import com.tradelearn.server.common.validation.ValidTradeType;
 
 import jakarta.validation.constraints.NotBlank;

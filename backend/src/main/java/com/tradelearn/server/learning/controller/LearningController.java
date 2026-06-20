@@ -1,5 +1,4 @@
 package com.tradelearn.server.learning.controller;
-import com.tradelearn.server.learning.model.UserLessonProgress;
 
 import com.tradelearn.server.user.model.User;
 import com.tradelearn.server.user.repository.UserRepository;

@@ -1,5 +1,4 @@
 package com.tradelearn.server.quests.service;
-import com.tradelearn.server.game.model.Game;
 
 import com.tradelearn.server.quests.model.Achievement;
 import com.tradelearn.server.user.model.User;

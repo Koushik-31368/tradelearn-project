@@ -1,6 +1,5 @@
 package com.tradelearn.server.leaderboard.service;
 
-import com.tradelearn.server.user.model.User;
 import org.springframework.stereotype.Service;
 
 @Service
