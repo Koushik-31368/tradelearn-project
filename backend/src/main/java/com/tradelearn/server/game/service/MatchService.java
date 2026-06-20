@@ -29,9 +29,6 @@ import java.util.Optional;
  *
  * <p><strong>Do not add new business logic here.</strong> Add it in the
  * appropriate focused service and expose it via a new method below if required.
- *
- * @deprecated Inject the focused services directly in new code.
- *             This façade will be removed once all call-sites have been migrated.
  */
 @Service
 public class MatchService {

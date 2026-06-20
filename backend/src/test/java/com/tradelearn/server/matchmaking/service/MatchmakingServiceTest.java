@@ -37,6 +37,7 @@ import static org.mockito.Mockito.*;
  * </ul>
  */
 @ExtendWith(MockitoExtension.class)
+@SuppressWarnings("null")
 class MatchmakingServiceTest {
 
     @Mock private MatchService matchService;
