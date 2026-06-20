@@ -10,7 +10,7 @@ import com.tradelearn.server.infrastructure.scheduling.MatchSchedulerService;
 import com.tradelearn.server.market.service.CandleService;
 import com.tradelearn.server.websocket.GameBroadcaster;
 import com.tradelearn.server.infrastructure.redis.store.PositionSnapshotStore;
-import com.tradelearn.server.infrastructure.pipeline.GameMetricsService;
+import com.tradelearn.server.infrastructure.scheduling.GameMetricsService;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -18,6 +18,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.util.Optional;
 
@@ -26,10 +29,14 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 /**
- * Integration-style unit tests for {@link MatchLifecycleService}.
+ * Unit tests for {@link MatchLifecycleService}.
  *
  * <p>All external dependencies (repositories, Redis, WebSocket) are mocked.
- * Tests cover the three core lifecycle paths:
+ * Tests that exercise methods using {@link TransactionSynchronizationManager}
+ * manually initialise and clean up synchronization around each call — this
+ * mirrors what Spring's {@code @Transactional} does in production.
+ *
+ * <p>Tests cover the three core lifecycle paths:
  * <ul>
  *   <li>Create custom match</li>
  *   <li>Join an existing match</li>
@@ -37,6 +44,7 @@ import static org.mockito.Mockito.*;
  * </ul>
  */
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 @SuppressWarnings("null")
 class MatchLifecycleServiceTest {
 
@@ -151,7 +159,13 @@ class MatchLifecycleServiceTest {
 
         when(gameRepository.findById(100L)).thenReturn(Optional.of(game));
 
-        service.deleteGame(100L, 1L);
+        // Activate TX synchronization manager so registerSynchronization() works
+        TransactionSynchronizationManager.initSynchronization();
+        try {
+            service.deleteGame(100L, 1L);
+        } finally {
+            TransactionSynchronizationManager.clearSynchronization();
+        }
 
         verify(gameRepository).deleteById(100L);
         verify(roomManager).endGame(eq(100L), anyBoolean());
@@ -172,7 +186,14 @@ class MatchLifecycleServiceTest {
         savedGame.setStartingBalance(1_000_000.0);
         when(gameRepository.save(any(Game.class))).thenReturn(savedGame);
 
-        Game result = service.createAutoMatch(1L, 2L);
+        // Activate TX synchronization manager so registerSynchronization() works
+        TransactionSynchronizationManager.initSynchronization();
+        Game result;
+        try {
+            result = service.createAutoMatch(1L, 2L);
+        } finally {
+            TransactionSynchronizationManager.clearSynchronization();
+        }
 
         assertThat(result.getStatus()).isEqualTo("ACTIVE");
         assertThat(result.getCreator().getId()).isEqualTo(1L);

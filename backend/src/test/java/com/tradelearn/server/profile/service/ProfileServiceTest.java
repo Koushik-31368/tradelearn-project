@@ -28,7 +28,7 @@ import static org.mockito.Mockito.*;
  * <ul>
  *   <li>User not found → empty Optional</li>
  *   <li>Win/loss/draw counting from finished games</li>
- *   <li>Global rank calculation</li>
+ *   <li>Global rank calculation via {@code countByRatingGreaterThan}</li>
  *   <li>Average drawdown / accuracy / score aggregation</li>
  *   <li>Recent matches ordered by createdAt descending, capped at 10</li>
  * </ul>
@@ -78,7 +78,9 @@ class ProfileServiceTest {
     void getProfile_correctlyCountsWinsLossesDraws() {
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(rankService.getRankTier(1500)).thenReturn("Diamond");
-        when(userRepository.findAllByOrderByRatingDesc()).thenReturn(List.of(user, opponent));
+        // computeRank: user (1500) has 0 users rated higher → rank 1
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(userRepository.countByRatingGreaterThan(1500)).thenReturn(0L);
 
         Game win  = finishedGame(user);   // user is winner
         Game loss = finishedGame(opponent); // opponent is winner
@@ -99,14 +101,10 @@ class ProfileServiceTest {
 
     @Test
     void getProfile_correctlyComputesGlobalRank() {
-        User topUser = new User();
-        topUser.setId(99L);
-        topUser.setRating(2000);
-
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(rankService.getRankTier(1500)).thenReturn("Diamond");
-        // topUser is rank 1, user is rank 2
-        when(userRepository.findAllByOrderByRatingDesc()).thenReturn(List.of(topUser, user));
+        // 1 user has a higher rating than user (1500), so rank = 1 + 1 = 2
+        when(userRepository.countByRatingGreaterThan(1500)).thenReturn(1L);
         when(gameRepository.findByCreatorIdOrOpponentId(1L, 1L)).thenReturn(List.of());
         when(matchStatsRepository.findByUserId(1L)).thenReturn(List.of());
 
@@ -122,7 +120,7 @@ class ProfileServiceTest {
     void getProfile_aggregatesMatchStatsCorrectly() {
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(rankService.getRankTier(1500)).thenReturn("Diamond");
-        when(userRepository.findAllByOrderByRatingDesc()).thenReturn(List.of(user));
+        when(userRepository.countByRatingGreaterThan(1500)).thenReturn(0L);
         when(gameRepository.findByCreatorIdOrOpponentId(1L, 1L)).thenReturn(List.of());
 
         MatchStats stats1 = new MatchStats();
@@ -152,7 +150,7 @@ class ProfileServiceTest {
     void getProfile_recentMatchesCappedAt10() {
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(rankService.getRankTier(1500)).thenReturn("Diamond");
-        when(userRepository.findAllByOrderByRatingDesc()).thenReturn(List.of(user));
+        when(userRepository.countByRatingGreaterThan(1500)).thenReturn(0L);
         when(matchStatsRepository.findByUserId(1L)).thenReturn(List.of());
 
         // 15 finished games

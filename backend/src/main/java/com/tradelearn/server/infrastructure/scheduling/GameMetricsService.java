@@ -1,4 +1,4 @@
-package com.tradelearn.server.infrastructure.pipeline;
+package com.tradelearn.server.infrastructure.scheduling;
 
 import com.tradelearn.server.infrastructure.redis.room.RoomManager;
 

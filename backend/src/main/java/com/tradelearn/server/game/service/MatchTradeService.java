@@ -2,7 +2,7 @@ package com.tradelearn.server.game.service;
 
 import com.tradelearn.server.infrastructure.redis.store.PositionSnapshotStore;
 import com.tradelearn.server.market.service.CandleService;
-import com.tradelearn.server.infrastructure.pipeline.GameMetricsService;
+import com.tradelearn.server.infrastructure.scheduling.GameMetricsService;
 
 import java.util.HashMap;
 import java.util.List;

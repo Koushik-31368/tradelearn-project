@@ -19,7 +19,7 @@ import com.tradelearn.server.game.model.Trade;
 import com.tradelearn.server.game.repository.GameRepository;
 import com.tradelearn.server.auth.security.WebSocketChannelInterceptor;
 import com.tradelearn.server.infrastructure.resilience.GameFreezeService;
-import com.tradelearn.server.infrastructure.pipeline.GameMetricsService;
+import com.tradelearn.server.infrastructure.scheduling.GameMetricsService;
 import com.tradelearn.server.infrastructure.resilience.GracefulDegradationManager;
 import com.tradelearn.server.game.service.MatchTradeService;
 import com.tradelearn.server.infrastructure.redis.store.PositionSnapshotStore;

@@ -1,4 +1,4 @@
-package com.tradelearn.server.common.controller;
+package com.tradelearn.server.common;
 
 import java.lang.management.ManagementFactory;
 import java.time.Duration;
