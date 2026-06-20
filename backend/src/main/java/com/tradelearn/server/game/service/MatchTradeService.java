@@ -1,6 +1,5 @@
 package com.tradelearn.server.game.service;
 
-import com.tradelearn.server.user.model.User;
 import com.tradelearn.server.infrastructure.redis.store.PositionSnapshotStore;
 import com.tradelearn.server.market.service.CandleService;
 import com.tradelearn.server.infrastructure.pipeline.GameMetricsService;

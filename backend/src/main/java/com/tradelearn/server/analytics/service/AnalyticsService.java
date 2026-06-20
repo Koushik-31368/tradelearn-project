@@ -1,5 +1,4 @@
 package com.tradelearn.server.analytics.service;
-import com.tradelearn.server.user.model.User;
 
 import com.tradelearn.server.simulator.model.TradeJournal;
 import com.tradelearn.server.simulator.repository.TradeJournalRepository;

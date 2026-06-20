@@ -1,5 +1,4 @@
 package com.tradelearn.server.quests.controller;
-import com.tradelearn.server.quests.model.Achievement;
 
 import com.tradelearn.server.dto.AchievementDTO;
 import com.tradelearn.server.user.model.User;

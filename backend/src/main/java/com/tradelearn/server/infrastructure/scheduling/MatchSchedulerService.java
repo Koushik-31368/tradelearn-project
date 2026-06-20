@@ -6,7 +6,6 @@ import com.tradelearn.server.infrastructure.redis.room.RoomManager;
 import com.tradelearn.server.market.service.CandleService;
 import com.tradelearn.server.infrastructure.resilience.GameFreezeService;
 import com.tradelearn.server.infrastructure.pipeline.GameMetricsService;
-import com.tradelearn.server.game.service.MatchService;
 import com.tradelearn.server.game.service.MatchTradeService;
 
 import java.time.Duration;

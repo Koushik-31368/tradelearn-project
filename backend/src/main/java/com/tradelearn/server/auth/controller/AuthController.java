@@ -1,6 +1,5 @@
 package com.tradelearn.server.auth.controller;
 
-import com.tradelearn.server.user.service.UserService;
 import java.util.LinkedHashMap;
 import java.util.Map;
 

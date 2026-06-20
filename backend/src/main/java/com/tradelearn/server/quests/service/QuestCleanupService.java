@@ -1,6 +1,4 @@
 package com.tradelearn.server.quests.service;
-import com.tradelearn.server.quests.repository.UserDailyQuestRepository;
-import com.tradelearn.server.quests.repository.UserWeeklyChallengeRepository;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
