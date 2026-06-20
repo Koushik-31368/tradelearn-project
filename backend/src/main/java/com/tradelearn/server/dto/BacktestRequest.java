@@ -2,12 +2,19 @@ package com.tradelearn.server.dto;
 
 import java.util.List;
 
+/**
+ * Request body for the SMA-crossover backtest endpoint.
+ *
+ * <p>Candles are supplied by the client and must be {@link Candle} objects
+ * with ISO-8601 {@code date} strings (e.g. {@code "2024-01-15"}).
+ * Use {@link Candle#getLocalDate()} when date arithmetic is needed.
+ */
 public class BacktestRequest {
     private String symbol;
     private double initialCapital;
     private int smaFast;
     private int smaSlow;
-    private List<CandleDto> candles;
+    private List<Candle> candles;
     private OosConfig oos;
 
     public static class OosConfig {
@@ -64,11 +71,11 @@ public class BacktestRequest {
         this.smaSlow = smaSlow;
     }
 
-    public List<CandleDto> getCandles() {
+    public List<Candle> getCandles() {
         return candles;
     }
 
-    public void setCandles(List<CandleDto> candles) {
+    public void setCandles(List<Candle> candles) {
         this.candles = candles;
     }
 

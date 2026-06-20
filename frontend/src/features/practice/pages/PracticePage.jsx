@@ -1,13 +1,13 @@
 // src/pages/PracticePage.jsx
 import React, { useEffect, useState, useRef, useCallback } from 'react';
-import { fetchMarketHistory } from '../services/marketApi';
-import CandlestickChart from '../components/simulator/CandlestickChart';
+import { fetchMarketHistory } from '../../../api/market.api';
+import CandlestickChart from '../../simulator/components/CandlestickChart';
 import { historicalEvents, findEvent } from '../data/historicalEvents';
 import './PracticePage.css';
-import { detectStrategies, expectedDecision } from '../utils/strategyDetector';
+import { detectStrategies, expectedDecision } from '../../strategies/utils/strategyDetector';
 import { aiDecision, aiDecisionLabel } from '../utils/aiTrader';
 import { useAuth } from '../../auth/AuthContext';
-import { api } from '../../../api/api';
+import apiClient from '../../../api/client';
 
 // ── Replay speed options (ms per candle) ────────────────────────────────────
 const SPEEDS = [
@@ -164,7 +164,7 @@ export default function PracticePage() {
     if (user?.username) {
       const delta = isRight ? 8 : -4;
       try {
-        await api.post(
+        await apiClient.post(
           `/api/leaderboard/update?username=${encodeURIComponent(user.username)}&scoreDelta=${delta}`
         );
       } catch {

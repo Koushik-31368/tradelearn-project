@@ -3,12 +3,17 @@ package com.tradelearn.server.dto;
 
 import java.util.List;
 
+/**
+ * Request body for the batch backtest endpoint (multiple symbols, same candle set).
+ *
+ * <p>Migrated from {@code CandleDto} to the canonical {@link Candle} DTO.
+ */
 public class BatchBacktestRequest {
     private List<String> symbols;
     private double initialCapital;
     private Integer smaFast;
     private Integer smaSlow;
-    private List<CandleDto> candles;
+    private List<Candle> candles;
     private BacktestRequest.OosConfig oos;
 
     public List<String> getSymbols() { return symbols; }
@@ -23,8 +28,8 @@ public class BatchBacktestRequest {
     public Integer getSmaSlow() { return smaSlow; }
     public void setSmaSlow(Integer smaSlow) { this.smaSlow = smaSlow; }
 
-    public List<CandleDto> getCandles() { return candles; }
-    public void setCandles(List<CandleDto> candles) { this.candles = candles; }
+    public List<Candle> getCandles() { return candles; }
+    public void setCandles(List<Candle> candles) { this.candles = candles; }
 
     public BacktestRequest.OosConfig getOos() { return oos; }
     public void setOos(BacktestRequest.OosConfig oos) { this.oos = oos; }

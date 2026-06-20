@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../auth/AuthContext';
-import { backendUrl, authHeaders } from '../../../api/api';
+import { backendUrl, authHeaders } from '../../../api/client';
 import TierBadge from '../../leaderboard/components/TierBadge';
 import FriendsPanel from '../../social/components/FriendsPanel';
 import './ProfilePage.css';
@@ -20,7 +20,7 @@ const ProfilePage = () => {
         (async () => {
             try {
                 const [profileRes, achRes] = await Promise.all([
-                    fetch(backendUrl(`/api/users/${user.id}/profile`), { headers: authHeaders() }),
+                    fetch(backendUrl(`/api/profile/${user.id}`), { headers: authHeaders() }),
                     fetch(backendUrl(`/api/achievements/user`), { headers: authHeaders() })
                 ]);
                 
@@ -95,8 +95,8 @@ const ProfilePage = () => {
                     <div className="pf-stat-sub">Win Rate: <strong>{winRate}%</strong></div>
                 </StatCard>
 
-                <StatCard title="Avg Drawdown" accent={profile.avgDrawdown > 0.1 ? 'red' : 'green'}>
-                    <div className="pf-stat-big">{(profile.avgDrawdown * 100).toFixed(1)}%</div>
+                <StatCard title="Avg Drawdown" accent={profile.avgDrawdown > 10 ? 'red' : 'green'}>
+                    <div className="pf-stat-big">{profile.avgDrawdown.toFixed(1)}%</div>
                     <div className="pf-stat-sub">Lower is better</div>
                 </StatCard>
 

@@ -1,13 +1,10 @@
 package com.tradelearn.server.analytics.service;
 
-import com.tradelearn.server.user.model.User;
-import com.tradelearn.server.game.model.Trade;
-import com.tradelearn.server.game.repository.TradeRepository;
 import com.tradelearn.server.dto.BacktestRequest;
 import com.tradelearn.server.dto.BacktestResult;
 import com.tradelearn.server.dto.BatchBacktestRequest;
 import com.tradelearn.server.dto.BatchBacktestResult;
-import com.tradelearn.server.dto.CandleDto;
+import com.tradelearn.server.dto.Candle;
 import com.tradelearn.server.dto.EquityPointDto;
 import com.tradelearn.server.dto.TradeDto;
 import org.springframework.stereotype.Service;
@@ -16,6 +13,13 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
+/**
+ * SMA-crossover backtest engine.
+ *
+ * <p>Uses the canonical {@link Candle} DTO (with {@link Candle#getLocalDate()}
+ * for date ordering). The previously separate {@code CandleDto} class has been
+ * deleted; all callers now use {@code Candle} directly.
+ */
 @Service
 public class BacktestService {
 
@@ -31,8 +35,8 @@ public class BacktestService {
         }
 
         // Copy and sort candles by date ascending
-        List<CandleDto> candles = new ArrayList<>(req.getCandles());
-        candles.sort(Comparator.comparing(CandleDto::getDate));
+        List<Candle> candles = new ArrayList<>(req.getCandles());
+        candles.sort(Comparator.comparing(Candle::getLocalDate));
 
         int fast = req.getSmaFast();
         int slow = req.getSmaSlow();
@@ -61,7 +65,7 @@ public class BacktestService {
         double maxDrawdown = 0.0;
 
         for (int i = 0; i < n; i++) {
-            CandleDto c = candles.get(i);
+            Candle c = candles.get(i);
             double price = c.getClose();
 
             // Generate signals only when we have both SMAs
@@ -71,7 +75,7 @@ public class BacktestService {
                 double fNow = smaFast[i];
                 double sNow = smaSlow[i];
 
-                boolean crossUp = (fPrev <= sPrev) && (fNow > sNow);
+                boolean crossUp   = (fPrev <= sPrev) && (fNow > sNow);
                 boolean crossDown = (fPrev >= sPrev) && (fNow < sNow);
 
                 // BUY on golden cross if flat
@@ -81,14 +85,14 @@ public class BacktestService {
                         position = qty;
                         cash -= qty * price;
                         entryPrice = price;
-                        trades.add(new TradeDto(c.getDate(), "BUY", price, qty));
+                        trades.add(new TradeDto(c.getLocalDate(), "BUY", price, qty));
                     }
                 }
 
                 // SELL on death cross if in position
                 if (crossDown && position > 0) {
                     cash += position * price;
-                    trades.add(new TradeDto(c.getDate(), "SELL", price, position));
+                    trades.add(new TradeDto(c.getLocalDate(), "SELL", price, position));
                     if (price > entryPrice) wins++;
                     closed++;
                     position = 0;
@@ -98,7 +102,7 @@ public class BacktestService {
 
             // Daily equity and drawdown
             double eq = cash + position * price;
-            equity.add(new EquityPointDto(c.getDate(), eq));
+            equity.add(new EquityPointDto(c.getLocalDate(), eq));
             if (eq > peak) peak = eq;
             double dd = peak > 0 ? (peak - eq) / peak : 0.0;
             if (dd > maxDrawdown) maxDrawdown = dd;
@@ -106,10 +110,10 @@ public class BacktestService {
 
         // Liquidate at end if still in position
         if (position > 0) {
-            CandleDto last = candles.get(n - 1);
+            Candle last = candles.get(n - 1);
             double price = last.getClose();
             cash += position * price;
-            trades.add(new TradeDto(last.getDate(), "SELL", price, position));
+            trades.add(new TradeDto(last.getLocalDate(), "SELL", price, position));
             if (price > entryPrice) wins++;
             closed++;
             position = 0;
@@ -133,37 +137,37 @@ public class BacktestService {
     }
 
     public BatchBacktestResult runBatch(BatchBacktestRequest req) {
-    if (req.getSymbols() == null || req.getSymbols().isEmpty())
-        throw new IllegalArgumentException("symbols required");
+        if (req.getSymbols() == null || req.getSymbols().isEmpty())
+            throw new IllegalArgumentException("symbols required");
 
-    List<BatchBacktestResult.Item> items = new ArrayList<>();
-    for (String sym : req.getSymbols()) {
-        BacktestRequest one = new BacktestRequest();
-        one.setSymbol(sym);
-        one.setInitialCapital(req.getInitialCapital());
-        one.setSmaFast(req.getSmaFast());
-        one.setSmaSlow(req.getSmaSlow());
-        one.setCandles(req.getCandles());
-        one.setOos(req.getOos());
+        List<BatchBacktestResult.Item> items = new ArrayList<>();
+        for (String sym : req.getSymbols()) {
+            BacktestRequest one = new BacktestRequest();
+            one.setSymbol(sym);
+            one.setInitialCapital(req.getInitialCapital());
+            one.setSmaFast(req.getSmaFast());
+            one.setSmaSlow(req.getSmaSlow());
+            one.setCandles(req.getCandles());
+            one.setOos(req.getOos());
 
-        BacktestResult r = runSmaCross(one);
+            BacktestResult r = runSmaCross(one);
 
-        BatchBacktestResult.Item it = new BatchBacktestResult.Item();
-        it.setSymbol(sym);
-        it.setReturnPct(r.getReturnPct());
-        it.setMaxDrawdownPct(r.getMaxDrawdownPct());
-        it.setWinRatePct(r.getWinRatePct());
-        it.setTrades(r.getTradesCount());
-        it.setFinalCapital(r.getFinalCapital());
-        items.add(it);
+            BatchBacktestResult.Item it = new BatchBacktestResult.Item();
+            it.setSymbol(sym);
+            it.setReturnPct(r.getReturnPct());
+            it.setMaxDrawdownPct(r.getMaxDrawdownPct());
+            it.setWinRatePct(r.getWinRatePct());
+            it.setTrades(r.getTradesCount());
+            it.setFinalCapital(r.getFinalCapital());
+            items.add(it);
+        }
+        // Sort by Return descending by default
+        items.sort((a, b) -> Double.compare(b.getReturnPct(), a.getReturnPct()));
+
+        BatchBacktestResult out = new BatchBacktestResult();
+        out.setResults(items);
+        return out;
     }
-    // Sort by Return descending by default
-    items.sort((a,b) -> Double.compare(b.getReturnPct(), a.getReturnPct()));
-
-    BatchBacktestResult out = new BatchBacktestResult();
-    out.setResults(items);
-    return out;
-}
 
     private static double[] sma(double[] x, int period) {
         int n = x.length;

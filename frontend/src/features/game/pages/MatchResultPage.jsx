@@ -1,6 +1,6 @@
 // src/pages/MatchResultPage.jsx
 import React, { useState, useEffect, useCallback } from 'react';
-import useGameSocket from '../hooks/useGameSocket';
+import useGameSocket from '../../../hooks/useGameSocket';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../auth/AuthContext';
 import { backendUrl, authHeaders } from '../../../api/api';
