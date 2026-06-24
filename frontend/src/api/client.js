@@ -69,7 +69,11 @@ apiClient.interceptors.response.use(
   (error) => {
     if (error.response && error.response.status === 401) {
       const currentPath = window.location.pathname;
-      if (currentPath !== '/login' && currentPath !== '/register') {
+      const hasToken = !!localStorage.getItem('tradelearn_token');
+      // Only force-logout if we actually had a token (i.e. it expired/was rejected)
+      // AND we're not already on an auth page.
+      // This prevents background calls on public pages from wiping a valid session.
+      if (hasToken && currentPath !== '/login' && currentPath !== '/register') {
         localStorage.removeItem('tradelearn_token');
         localStorage.removeItem('tradelearn_user');
         window.location.href = '/login';
