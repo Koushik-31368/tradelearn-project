@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { MISSIONS } from '../utils/missions';
 import MissionDebriefModal from './MissionDebriefModal';
@@ -21,6 +21,15 @@ const MissionDashboard = () => {
   const [assessment, setAssessment] = useState(null);
 
   const highestBalanceRef = useRef(mission?.startingBalance || 100000);
+  // Keep refs in sync so the interval can read live values without being a dep
+  const balanceRef = useRef(balance);
+  const positionRef = useRef(position);
+  const maxDrawdownRef = useRef(0);
+  const currentIndexRef = useRef(0);
+  useEffect(() => { balanceRef.current = balance; }, [balance]);
+  useEffect(() => { positionRef.current = position; }, [position]);
+  useEffect(() => { maxDrawdownRef.current = maxDrawdown; }, [maxDrawdown]);
+  useEffect(() => { currentIndexRef.current = currentIndex; }, [currentIndex]);
 
   useEffect(() => {
     if (!mission) navigate('/missions');
@@ -40,55 +49,77 @@ const MissionDashboard = () => {
         const next = prev + 1;
         if (next >= mission.dataset.length) {
           clearInterval(timer);
-          endMission();
+          // Read live balance/position via refs, not stale closure values
+          const finalPrice = mission.dataset[prev]?.close || 0;
+          const finalEquity = balanceRef.current + (positionRef.current.qty * finalPrice);
+          const history = {
+            finalBalance: finalEquity,
+            tradeCount: 0, // will be overridden by endMission
+            maxDrawdown: maxDrawdownRef.current,
+            forcedFail: false
+          };
+          setIsFinished(true);
+          setAssessment(mission.assess({ ...history, get tradeCount() { return 0; } }));
           return prev;
         }
-        
+
         const nextCandle = mission.dataset[next];
         setCandles(old => [...old, nextCandle]);
-        
-        // Update live drawdown
+
+        // Update live drawdown using refs (no stale closure)
         const currentPrice = nextCandle.close;
-        const equity = balance + (position.qty * currentPrice);
-        
+        const equity = balanceRef.current + (positionRef.current.qty * currentPrice);
+
         if (equity > highestBalanceRef.current) {
           highestBalanceRef.current = equity;
         }
-        
+
         const currentDrawdown = ((highestBalanceRef.current - equity) / highestBalanceRef.current) * 100;
-        if (currentDrawdown > maxDrawdown) {
+        if (currentDrawdown > maxDrawdownRef.current) {
           setMaxDrawdown(currentDrawdown);
         }
 
         // Check fail conditions live
         if (mission.constraints.maxDrawdownPercent && currentDrawdown > mission.constraints.maxDrawdownPercent) {
           clearInterval(timer);
-          endMission(true); // Forced failure
+          setIsFinished(true);
+          setAssessment(mission.assess({
+            finalBalance: equity,
+            tradeCount: 0,
+            maxDrawdown: currentDrawdown,
+            forcedFail: true
+          }));
         }
-        
+
         return next;
       });
     }, 2000); // 2 second ticks
 
     return () => clearInterval(timer);
+  // Only restart if the mission itself changes or it finishes — NOT on balance/position changes
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isFinished, mission, balance, position, maxDrawdown]);
+  }, [isFinished, mission]);
 
-  const endMission = (forcedFail = false) => {
+  const endMission = useCallback((forcedFail = false) => {
     setIsFinished(true);
-    const finalCurrentPrice = mission.dataset[currentIndex]?.close || 0;
-    const finalEquity = balance + (position.qty * finalCurrentPrice);
-    
-    const history = {
-      finalBalance: finalEquity,
-      tradeCount: trades.length,
-      maxDrawdown: maxDrawdown,
-      forcedFail: forcedFail
-    };
-    
-    const result = mission.assess(history);
-    setAssessment(result);
-  };
+    // Read live values from refs to avoid stale closure
+    const idx = currentIndexRef.current;
+    const finalCurrentPrice = mission?.dataset[idx]?.close || 0;
+    const finalEquity = balanceRef.current + (positionRef.current.qty * finalCurrentPrice);
+
+    setTrades(currentTrades => {
+      const history = {
+        finalBalance: finalEquity,
+        tradeCount: currentTrades.length,
+        maxDrawdown: maxDrawdownRef.current,
+        forcedFail: forcedFail
+      };
+      const result = mission.assess(history);
+      setAssessment(result);
+      return currentTrades;
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mission]);
 
   const handleTrade = (type, qty, orderType) => {
     if (isFinished) return;
