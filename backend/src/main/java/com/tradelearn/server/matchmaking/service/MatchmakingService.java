@@ -62,6 +62,14 @@ import jakarta.annotation.PreDestroy;
  *     120+ s  → auto-expired (cleanup removes)
  * </pre>
  *
+ * <h3>Failure recovery (Issue 3)</h3>
+ * If {@code createAutoMatch} throws after both players are already dequeued by
+ * the Lua script, both players are automatically re-enqueued with a fresh
+ * {@code joinTime} (ELO window resets to ±100 — acceptable trade-off).  Both
+ * receive a {@code match-retry} WebSocket event so the frontend shows
+ * "reconnecting…" instead of silently stopping.  If re-enqueue also fails
+ * (Redis unreachable), a {@code match-failed} event is sent instead.
+ *
  * <h3>Redis keys introduced</h3>
  * <pre>
  *     matchmaking:queue                → ZSET  (score=rating, member=userId)
@@ -338,21 +346,23 @@ public class MatchmakingService {
      * verify + remove both players via Lua script (atomic),
      * then create the match OUTSIDE the lock.
      *
-     * Locking strategy:
-     *   Key = matchmaking:pair:{minUserId}:{maxUserId}
-     *   tryLock 500 ms / lease 3000 ms
-     *   Inside lock: Lua script verifies both in ZSET + removes both + deletes hashes
+     * <h3>Locking strategy</h3>
+     *   Key = matchmaking:pair:{minUserId}:{maxUserId}<br>
+     *   tryLock 500 ms / lease 3000 ms<br>
+     *   Inside lock: read ticket metadata → Lua verify+remove both → unlock<br>
      *   Outside lock: createAutoMatch (DB transaction)
      *
-     * Race-condition free because:
-     *   - Distributed lock serializes all attempts to pair the same two players
-     *   - Lua script is atomic on Redis server — no TOCTOU
-     *   - If either player was already matched, Lua returns 0 → skip
+     * <h3>Failure recovery (Issue 3)</h3>
+     * If createAutoMatch throws, both players are re-enqueued with a fresh
+     * joinTime and receive a {@code match-retry} WebSocket event.  If
+     * re-enqueue also fails, they receive {@code match-failed} instead.
      */
     @SuppressWarnings("null")
     private Optional<Game> tryPair(long userId1, int rating1, long userId2, int rating2) {
         long lo = Math.min(userId1, userId2);
         long hi = Math.max(userId1, userId2);
+        int loRating = (lo == userId1) ? rating1 : rating2;
+        int hiRating = (lo == userId1) ? rating2 : rating1;
 
         RLock lock = redisson.getLock("matchmaking:pair:" + lo + ":" + hi);
         try {
@@ -361,6 +371,12 @@ public class MatchmakingService {
                 return Optional.empty();
             }
             try {
+                // ── Capture ticket metadata BEFORE Lua removes the hashes ──
+                // After PAIR_REMOVE_LUA the ticket hashes are gone; we need
+                // username + rating for re-enqueue if createAutoMatch later fails.
+                String loUsername = readUsername(lo);
+                String hiUsername = readUsername(hi);
+
                 // ── Critical section: Lua verify + remove (~1 ms) ──
                 DefaultRedisScript<Long> script = new DefaultRedisScript<>(PAIR_REMOVE_LUA, Long.class);
                 Long result = redis.execute(script,
@@ -375,27 +391,103 @@ public class MatchmakingService {
 
                 log.info("[MM] Paired [{} vs {}] gap={}",
                         lo, hi, Math.abs(rating1 - rating2));
-            } finally {
+
+                // Store metadata in effectively-final locals for use outside the lock
+                final String capturedLoUsername = loUsername;
+                final String capturedHiUsername = hiUsername;
+                final int    capturedLoRating   = loRating;
+                final int    capturedHiRating   = hiRating;
+
+                // ── Unlock before the DB call (outside lock is intentional) ──
                 lock.unlock();
+
+                // ── Match creation OUTSIDE lock (DB transaction) ──
+                try {
+                    Game game = matchService.createAutoMatch(lo, hi);
+                    notifyMatchFound(lo, hi, game);
+                    log.info("[MM] Match created: gameId={}, [{} vs {}]", game.getId(), lo, hi);
+                    return Optional.of(game);
+                } catch (Exception e) {
+                    log.error("[MM] Match creation failed [{} vs {}]: {}",
+                            lo, hi, e.getMessage(), e);
+                    // Re-enqueue both players so they don't silently disappear
+                    recoverPlayers(lo, capturedLoRating, capturedLoUsername,
+                                   hi, capturedHiRating, capturedHiUsername);
+                    return Optional.empty();
+                }
+
+            } finally {
+                // Idempotent: safe to call even if already unlocked above
+                if (lock.isHeldByCurrentThread()) {
+                    lock.unlock();
+                }
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             return Optional.empty();
         }
+    }
 
-        // ── Match creation OUTSIDE lock (DB transaction) ──
+    /**
+     * Read a player's username from their ticket hash.
+     * Returns a safe fallback string if the hash is missing or corrupt.
+     */
+    private String readUsername(long userId) {
         try {
-            Game game = matchService.createAutoMatch(lo, hi);
-            notifyMatchFound(lo, hi, game);
-            log.info("[MM] Match created: gameId={}, [{} vs {}]", game.getId(), lo, hi);
-            return Optional.of(game);
+            Object val = redis.opsForHash().get(TICKET_PREFIX + userId, "username");
+            return val != null ? val.toString() : "player-" + userId;
         } catch (Exception e) {
-            log.error("[MM] Match creation failed [{} vs {}]: {}",
-                    lo, hi, e.getMessage(), e);
-            // Players removed from queue — they must re-queue on failure
-            return Optional.empty();
+            return "player-" + userId;
         }
     }
+
+    /**
+     * Attempt to re-enqueue both players after a match-creation failure.
+     *
+     * <ul>
+     *   <li>Uses the same {@code ENQUEUE_LUA} path as {@link #enqueue}, with a
+     *       fresh {@code joinTime} so the ELO window resets to ±100.</li>
+     *   <li>On success: sends {@code match-retry} to both players so the frontend
+     *       can show "reconnecting to matchmaking…" instead of silently stopping.</li>
+     *   <li>On failure: sends {@code match-failed} to both players (consistent with
+     *       the naming introduced in Issue 2) so the frontend can display a hard error.</li>
+     * </ul>
+     */
+    void recoverPlayers(long loId, int loRating, String loUsername,
+                                long hiId, int hiRating, String hiUsername) {
+        try {
+            reEnqueuePlayer(loId, loRating, loUsername);
+            reEnqueuePlayer(hiId, hiRating, hiUsername);
+            notifyMatchRetry(loId, hiId);
+            log.info("[MM] Re-enqueued [{}, {}] after match-creation failure", loId, hiId);
+        } catch (Exception reEnqueueEx) {
+            log.error("[MM] Re-enqueue failed for [{}, {}] — sending match-failed: {}",
+                    loId, hiId, reEnqueueEx.getMessage());
+            notifyMatchFailed(loId, hiId);
+        }
+    }
+
+    /**
+     * Atomically re-insert a player into the Redis ZSET + ticket hash using
+     * the same {@code ENQUEUE_LUA} as {@link #enqueue}.  Uses a fresh
+     * {@code joinTime} (ELO window resets to ±100 — acceptable trade-off).
+     *
+     * <p>Returns {@code true} if the player was successfully re-enqueued,
+     * {@code false} if they were already in the queue (another instance beat us).
+     */
+    @SuppressWarnings("null")
+    boolean reEnqueuePlayer(long userId, int rating, String username) {
+        DefaultRedisScript<Long> script = new DefaultRedisScript<>(ENQUEUE_LUA, Long.class);
+        Long result = redis.execute(script,
+                List.of(QUEUE_KEY, TICKET_PREFIX + userId),
+                String.valueOf(userId),
+                String.valueOf(rating),
+                username,
+                Instant.now().toString(),
+                String.valueOf(TICKET_TTL.getSeconds()));
+        return result != null && result > 0;
+    }
+
 
     // ==================== BACKGROUND HOUSEKEEPING ====================
 
@@ -526,5 +618,32 @@ public class MatchmakingService {
         );
         broadcaster.sendToUser(userId1, "match-found", payload);
         broadcaster.sendToUser(userId2, "match-found", payload);
+    }
+
+    /**
+     * Notify both players that match creation failed and they have been
+     * automatically re-enqueued.  The frontend should show a transient
+     * "reconnecting…" indicator and continue polling / waiting.
+     */
+    private void notifyMatchRetry(long userId1, long userId2) {
+        Map<String, Object> payload = Map.of(
+                "message", "Match setup failed — reconnecting you to matchmaking automatically."
+        );
+        broadcaster.sendToUser(userId1, "match-retry", payload);
+        broadcaster.sendToUser(userId2, "match-retry", payload);
+    }
+
+    /**
+     * Notify both players with a hard error.  Used when re-enqueue itself fails
+     * (e.g. Redis unreachable) — consistent with the {@code match-failed} event
+     * introduced in Issue 2 for afterCommit exhaustion.
+     */
+    private void notifyMatchFailed(long userId1, long userId2) {
+        Map<String, Object> payload = Map.of(
+                "message", "Matchmaking failed. Please try searching again.",
+                "status", "FAILED"
+        );
+        broadcaster.sendToUser(userId1, "match-failed", payload);
+        broadcaster.sendToUser(userId2, "match-failed", payload);
     }
 }
