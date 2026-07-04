@@ -59,7 +59,6 @@ const LeaderboardPage = () => {
                 const res = await apiClient.get(`/api/users/leaderboard/tier/${encodeURIComponent(selectedTier)}`);
                 setLeagueEntries(res.data);
             } catch (err) {
-                console.error('[leaderboard] Failed to load league:', err.message);
                 // Don't throw — just show empty table
                 setLeagueEntries([]);
             } finally {
