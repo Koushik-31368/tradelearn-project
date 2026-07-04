@@ -4,8 +4,8 @@
   "framework": null,
   "rewrites": [
     {
-      "source": "/api/(.*)",
-      "destination": "https://tradelearn-project-g.onrender.com/api/$1"
+      "source": "/api/:path*",
+      "destination": "https://tradelearn-project-g.onrender.com/api/:path*"
     },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
