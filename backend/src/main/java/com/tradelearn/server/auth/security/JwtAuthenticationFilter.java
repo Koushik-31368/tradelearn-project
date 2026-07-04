@@ -23,14 +23,19 @@ import jakarta.servlet.http.HttpServletResponse;
 /**
  * JWT authentication filter for REST API requests.
  *
- * Extracts the Bearer token from the Authorization header, validates it,
- * and sets the Spring Security authentication context with the full User
- * entity as the principal.
+ * <h3>Token source</h3>
+ * Reads the short-lived access token exclusively from the
+ * {@code Authorization: Bearer <token>} header. The httpOnly refresh-token
+ * cookie is <em>never</em> read here — it is path-scoped to {@code /api/auth}
+ * so the browser never sends it to other endpoints, and we deliberately do not
+ * fall back to it here.  This keeps all state-changing endpoints CSRF-safe:
+ * an attacker cannot trigger them by exploiting the cookie.
  *
- * Skipped for:
- *   - Requests without Authorization header
- *   - WebSocket upgrade requests (handled by WebSocketAuthInterceptor)
- *   - Actuator endpoints
+ * <h3>Skipped for</h3>
+ * <ul>
+ *   <li>Requests without an Authorization header (proceed as anonymous).</li>
+ *   <li>WebSocket upgrade requests (handled by WebSocketAuthInterceptor).</li>
+ * </ul>
  */
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -58,6 +63,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
+        // ── Extract token from Authorization: Bearer header only ──────────────
+        // The httpOnly refresh-token cookie is deliberately NOT read here.
+        // It is path-scoped to /api/auth and handled exclusively by AuthController.
         String header = request.getHeader("Authorization");
         if (header == null || !header.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);

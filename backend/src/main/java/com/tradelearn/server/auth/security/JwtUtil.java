@@ -56,7 +56,12 @@ public class JwtUtil {
 
     private final SecretKey currentKey;
     private final SecretKey previousKey;  // null if no rotation in progress
-    private final long expirationMs;
+    private final long expirationMs;      // access token expiry (kept for compat; same as accessExpirationMs)
+
+    // ── Refresh token has its own secret key and a longer TTL ───────────────
+    private static final String REFRESH_KID = "refresh";
+    private final SecretKey refreshKey;
+    private final long refreshExpirationMs;
 
     /**
      * Bounded JTI replay cache. Key = jti string, Value = expiration timestamp.
@@ -71,12 +76,16 @@ public class JwtUtil {
     public JwtUtil(
             @Value("${tradelearn.jwt.secret}") String secret,
             @Value("${tradelearn.jwt.previous-secret:}") String previousSecret,
-            @Value("${tradelearn.jwt.expiration-ms}") long expirationMs) {
+            @Value("${tradelearn.jwt.expiration-ms}") long expirationMs,
+            @Value("${tradelearn.jwt.refresh-secret:${tradelearn.jwt.secret}_refresh_key_suffix}") String refreshSecret,
+            @Value("${tradelearn.jwt.refresh-expiration-ms:604800000}") long refreshExpirationMs) {
         this.currentKey = Keys.hmacShaKeyFor(secret.getBytes());
         this.previousKey = (previousSecret != null && !previousSecret.isBlank())
                 ? Keys.hmacShaKeyFor(previousSecret.getBytes())
                 : null;
         this.expirationMs = expirationMs;
+        this.refreshKey = Keys.hmacShaKeyFor(refreshSecret.getBytes());
+        this.refreshExpirationMs = refreshExpirationMs;
 
         if (this.previousKey != null) {
             log.info("[JWT] Key rotation active — accepting tokens signed with both current and previous keys");
@@ -104,10 +113,11 @@ public class JwtUtil {
     // ==================== TOKEN GENERATION ====================
 
     /**
-     * Generate a JWT token for the given user.
-     * Includes a unique jti claim for replay prevention.
+     * Generate a short-lived ACCESS token for the given user.
+     * Signed with {@code currentKey}. Expiry controlled by
+     * {@code tradelearn.jwt.expiration-ms} (default 15 min recommended).
      */
-    public String generateToken(Long userId, String email, String username) {
+    public String generateAccessToken(Long userId, String email, String username) {
         Date now = new Date();
         Date expiry = new Date(now.getTime() + expirationMs);
 
@@ -120,6 +130,37 @@ public class JwtUtil {
                 .issuedAt(now)
                 .expiration(expiry)
                 .signWith(currentKey, Jwts.SIG.HS256)
+                .compact();
+    }
+
+    /**
+     * Backward-compat alias — delegates to {@link #generateAccessToken}.
+     * Existing callers (e.g. WebSocketAuthInterceptor) continue to work unchanged.
+     */
+    public String generateToken(Long userId, String email, String username) {
+        return generateAccessToken(userId, email, username);
+    }
+
+    /**
+     * Generate a long-lived REFRESH token for the given user.
+     * Signed with a <em>separate</em> {@code refreshKey} so that a compromised
+     * access-token secret cannot be used to forge refresh tokens.
+     * Expiry controlled by {@code tradelearn.jwt.refresh-expiration-ms} (default 7 days).
+     */
+    public String generateRefreshToken(Long userId, String email, String username) {
+        Date now = new Date();
+        Date expiry = new Date(now.getTime() + refreshExpirationMs);
+
+        return Jwts.builder()
+                .header().keyId(REFRESH_KID).and()
+                .subject(email)
+                .claim("uid", userId)
+                .claim("name", username)
+                .claim("type", "refresh")
+                .id(UUID.randomUUID().toString())
+                .issuedAt(now)
+                .expiration(expiry)
+                .signWith(refreshKey, Jwts.SIG.HS256)
                 .compact();
     }
 
@@ -150,6 +191,46 @@ public class JwtUtil {
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
+    }
+
+    /**
+     * Parse and validate a REFRESH token.
+     * Uses the dedicated {@code refreshKey} — access tokens are rejected here.
+     *
+     * @throws JwtException if the token is invalid, expired, or not a refresh token
+     */
+    public Claims parseRefreshToken(String token) {
+        Claims claims = Jwts.parser()
+                .verifyWith(refreshKey)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+
+        // Enforce type claim so access tokens can't be used as refresh tokens
+        if (!"refresh".equals(claims.get("type", String.class))) {
+            throw new JwtException("Token is not a refresh token");
+        }
+        return claims;
+    }
+
+    /**
+     * Check if a refresh token is valid (not expired, correct key, correct type).
+     */
+    public boolean isValidRefreshToken(String token) {
+        try {
+            parseRefreshToken(token);
+            return true;
+        } catch (ExpiredJwtException e) {
+            log.debug("[JWT] Refresh token expired: {}", e.getMessage());
+        } catch (JwtException e) {
+            log.warn("[JWT] Refresh token invalid: {}", e.getMessage());
+        }
+        return false;
+    }
+
+    /** Refresh token TTL in milliseconds — used to set cookie Max-Age. */
+    public long getRefreshExpirationMs() {
+        return refreshExpirationMs;
     }
 
     /**
