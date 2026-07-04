@@ -4,27 +4,10 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../auth/AuthContext';
 import { backendUrl } from '../../../api/client';
 import DashboardPanel from '../components/DashboardPanel';
+import bgImage from '../../../assets/background.jpg';
 import './HomePage.css';
 
-/* ── Subtle SVG chart line for hero background ─────────── */
-const HeroChart = () => (
-  <div className="hp-hero-chart" aria-hidden="true">
-    <svg viewBox="0 0 480 220" preserveAspectRatio="none">
-      <polyline
-        fill="none"
-        stroke="#00ff88"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        points="
-          0,180 30,170 60,160 90,140 120,150 150,120
-          180,130 210,90 240,100 270,70 300,80 330,50
-          360,60 390,40 420,55 450,30 480,20
-        "
-      />
-    </svg>
-  </div>
-);
+
 
 /* ── Section 2 data ────────────────────────────────────── */
 const STEPS = [
@@ -106,10 +89,13 @@ const HomePage = () => {
   if (user) {
     return (
       <div className="hp">
-        <section className="hp-hero" style={{ paddingBottom: '2rem' }}>
-          <div className="hp-inner" style={{ textAlign: 'center' }}>
-            <h1 className="hp-hero-title">Welcome back, {user.username}</h1>
-            <p className="hp-hero-sub">Ready to conquer the market today?</p>
+        <section className="hp-hero hp-hero--logged-in" style={{ backgroundImage: `url(${bgImage})` }}>
+          <div className="hp-hero-overlay"></div>
+          <div className="hp-inner hp-hero-content" style={{ textAlign: 'center', justifyContent: 'center' }}>
+            <div className="hp-hero-text">
+              <h1 className="hp-hero-title">Welcome back, {user.username}</h1>
+              <p className="hp-hero-sub">Ready to conquer the market today?</p>
+            </div>
           </div>
         </section>
         <DashboardPanel user={user} />
@@ -120,8 +106,14 @@ const HomePage = () => {
   return (
     <div className="hp">
       {/* ── Section 1 — Hero ───────────────────────────── */}
-      <section className="hp-hero">
-        <div className="hp-inner">
+      <section className="hp-hero" style={{ backgroundImage: `url(${bgImage})` }}>
+        <div className="hp-hero-overlay"></div>
+        <div className="hp-particles">
+          <div className="hp-particle p1"></div>
+          <div className="hp-particle p2"></div>
+          <div className="hp-particle p3"></div>
+        </div>
+        <div className="hp-inner hp-hero-content fade-up-enter">
           <div className="hp-hero-text">
             <h1 className="hp-hero-title">
               Master Market Skill Through Competition
@@ -142,7 +134,33 @@ const HomePage = () => {
               </button>
             </div>
           </div>
-          <HeroChart />
+          
+          <div className="hp-hero-card-wrapper">
+            <div className="hp-glass-card">
+              <div className="hp-glass-header">
+                <div className="hp-glass-title">Live Portfolio</div>
+                <div className="hp-glass-badge">PRO</div>
+              </div>
+              <div className="hp-glass-metrics">
+                <div className="hp-glass-metric">
+                  <span>Total P&L</span>
+                  <span className="pos">+$12,450.00</span>
+                </div>
+                <div className="hp-glass-metric">
+                  <span>Win Rate</span>
+                  <span>68.5%</span>
+                </div>
+                <div className="hp-glass-metric">
+                  <span>Today's XP</span>
+                  <span className="xp-text">+450 XP</span>
+                </div>
+                <div className="hp-glass-metric">
+                  <span>League</span>
+                  <span className="league-text">Gold League</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
