@@ -1,6 +1,7 @@
 package com.tradelearn.server.profile.service;
 
 import com.tradelearn.server.game.model.Game;
+import com.tradelearn.server.game.model.GameStatus;
 import com.tradelearn.server.game.model.MatchStats;
 import com.tradelearn.server.game.repository.GameRepository;
 import com.tradelearn.server.game.repository.MatchStatsRepository;
@@ -174,7 +175,7 @@ class ProfileServiceTest {
         game.setOpponent(opponent);
         game.setStockSymbol("TCS");
         game.setStartingBalance(1_000_000.0);
-        game.setStatus("FINISHED");
+        game.setStatus(GameStatus.FINISHED);
         game.setWinner(winner);
         return game;
     }

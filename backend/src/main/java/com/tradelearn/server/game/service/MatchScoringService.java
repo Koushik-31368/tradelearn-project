@@ -11,6 +11,7 @@ import com.tradelearn.server.common.util.GameLogger;
 import com.tradelearn.server.common.util.ScoringUtil;
 import com.tradelearn.server.dto.MatchResult;
 import com.tradelearn.server.game.model.Game;
+import com.tradelearn.server.game.model.GameStatus;
 import com.tradelearn.server.game.model.MatchStats;
 import com.tradelearn.server.user.model.User;
 import com.tradelearn.server.game.repository.GameRepository;
@@ -127,7 +128,7 @@ public class MatchScoringService {
         Game game = gameRepository.findByIdForUpdate(gameId)
                 .orElseThrow(() -> new IllegalArgumentException("Game not found"));
 
-        if (!"ACTIVE".equals(game.getStatus())) {
+        if (!GameStatus.ACTIVE.equals(game.getStatus())) {
             throw new IllegalStateException("Game is not active");
         }
 
@@ -192,7 +193,7 @@ public class MatchScoringService {
         userRepository.save(creator);
         userRepository.save(opponent);
 
-        game.setStatus("FINISHED");
+        game.setStatus(GameStatus.FINISHED);
         game.setEndTime(LocalDateTime.now());
         game.setCreatorFinalBalance(creatorBalance);
         game.setOpponentFinalBalance(opponentBalance);
@@ -254,14 +255,14 @@ public class MatchScoringService {
         Game game = gameRepository.findByIdForUpdate(gameId)
                 .orElseThrow(() -> new IllegalArgumentException("Game not found"));
 
-        if (!"ACTIVE".equals(game.getStatus())) {
+        if (!GameStatus.ACTIVE.equals(game.getStatus())) {
             log.info("[Abandon] Game {} already {} — skipping scoring", gameId, game.getStatus());
             return;
         }
 
         if (game.getOpponent() == null) {
             log.warn("[Abandon] Game {} has no opponent — marking ABANDONED without scoring", gameId);
-            game.setStatus("ABANDONED");
+            game.setStatus(GameStatus.ABANDONED);
             game.setEndTime(LocalDateTime.now());
             gameRepository.save(game);
             return;
@@ -323,7 +324,7 @@ public class MatchScoringService {
         userRepository.save(creator);
         userRepository.save(opponent);
 
-        game.setStatus("ABANDONED");
+        game.setStatus(GameStatus.ABANDONED);
         game.setEndTime(LocalDateTime.now());
         game.setCreatorFinalBalance(creatorBalance);
         game.setOpponentFinalBalance(opponentBalance);
@@ -373,7 +374,7 @@ public class MatchScoringService {
         Game oldGame = gameRepository.findById(oldGameId)
                 .orElseThrow(() -> new IllegalArgumentException("Game not found"));
 
-        if (!"FINISHED".equals(oldGame.getStatus()) && !"ABANDONED".equals(oldGame.getStatus())) {
+        if (!GameStatus.FINISHED.equals(oldGame.getStatus()) && !GameStatus.ABANDONED.equals(oldGame.getStatus())) {
             throw new IllegalStateException("Game is not finished or abandoned");
         }
 
@@ -417,7 +418,7 @@ public class MatchScoringService {
             newGame.setStockSymbol(symbol);
             newGame.setDurationMinutes(oldGame.getDurationMinutes());
             newGame.setStartingBalance(oldGame.getStartingBalance());
-            newGame.setStatus("ACTIVE");
+            newGame.setStatus(GameStatus.ACTIVE);
             newGame.setStartTime(LocalDateTime.now());
             newGame.setCreatedAt(java.sql.Timestamp.valueOf(LocalDateTime.now()));
 

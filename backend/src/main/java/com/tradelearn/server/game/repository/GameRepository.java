@@ -12,25 +12,26 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.tradelearn.server.game.model.Game;
+import com.tradelearn.server.game.model.GameStatus;
 
 import jakarta.persistence.LockModeType;
 
 @Repository
 public interface GameRepository extends JpaRepository<Game, Long> {
 
-    List<Game> findByStatus(String status);
+    List<Game> findByStatus(GameStatus status);
 
     /**
      * Find all WAITING games whose created_at timestamp is before the given
      * cutoff. Used by {@link com.tradelearn.server.infrastructure.scheduling.GameCleanupService}
      * to purge abandoned lobby games.
      */
-    @Query("SELECT g FROM Game g WHERE g.status = 'WAITING' AND g.createdAt < :cutoff")
+    @Query("SELECT g FROM Game g WHERE g.status = com.tradelearn.server.game.model.GameStatus.WAITING AND g.createdAt < :cutoff")
     List<Game> findStaleWaitingGames(@Param("cutoff") java.sql.Timestamp cutoff);
 
     List<Game> findByCreatorIdOrOpponentId(Long creatorId, Long opponentId);
 
-    List<Game> findByCreatorIdOrOpponentIdAndStatus(Long creatorId, Long opponentId, String status);
+    List<Game> findByCreatorIdOrOpponentIdAndStatus(Long creatorId, Long opponentId, GameStatus status);
 
     long countByCreatorIdOrOpponentId(Long creatorId, Long opponentId);
 
@@ -54,9 +55,9 @@ public interface GameRepository extends JpaRepository<Game, Long> {
     // persistence context after the UPDATE, ensuring the subsequent
     // findByIdForUpdate() reads fresh state from the DB, not the L1 cache.
     @Modifying(clearAutomatically = true)
-    @Query("UPDATE Game g SET g.status = 'ACTIVE', g.opponent = :opponent, " +
+    @Query("UPDATE Game g SET g.status = com.tradelearn.server.game.model.GameStatus.ACTIVE, g.opponent = :opponent, " +
            "g.startTime = CURRENT_TIMESTAMP, g.version = g.version + 1 " +
-           "WHERE g.id = :gameId AND g.status = 'WAITING'")
+           "WHERE g.id = :gameId AND g.status = com.tradelearn.server.game.model.GameStatus.WAITING")
     int atomicJoin(@Param("gameId") Long gameId,
                    @Param("opponent") com.tradelearn.server.user.model.User opponent);
 }

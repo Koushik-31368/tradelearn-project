@@ -27,6 +27,7 @@ import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import com.tradelearn.server.game.model.Game;
+import com.tradelearn.server.game.model.GameStatus;
 import com.tradelearn.server.game.model.MatchStats;
 import com.tradelearn.server.game.model.Trade;
 import com.tradelearn.server.user.model.User;
@@ -237,7 +238,7 @@ public class MatchSchedulerService {
                 return;
             }
             
-            if (!"ACTIVE".equals(game.getStatus())) {
+            if (!GameStatus.ACTIVE.equals(game.getStatus())) {
                 GameLogger.logDiagnosticSnapshot(log, "Stopping Tick - Not Active", Map.of(
                     "gameId", gameId,
                     "status", game.getStatus()
@@ -298,7 +299,7 @@ public class MatchSchedulerService {
         try {
             // Pessimistic lock prevents race with MatchService.endMatch()
             Game game = gameRepository.findByIdForUpdate(gameId).orElse(null);
-            if (game == null || !"ACTIVE".equals(game.getStatus())) return;
+            if (game == null || !GameStatus.ACTIVE.equals(game.getStatus())) return;
 
             double finalPrice = candleService.getCurrentPrice(gameId);
 
@@ -322,7 +323,7 @@ public class MatchSchedulerService {
                     opponentBal, game.getStartingBalance(),
                     opponentPos.maxDrawdown, opponentPos.totalTrades, opponentPos.profitableTrades);
 
-            game.setStatus("FINISHED");
+            game.setStatus(GameStatus.FINISHED);
             game.setEndTime(LocalDateTime.now());
             game.setCreatorFinalBalance(creatorBal);
             game.setOpponentFinalBalance(opponentBal);
