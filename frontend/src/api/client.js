@@ -18,6 +18,7 @@
 import axios from 'axios';
 
 const API_URL = process.env.REACT_APP_API_URL || '';
+const WS_URL = process.env.REACT_APP_WS_URL || '';
 
 // ── URL helpers ──────────────────────────────────────────────────────────────
 
@@ -31,15 +32,19 @@ export function backendUrl(path) {
 }
 
 /**
- * Derive the WebSocket base from the HTTP base URL.
+ * Derive the WebSocket base from the HTTP base URL, or use WS_URL if provided.
  */
 export function wsBase() {
+  if (WS_URL) return WS_URL;
   if (!API_URL) return '';
   if (API_URL.startsWith('https://'))
     return 'wss://' + API_URL.replace(/^https?:\/\//, '');
   if (API_URL.startsWith('http://'))
     return 'ws://' + API_URL.replace(/^https?:\/\//, '');
-  return API_URL;
+  
+  // Fallback for relative API_URL (e.g. '/' or '')
+  const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+  return protocol + window.location.host;
 }
 
 // ── In-memory access token (replaced localStorage) ───────────────────────────
