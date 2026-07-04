@@ -5,6 +5,8 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import SockJS from 'sockjs-client';
 import { Client } from '@stomp/stompjs';
+// getToken() reads the in-memory access token set by AuthContext via setToken().
+// It never reads localStorage or the httpOnly refresh cookie.
 import { wsBase, getToken } from '../api/api';
 
 /* ──────── public enums ──────── */
