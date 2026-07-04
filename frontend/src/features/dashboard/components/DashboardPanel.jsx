@@ -14,8 +14,10 @@ const DashboardPanel = ({ user }) => {
           fetchDailyQuests(),
           fetchWeeklyChallenges()
         ]);
-        setDailyQuests(dailyRes.data);
-        setWeeklyChallenges(weeklyRes.data);
+        // fetchDailyQuests / fetchWeeklyChallenges already return res.data (the array),
+        // NOT a full axios response — accessing .data again yields undefined.
+        setDailyQuests(Array.isArray(dailyRes) ? dailyRes : []);
+        setWeeklyChallenges(Array.isArray(weeklyRes) ? weeklyRes : []);
       } catch (err) {
         console.error("Failed to load quests", err);
       } finally {

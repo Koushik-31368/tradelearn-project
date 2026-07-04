@@ -23,12 +23,13 @@ const DailyCheckinModal = () => {
       if (lastCheckinStr !== todayStr) {
         dailyCheckin()
           .then((res) => {
-            if (mounted && res.data && res.data.message && res.data.message.includes('+10 XP')) {
-              setCheckinData(res.data);
+            // dailyCheckin() already returns res.data (the payload object), not an axios response
+            if (mounted && res && res.message && res.message.includes('+10 XP')) {
+              setCheckinData(res);
               setShowModal(true);
               updateUser({
-                xp: res.data.xp,
-                loginStreak: res.data.loginStreak
+                xp: res.xp,
+                loginStreak: res.loginStreak
               });
               localStorage.setItem(lastCheckinKey, todayStr);
             }
