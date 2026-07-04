@@ -54,4 +54,21 @@ backend/errors.txt
 project_structure.txt
 code_verification.txt
 
+# ── Playwright E2E test output artifacts ──────────────────
+# These are generated at runtime and must never be committed.
+e2e/test-results/
+e2e/playwright-report/
+e2e/playwright-prod-report/
+e2e/prod-test-results/
+e2e/prod-test-results-*/
+e2e/trace_inspect/
+e2e/trace_inspect_first/
+e2e/trace_out/
+e2e/trace_out*/
+e2e/prod-test-accounts.log
+e2e/prod-test-results.json
+
+# ── Root-level debug / scratch scripts ────────────────────
+scratch-*.js
+
 internal-notes/
