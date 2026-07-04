@@ -53,3 +53,5 @@ backend/errors.txt
 # ── Generated reports / dumps ─────────────────────────────
 project_structure.txt
 code_verification.txt
+
+internal-notes/
