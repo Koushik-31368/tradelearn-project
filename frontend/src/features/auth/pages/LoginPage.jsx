@@ -1,9 +1,8 @@
 // src/pages/LoginPage.jsx
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import apiClient from '../../../api/client';
 import { useAuth } from '../AuthContext';
-import { backendUrl } from '../../../api/api';
 import './AuthForm.css';
 
 const LoginPage = () => {
@@ -20,8 +19,8 @@ const LoginPage = () => {
     setIsError(false);
 
     try {
-      const response = await axios.post(
-        backendUrl('/api/auth/login'),
+      const response = await apiClient.post(
+        '/api/auth/login',
         { email, password }
       );
 
