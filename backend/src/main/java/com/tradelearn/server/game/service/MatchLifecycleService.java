@@ -18,12 +18,15 @@ import com.tradelearn.server.user.repository.UserRepository;
 import com.tradelearn.server.websocket.GameBroadcaster;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
@@ -38,6 +41,20 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
  * Redis is only mutated when we know the DB transaction has succeeded — preventing
  * stale Redis state on DB rollback (deadlock, constraint violation, etc.).
  *
+ * <h3>Reconciliation (Issue 2)</h3>
+ * <ul>
+ *   <li><b>Inline retry:</b> Every afterCommit block uses
+ *       {@link #afterCommitWithRetry} — 3 attempts with 200/500/1000 ms
+ *       exponential backoff.  On exhaustion the game is transitioned to
+ *       {@link GameStatus#FAILED} and both players are notified via
+ *       {@code match-failed} so the frontend doesn't hang.</li>
+ *   <li><b>Sweep job:</b> {@link #sweepOrphanedActiveGames()} runs every 60 s.
+ *       It finds games that are ACTIVE in the DB but have no corresponding Redis
+ *       room (i.e. the afterCommit never fired, e.g. after a crash), marks them
+ *       FAILED, and broadcasts to both players.  This is the safety net for the
+ *       gap between DB commit and the afterCommit callback.</li>
+ * </ul>
+ *
  * <h3>Separated concerns</h3>
  * <ul>
  *   <li>{@link MatchScoringService} — end-game scoring, ELO, abandon handling</li>
@@ -49,6 +66,15 @@ public class MatchLifecycleService {
 
     private static final Logger log = LoggerFactory.getLogger(MatchLifecycleService.class);
     private static final int MAX_PLAYERS = 2;
+
+    /** Backoff delays (ms) for afterCommit retries: 200 ms, 500 ms, 1 000 ms. */
+    private static final long[] RETRY_DELAYS_MS = {200L, 500L, 1_000L};
+
+    /**
+     * Games younger than this threshold are not swept — give the afterCommit
+     * callback time to fire naturally before the sweep declares them orphaned.
+     */
+    private static final int SWEEP_MIN_AGE_MINUTES = 2;
 
     /**
      * Stock symbols used for ranked/auto-match game creation.
@@ -85,6 +111,90 @@ public class MatchLifecycleService {
         this.roomManager = roomManager;
         this.positionStore = positionStore;
         this.metrics = metrics;
+    }
+
+    // ==================== RETRY HELPER ====================
+
+    /**
+     * Execute {@code action} from inside an afterCommit callback, with bounded
+     * exponential-backoff retries.
+     *
+     * <p>On success: does nothing more.
+     * <p>On exhaustion: transitions the game to {@link GameStatus#FAILED},
+     * notifies both players with a {@code match-failed} WebSocket event,
+     * and logs an error.
+     *
+     * @param context  human-readable label for log lines (e.g. "joinMatch")
+     * @param gameId   game being started — used for notifications and DB update
+     * @param creatorId  creator's user-id — used for the failure broadcast
+     * @param opponentId opponent's user-id — used for the failure broadcast
+     * @param action   the Redis+candle+scheduler side-effect block to attempt
+     */
+    void afterCommitWithRetry(String context, long gameId,
+                                      long creatorId, long opponentId,
+                                      Runnable action) {
+        Exception lastException = null;
+        for (int attempt = 0; attempt < RETRY_DELAYS_MS.length; attempt++) {
+            try {
+                action.run();
+                if (attempt > 0) {
+                    log.info("[{}] afterCommit succeeded on attempt {} for game {}",
+                            context, attempt + 1, gameId);
+                }
+                return;   // success
+            } catch (Exception e) {
+                lastException = e;
+                log.warn("[{}] afterCommit attempt {}/{} failed for game {}: {}",
+                        context, attempt + 1, RETRY_DELAYS_MS.length, gameId, e.getMessage());
+                if (attempt < RETRY_DELAYS_MS.length - 1) {
+                    try {
+                        Thread.sleep(RETRY_DELAYS_MS[attempt]);
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        break;
+                    }
+                }
+            }
+        }
+        // All retries exhausted — transition to FAILED and notify players
+        GameLogger.logError(log, context + ".afterCommit", gameId, lastException, Map.of(
+                "creatorId", creatorId,
+                "opponentId", opponentId,
+                "impact", "DB committed ACTIVE but all side-effect retries failed — marking FAILED"
+        ));
+        markGameFailed(gameId, creatorId, opponentId, context);
+    }
+
+    /**
+     * Transition a game to FAILED in the DB and broadcast {@code match-failed}
+     * to both players.  Runs in a NEW transaction so it is independent of any
+     * surrounding context.
+     */
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void markGameFailed(long gameId, long creatorId, long opponentId, String context) {
+        try {
+            gameRepository.findById(gameId).ifPresent(g -> {
+                if (GameStatus.ACTIVE.equals(g.getStatus())) {
+                    g.setStatus(GameStatus.FAILED);
+                    gameRepository.save(g);
+                    log.error("[{}] Game {} marked FAILED after afterCommit exhaustion", context, gameId);
+                }
+            });
+        } catch (Exception e) {
+            log.error("[{}] Could not mark game {} FAILED in DB: {}", context, gameId, e.getMessage());
+        }
+
+        // Notify players regardless of whether the DB update succeeded
+        try {
+            Map<String, Object> payload = Map.of(
+                    "gameId", gameId,
+                    "status", "FAILED",
+                    "reason", "Server failed to initialize the match after multiple attempts. Please try again."
+            );
+            broadcaster.sendToGame(gameId, "match-failed", payload);
+        } catch (Exception e) {
+            log.error("[{}] Could not broadcast match-failed for game {}: {}", context, gameId, e.getMessage());
+        }
     }
 
     // ==================== CREATE CUSTOM MATCH ====================
@@ -132,6 +242,11 @@ public class MatchLifecycleService {
      * that is very hard to detect and repair. By deferring side effects to
      * afterCommit, we guarantee that Redis/WebSocket only fire when we KNOW
      * the DB change is durable.
+     *
+     * <h3>Resilience (Issue 2)</h3>
+     * The afterCommit block uses {@link #afterCommitWithRetry} with 3 attempts
+     * and exponential backoff.  On exhaustion the game is marked FAILED and
+     * both players are notified via {@code match-failed}.
      */
     @SuppressWarnings("null")
     @Transactional
@@ -196,7 +311,7 @@ public class MatchLifecycleService {
             "totalCandles", game.getTotalCandles()
         ));
 
-        // ── Phase 3: Register afterCommit side effects ──
+        // ── Phase 3: Register afterCommit side effects (with retry) ──
         final long creatorId = game.getCreator().getId();
         final double startingBalance = game.getStartingBalance();
         final Long opponentId = opponent.getId();
@@ -205,7 +320,7 @@ public class MatchLifecycleService {
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
             @Override
             public void afterCommit() {
-                try {
+                afterCommitWithRetry("joinMatch", gameId, creatorId, opponentId, () -> {
                     roomManager.joinRoom(gameId, opponentId);
                     candleService.loadCandles(gameId);
                     matchSchedulerService.startProgression(gameId);
@@ -231,13 +346,7 @@ public class MatchLifecycleService {
                         "candlesLoaded", true,
                         "schedulerStarted", true
                     ));
-                } catch (Exception e) {
-                    GameLogger.logError(log, "joinMatch.afterCommit", gameId, e, Map.of(
-                        "creatorId", creatorId,
-                        "opponentId", opponentId,
-                        "impact", "DB committed ACTIVE but side effects failed — needs reconciliation"
-                    ));
-                }
+                });
             }
         });
 
@@ -289,7 +398,7 @@ public class MatchLifecycleService {
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
             @Override
             public void afterCommit() {
-                try {
+                afterCommitWithRetry("createAutoMatch", gameId, p1Id, p2Id, () -> {
                     roomManager.createRoom(gameId, p1Id);
                     roomManager.joinRoom(gameId, p2Id);
 
@@ -306,13 +415,7 @@ public class MatchLifecycleService {
                         "stockSymbol", symbol,
                         "status", "ACTIVE"
                     ));
-                } catch (Exception e) {
-                    GameLogger.logError(log, "createAutoMatch.afterCommit", gameId, e, Map.of(
-                        "p1Id", p1Id,
-                        "p2Id", p2Id,
-                        "impact", "DB committed ACTIVE but side effects failed — needs reconciliation"
-                    ));
-                }
+                });
             }
         });
 
@@ -376,7 +479,7 @@ public class MatchLifecycleService {
             TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
                 @Override
                 public void afterCommit() {
-                    try {
+                    afterCommitWithRetry("startMatch", gameId, cId, oId, () -> {
                         candleService.loadCandles(gameId);
                         matchSchedulerService.startProgression(gameId);
                         positionStore.initializePosition(gameId, cId, startBal);
@@ -389,11 +492,7 @@ public class MatchLifecycleService {
                             "status", "ACTIVE",
                             "candlesLoaded", true
                         ));
-                    } catch (Exception e) {
-                        GameLogger.logError(log, "startMatch.afterCommit", gameId, e, Map.of(
-                            "impact", "DB committed but side effects failed — needs reconciliation"
-                        ));
-                    }
+                    });
                 }
             });
 
@@ -403,6 +502,68 @@ public class MatchLifecycleService {
             throw e;
         } finally {
             GameLogger.clearContext();
+        }
+    }
+
+    // ==================== SWEEP JOB (safety net) ====================
+
+    /**
+     * Scheduled sweep that finds ACTIVE games with no corresponding Redis room
+     * and marks them FAILED.
+     *
+     * <h3>What it catches</h3>
+     * The afterCommit callback can be silently skipped if the JVM crashes between
+     * the DB commit and the callback.  In that case the game is durable in DB as
+     * ACTIVE but Redis has no room and no scheduler — the frontend hangs waiting
+     * for candles that will never arrive.
+     *
+     * <h3>Safety threshold</h3>
+     * Only games older than {@value #SWEEP_MIN_AGE_MINUTES} minutes are considered
+     * orphaned — this gives legitimate afterCommit callbacks time to run.
+     */
+    @Scheduled(fixedDelayString = "${tradelearn.sweep.interval-ms:60000}",
+               initialDelayString = "${tradelearn.sweep.initial-delay-ms:30000}")
+    public void sweepOrphanedActiveGames() {
+        List<Game> activeGames = gameRepository.findByStatus(GameStatus.ACTIVE);
+        if (activeGames.isEmpty()) return;
+
+        LocalDateTime ageThreshold = LocalDateTime.now().minusMinutes(SWEEP_MIN_AGE_MINUTES);
+        int swept = 0;
+
+        for (Game game : activeGames) {
+            long gId = game.getId();
+            try {
+                // Skip games that are too young — give afterCommit time to run
+                if (game.getStartTime() != null && game.getStartTime().isAfter(ageThreshold)) {
+                    continue;
+                }
+                // Skip if createdAt is too recent (startTime may be null for edge cases)
+                if (game.getStartTime() == null && game.getCreatedAt() != null) {
+                    LocalDateTime created = game.getCreatedAt().toLocalDateTime();
+                    if (created.isAfter(ageThreshold)) continue;
+                }
+
+                // If the Redis room exists, the game is running normally — skip
+                if (roomManager.hasRoom(gId)) continue;
+
+                long creatorId  = game.getCreator()  != null ? game.getCreator().getId()  : -1L;
+                long opponentId = game.getOpponent() != null ? game.getOpponent().getId() : -1L;
+
+                log.warn("[Sweep] Game {} is ACTIVE in DB but has no Redis room — marking FAILED " +
+                         "(creator={}, opponent={})", gId, creatorId, opponentId);
+
+                markGameFailed(gId, creatorId, opponentId, "sweep");
+                swept++;
+
+            } catch (Exception e) {
+                log.error("[Sweep] Error processing game {}: {}", gId, e.getMessage());
+            }
+        }
+
+        if (swept > 0) {
+            log.warn("[Sweep] Marked {} orphaned ACTIVE game(s) as FAILED", swept);
+        } else {
+            log.debug("[Sweep] No orphaned games found ({} ACTIVE games checked)", activeGames.size());
         }
     }
 

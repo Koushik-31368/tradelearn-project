@@ -1,6 +1,8 @@
 package com.tradelearn.server.auth.security;
 
+import java.security.SecureRandom;
 import java.util.Date;
+import java.util.HexFormat;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
@@ -77,19 +79,44 @@ public class JwtUtil {
             @Value("${tradelearn.jwt.secret}") String secret,
             @Value("${tradelearn.jwt.previous-secret:}") String previousSecret,
             @Value("${tradelearn.jwt.expiration-ms}") long expirationMs,
-            @Value("${tradelearn.jwt.refresh-secret:${tradelearn.jwt.secret}_refresh_key_suffix}") String refreshSecret,
+            @Value("${tradelearn.jwt.refresh-secret:}") String refreshSecret,
             @Value("${tradelearn.jwt.refresh-expiration-ms:604800000}") long refreshExpirationMs) {
         this.currentKey = Keys.hmacShaKeyFor(secret.getBytes());
         this.previousKey = (previousSecret != null && !previousSecret.isBlank())
                 ? Keys.hmacShaKeyFor(previousSecret.getBytes())
                 : null;
         this.expirationMs = expirationMs;
-        this.refreshKey = Keys.hmacShaKeyFor(refreshSecret.getBytes());
+        this.refreshKey = resolveRefreshKey(refreshSecret);
         this.refreshExpirationMs = refreshExpirationMs;
 
         if (this.previousKey != null) {
             log.info("[JWT] Key rotation active — accepting tokens signed with both current and previous keys");
         }
+    }
+
+    /**
+     * Resolve the refresh-token signing key.
+     *
+     * <ul>
+     *   <li>If {@code refreshSecret} is non-blank: use it as-is (standard prod path).</li>
+     *   <li>If blank/absent: generate a cryptographically-random 64-byte key at boot.
+     *       <strong>This is only safe for local development</strong> — all existing refresh
+     *       tokens are invalidated on every restart. In production, set
+     *       {@code JWT_REFRESH_SECRET} to a stable, independent secret; the app
+     *       fails at startup if the property is missing (no fallback in prod profile).</li>
+     * </ul>
+     */
+    private static SecretKey resolveRefreshKey(String refreshSecret) {
+        if (refreshSecret != null && !refreshSecret.isBlank()) {
+            return Keys.hmacShaKeyFor(refreshSecret.getBytes());
+        }
+        // Dev-only: random key, invalidated on every restart
+        byte[] randomBytes = new byte[64];
+        new SecureRandom().nextBytes(randomBytes);
+        String hex = HexFormat.of().formatHex(randomBytes);
+        log.warn("[JWT] tradelearn.jwt.refresh-secret is not set — generating a random key for this session.");
+        log.warn("[JWT] Existing refresh tokens will be INVALID after restart. Set JWT_REFRESH_SECRET in production.");
+        return Keys.hmacShaKeyFor(hex.getBytes());
     }
 
     @PostConstruct
