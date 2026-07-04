@@ -54,7 +54,7 @@ test.describe('Learning Academy — All 8 Strategies (Production)', () => {
   // ── TEST 2: Open each of the 8 strategy cards — verify distinct content ──
   test('all 8 strategy detail panels render with distinct content', async ({ page }) => {
     await page.goto('/strategies');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     const cards = page.locator('[class*="strategy-card"], [class*="StrategyCard"], [class*="card"]');
     const totalCards = await cards.count();
@@ -66,7 +66,7 @@ test.describe('Learning Academy — All 8 Strategies (Production)', () => {
     for (let i = 0; i < Math.min(totalCards, 8); i++) {
       // Navigate fresh to avoid stale card references after overlay manipulation
       await page.goto('/strategies');
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
 
       const freshCards = page.locator('[class*="strategy-card"], [class*="StrategyCard"], [class*="card"]');
       await expect(freshCards.nth(i)).toBeVisible({ timeout: 15_000 });
@@ -105,7 +105,7 @@ test.describe('Learning Academy — All 8 Strategies (Production)', () => {
   // ── TEST 3: Page body mentions all 8 expected strategy names ────────────
   test('page body mentions all 8 expected strategies by name/keyword', async ({ page }) => {
     await page.goto('/strategies');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     const bodyText = await page.locator('body').textContent();
     const missingStrategies = [];
@@ -137,7 +137,7 @@ test.describe('Learning Academy — All 8 Strategies (Production)', () => {
     const errors = collectConsoleErrors(page);
 
     await page.goto('/strategies');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Click first two cards
     const cards = page.locator('[class*="strategy-card"], [class*="card"]');

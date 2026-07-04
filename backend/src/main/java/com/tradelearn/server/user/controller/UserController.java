@@ -24,11 +24,11 @@ public class UserController {
 
     @PostMapping("/daily-checkin")
     public ResponseEntity<?> dailyCheckin(Authentication authentication) {
-        if (authentication == null || !(authentication.getPrincipal() instanceof UserDetails)) {
+        if (authentication == null || !(authentication.getPrincipal() instanceof User)) {
             return ResponseEntity.status(401).body(Map.of("message", "Unauthorized"));
         }
 
-        UserDetails principal = (UserDetails) authentication.getPrincipal();
+        User principal = (User) authentication.getPrincipal();
         try {
             User user = userService.findByUsername(principal.getUsername());
             User updatedUser = userService.performDailyCheckin(user.getId());

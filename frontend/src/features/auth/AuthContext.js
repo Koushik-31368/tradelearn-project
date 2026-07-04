@@ -69,6 +69,7 @@ export const AuthProvider = ({ children }) => {
     setAccessToken(null);
     setUser(null);
     setToken(null);
+    localStorage.removeItem('tradelearn_user');
   }, []);
 
   // ── register logout callback so client.js can trigger it on 401 ──────────
@@ -107,11 +108,18 @@ export const AuthProvider = ({ children }) => {
     const { token: jwt, ...userObj } = responseData;
     setAccessToken(jwt);
     setUser(userObj);
+    localStorage.setItem('tradelearn_user', JSON.stringify(userObj));
   }, []);
 
   // ── updateUser — for in-place profile updates (XP, rating, etc.) ─────────
   const updateUser = useCallback((updates) => {
-    setUser((prev) => (prev ? { ...prev, ...updates } : null));
+    setUser((prev) => {
+      const next = prev ? { ...prev, ...updates } : null;
+      if (next) {
+        localStorage.setItem('tradelearn_user', JSON.stringify(next));
+      }
+      return next;
+    });
   }, []);
 
   // ── derived: isAuthenticated ──────────────────────────────────────────────
