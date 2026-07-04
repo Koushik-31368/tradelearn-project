@@ -238,8 +238,18 @@
     font-size: 0.92rem;
   }
 
+  /* Prevent stats bar from overflowing narrow viewports */
+  .strat-hero__stats {
+    max-width: 100%;
+    box-sizing: border-box;
+    padding: 12px 16px;
+    gap: 10px;
+  }
+
   .strat-journey__inner {
     font-size: 0.72rem;
     gap: 6px;
+    flex-wrap: wrap;
+    max-width: 100%;
   }
 }

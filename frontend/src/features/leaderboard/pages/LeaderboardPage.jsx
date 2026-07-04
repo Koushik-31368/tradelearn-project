@@ -1,6 +1,6 @@
 // src/pages/LeaderboardPage.jsx
 import React, { useState, useEffect } from 'react';
-import { backendUrl } from '../../../api/api';
+import apiClient from '../../../api/client';
 import { useAuth } from '../../auth/AuthContext';
 import TierBadge from '../components/TierBadge';
 import './LeaderboardPage.css';
@@ -27,12 +27,10 @@ const LeaderboardPage = () => {
             setLoading(true);
             setError(null);
             try {
-                const res = await fetch(backendUrl('/api/users/leaderboard'));
-                if (!res.ok) throw new Error('Failed to load leaderboard');
-                const data = await res.json();
-                setEntries(data);
+                const res = await apiClient.get('/api/users/leaderboard');
+                setEntries(res.data);
             } catch (err) {
-                setError(err.message);
+                setError(err.message ?? 'Failed to load leaderboard');
             } finally {
                 setLoading(false);
             }
@@ -44,10 +42,8 @@ const LeaderboardPage = () => {
         if (activeTab !== TAB_PRACTICE) return;
         (async () => {
             try {
-                const res = await fetch(backendUrl('/api/leaderboard'));
-                if (!res.ok) throw new Error('Failed to load practice leaderboard');
-                const data = await res.json();
-                setPracticeEntries(data);
+                const res = await apiClient.get('/api/leaderboard');
+                setPracticeEntries(res.data);
             } catch {
                 // Non-critical; practice leaderboard might be empty
             }
@@ -60,12 +56,12 @@ const LeaderboardPage = () => {
         (async () => {
             setLoading(true);
             try {
-                const res = await fetch(backendUrl(`/api/users/leaderboard/tier/${selectedTier}`));
-                if (!res.ok) throw new Error('Failed to load league');
-                const data = await res.json();
-                setLeagueEntries(data);
+                const res = await apiClient.get(`/api/users/leaderboard/tier/${encodeURIComponent(selectedTier)}`);
+                setLeagueEntries(res.data);
             } catch (err) {
-                console.error(err);
+                console.error('[leaderboard] Failed to load league:', err.message);
+                // Don't throw — just show empty table
+                setLeagueEntries([]);
             } finally {
                 setLoading(false);
             }
