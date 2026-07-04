@@ -15,6 +15,7 @@ import org.springframework.stereotype.Controller;
 import com.tradelearn.server.websocket.config.WebSocketEventListener;
 import com.tradelearn.server.dto.MatchTradeRequest;
 import com.tradelearn.server.game.model.Game;
+import com.tradelearn.server.game.model.GameStatus;
 import com.tradelearn.server.game.model.Trade;
 import com.tradelearn.server.game.repository.GameRepository;
 import com.tradelearn.server.auth.security.WebSocketChannelInterceptor;
@@ -201,7 +202,7 @@ public class GameWebSocketHandler {
             }
 
             Game game = gameOpt.get();
-            if (!"ACTIVE".equals(game.getStatus())) {
+            if (!GameStatus.ACTIVE.equals(game.getStatus())) {
                 GameLogger.logTradeRejected(log, gameId, playerId,
                         trade.type, trade.amount, "Game is not ACTIVE");
                 return;
@@ -364,7 +365,7 @@ public class GameWebSocketHandler {
             // "started" broadcast (e.g. brief WS disconnect during the waiting phase).
             // Re-broadcast to the game topic so they transition out of WAITING.
             Game game = gameRepository.findById(gameId).orElse(null);
-            if (game != null && "ACTIVE".equals(game.getStatus())) {
+            if (game != null && GameStatus.ACTIVE.equals(game.getStatus())) {
                 boolean isCreator  = game.getCreator() != null && game.getCreator().getId().equals(userId);
                 boolean isOpponent = game.getOpponent() != null && game.getOpponent().getId().equals(userId);
                 if (isCreator || isOpponent) {

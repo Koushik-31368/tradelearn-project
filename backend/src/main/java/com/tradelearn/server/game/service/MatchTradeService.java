@@ -17,6 +17,7 @@ import com.tradelearn.server.dto.MatchTradeRequest;
 import com.tradelearn.server.common.exception.InvalidGameStateException;
 import com.tradelearn.server.common.exception.TradeValidationException;
 import com.tradelearn.server.game.model.Game;
+import com.tradelearn.server.game.model.GameStatus;
 import com.tradelearn.server.game.model.Trade;
 import com.tradelearn.server.game.repository.GameRepository;
 import com.tradelearn.server.game.repository.TradeRepository;
@@ -62,10 +63,10 @@ public class MatchTradeService {
                     .orElseThrow(() -> new IllegalArgumentException("Game not found"));
 
             // ---- Guard: game must be ACTIVE ----
-            if (!"ACTIVE".equals(game.getStatus())) {
+            if (!GameStatus.ACTIVE.equals(game.getStatus())) {
                 GameLogger.logTradeRejected(log, request.getGameId(), request.getUserId(), 
                     request.getType(), request.getQuantity(), "Game is not active");
-                throw new InvalidGameStateException(request.getGameId(), game.getStatus(), "ACTIVE");
+                throw new InvalidGameStateException(request.getGameId(), game.getStatus().name(), "ACTIVE");
             }
 
             // ---- Guard: candles must not be exhausted ----

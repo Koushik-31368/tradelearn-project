@@ -16,6 +16,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import com.tradelearn.server.game.model.Game;
+import com.tradelearn.server.game.model.GameStatus;
 import com.tradelearn.server.game.repository.GameRepository;
 
 /**
@@ -149,7 +150,7 @@ public class StateReconciliationService {
                 } else {
                     // Redis lost it (restart/flush) — check DB for ground truth
                     Game game = gameRepository.findById(gameId).orElse(null);
-                    if (game != null && "ACTIVE".equals(game.getStatus())) {
+                    if (game != null && GameStatus.ACTIVE.equals(game.getStatus())) {
                         // Game is active in DB but missing from Redis — recreate
                         rawRedis.createRoom(gameId, game.getCreator().getId());
                         rawRedis.setPhase(gameId, "ACTIVE");
@@ -189,7 +190,7 @@ public class StateReconciliationService {
     private int reconcileGameStates() {
         List<Game> activeGames;
         try {
-            activeGames = gameRepository.findByStatus("ACTIVE");
+            activeGames = gameRepository.findByStatus(GameStatus.ACTIVE);
         } catch (Exception e) {
             log.warn("[Reconciliation] Cannot query DB for active games: {}", e.getMessage());
             return 0;

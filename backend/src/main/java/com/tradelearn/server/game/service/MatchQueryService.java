@@ -1,6 +1,7 @@
 package com.tradelearn.server.game.service;
 
 import com.tradelearn.server.game.model.Game;
+import com.tradelearn.server.game.model.GameStatus;
 import com.tradelearn.server.game.repository.GameRepository;
 
 import org.springframework.stereotype.Service;
@@ -44,21 +45,21 @@ public class MatchQueryService {
      * All games currently in WAITING state (open lobby games).
      */
     public List<Game> getOpenMatches() {
-        return gameRepository.findByStatus("WAITING");
+        return gameRepository.findByStatus(GameStatus.WAITING);
     }
 
     /**
      * All games currently in ACTIVE state (in-progress games).
      */
     public List<Game> getActiveMatches() {
-        return gameRepository.findByStatus("ACTIVE");
+        return gameRepository.findByStatus(GameStatus.ACTIVE);
     }
 
     /**
      * All games that have reached the FINISHED state.
      */
     public List<Game> getFinishedMatches() {
-        return gameRepository.findByStatus("FINISHED");
+        return gameRepository.findByStatus(GameStatus.FINISHED);
     }
 
     /**

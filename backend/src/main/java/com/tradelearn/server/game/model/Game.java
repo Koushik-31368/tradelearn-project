@@ -6,6 +6,8 @@ import java.time.LocalDateTime;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -36,8 +38,9 @@ public class Game {
     @Column(name = "duration_minutes", nullable = false)
     private int durationMinutes;
 
-    @Column(nullable = false)
-    private String status; // WAITING, ACTIVE, FINISHED
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 16)
+    private GameStatus status; // WAITING, ACTIVE, FINISHED, ABANDONED, FAILED
 
     @ManyToOne
     @JoinColumn(name = "creator_id")
@@ -97,8 +100,8 @@ public class Game {
     public int getDurationMinutes() { return durationMinutes; }
     public void setDurationMinutes(int durationMinutes) { this.durationMinutes = durationMinutes; }
 
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
+    public GameStatus getStatus() { return status; }
+    public void setStatus(GameStatus status) { this.status = status; }
 
     public User getCreator() { return creator; }
     public void setCreator(User creator) { this.creator = creator; }

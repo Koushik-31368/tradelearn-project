@@ -11,6 +11,7 @@ import com.tradelearn.server.common.exception.RoomFullException;
 import com.tradelearn.server.common.util.GameLogger;
 import com.tradelearn.server.dto.CreateMatchRequest;
 import com.tradelearn.server.game.model.Game;
+import com.tradelearn.server.game.model.GameStatus;
 import com.tradelearn.server.user.model.User;
 import com.tradelearn.server.game.repository.GameRepository;
 import com.tradelearn.server.user.repository.UserRepository;
@@ -106,7 +107,7 @@ public class MatchLifecycleService {
         game.setStockSymbol(request.getStockSymbol());
         game.setDurationMinutes(request.getDurationMinutes());
         game.setStartingBalance(request.getStartingBalance());
-        game.setStatus("WAITING");
+        game.setStatus(GameStatus.WAITING);
         game.setCreatedAt(java.sql.Timestamp.valueOf(LocalDateTime.now()));
 
         Game saved = gameRepository.save(game);
@@ -272,7 +273,7 @@ public class MatchLifecycleService {
         game.setStockSymbol(symbol);
         game.setDurationMinutes(5);
         game.setStartingBalance(1_000_000.0);
-        game.setStatus("ACTIVE");
+        game.setStatus(GameStatus.ACTIVE);
         game.setStartTime(LocalDateTime.now());
 
         Game saved = gameRepository.save(game);
@@ -345,12 +346,12 @@ public class MatchLifecycleService {
                 opponent != null ? opponent.getId() : null,
                 game.getStatus());
 
-            if (!"ACTIVE".equals(game.getStatus())) {
+            if (!GameStatus.ACTIVE.equals(game.getStatus())) {
                 GameLogger.logGameCannotStart(log, gameId, "Game is not ACTIVE", Map.of(
                     "currentStatus", game.getStatus(),
                     "expectedStatus", "ACTIVE"
                 ));
-                throw new InvalidGameStateException(gameId, game.getStatus(), "ACTIVE");
+                throw new InvalidGameStateException(gameId, game.getStatus().name(), "ACTIVE");
             }
 
             if (opponent == null) {
@@ -432,7 +433,7 @@ public class MatchLifecycleService {
             throw new IllegalStateException("Only the host can cancel this game");
         }
 
-        if (!"WAITING".equals(game.getStatus())) {
+        if (!GameStatus.WAITING.equals(game.getStatus())) {
             throw new IllegalStateException("Cannot cancel a game that is already " + game.getStatus());
         }
 

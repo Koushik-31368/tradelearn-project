@@ -2,6 +2,7 @@ package com.tradelearn.server.game.service;
 
 import com.tradelearn.server.dto.CreateMatchRequest;
 import com.tradelearn.server.game.model.Game;
+import com.tradelearn.server.game.model.GameStatus;
 import com.tradelearn.server.game.repository.GameRepository;
 import com.tradelearn.server.user.model.User;
 import com.tradelearn.server.user.repository.UserRepository;
@@ -85,7 +86,7 @@ class MatchLifecycleServiceTest {
 
         Game savedGame = new Game();
         savedGame.setId(100L);
-        savedGame.setStatus("WAITING");
+        savedGame.setStatus(GameStatus.WAITING);
         when(gameRepository.save(any(Game.class))).thenReturn(savedGame);
 
         CreateMatchRequest req = new CreateMatchRequest();
@@ -98,7 +99,7 @@ class MatchLifecycleServiceTest {
         Game result = service.createMatch(req);
 
         // Assert
-        assertThat(result.getStatus()).isEqualTo("WAITING");
+        assertThat(result.getStatus()).isEqualTo(GameStatus.WAITING);
         assertThat(result.getId()).isEqualTo(100L);
         verify(roomManager).createRoom(100L, 1L);
         verify(gameRepository).save(any(Game.class));
@@ -126,7 +127,7 @@ class MatchLifecycleServiceTest {
         Game game = new Game();
         game.setId(100L);
         game.setCreator(creator);
-        game.setStatus("WAITING");
+        game.setStatus(GameStatus.WAITING);
 
         when(gameRepository.findById(100L)).thenReturn(Optional.of(game));
 
@@ -141,7 +142,7 @@ class MatchLifecycleServiceTest {
         Game game = new Game();
         game.setId(100L);
         game.setCreator(creator);
-        game.setStatus("ACTIVE");
+        game.setStatus(GameStatus.ACTIVE);
 
         when(gameRepository.findById(100L)).thenReturn(Optional.of(game));
 
@@ -155,7 +156,7 @@ class MatchLifecycleServiceTest {
         Game game = new Game();
         game.setId(100L);
         game.setCreator(creator);
-        game.setStatus("WAITING");
+        game.setStatus(GameStatus.WAITING);
 
         when(gameRepository.findById(100L)).thenReturn(Optional.of(game));
 
@@ -182,7 +183,7 @@ class MatchLifecycleServiceTest {
         savedGame.setId(200L);
         savedGame.setCreator(creator);
         savedGame.setOpponent(opponent);
-        savedGame.setStatus("ACTIVE");
+        savedGame.setStatus(GameStatus.ACTIVE);
         savedGame.setStartingBalance(1_000_000.0);
         when(gameRepository.save(any(Game.class))).thenReturn(savedGame);
 
@@ -195,7 +196,7 @@ class MatchLifecycleServiceTest {
             TransactionSynchronizationManager.clearSynchronization();
         }
 
-        assertThat(result.getStatus()).isEqualTo("ACTIVE");
+        assertThat(result.getStatus()).isEqualTo(GameStatus.ACTIVE);
         assertThat(result.getCreator().getId()).isEqualTo(1L);
         assertThat(result.getOpponent().getId()).isEqualTo(2L);
         verify(metrics).recordMatchCreated();

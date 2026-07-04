@@ -18,6 +18,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import com.tradelearn.server.game.model.Game;
+import com.tradelearn.server.game.model.GameStatus;
 import com.tradelearn.server.game.model.Trade;
 import com.tradelearn.server.game.repository.GameRepository;
 import com.tradelearn.server.game.repository.TradeRepository;
@@ -110,7 +111,7 @@ public class CrashRecoveryService {
         log.info("[CrashRecovery] Scanning for interrupted ACTIVE games...");
 
         try {
-            List<Game> activeGames = gameRepository.findByStatus("ACTIVE");
+            List<Game> activeGames = gameRepository.findByStatus(GameStatus.ACTIVE);
 
             if (activeGames.isEmpty()) {
                 recoveryResult = "OK — no active games found";
@@ -159,7 +160,7 @@ public class CrashRecoveryService {
         if (!startupComplete) return;
 
         try {
-            List<Game> activeGames = gameRepository.findByStatus("ACTIVE");
+            List<Game> activeGames = gameRepository.findByStatus(GameStatus.ACTIVE);
             int recovered = 0;
 
             for (Game game : activeGames) {
@@ -231,7 +232,7 @@ public class CrashRecoveryService {
      */
     private void onRedisRestored() {
         try {
-            List<Game> activeGames = gameRepository.findByStatus("ACTIVE");
+            List<Game> activeGames = gameRepository.findByStatus(GameStatus.ACTIVE);
             int recovered = 0;
 
             for (Game game : activeGames) {

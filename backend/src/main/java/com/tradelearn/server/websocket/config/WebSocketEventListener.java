@@ -15,6 +15,7 @@ import org.springframework.web.socket.messaging.SessionConnectEvent;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 
 import com.tradelearn.server.game.model.Game;
+import com.tradelearn.server.game.model.GameStatus;
 import com.tradelearn.server.game.repository.GameRepository;
 import com.tradelearn.server.market.service.CandleService;
 import com.tradelearn.server.infrastructure.scheduling.GameMetricsService;
@@ -134,7 +135,7 @@ public class WebSocketEventListener {
         if (game == null) return;
 
         // Only handle disconnect for ACTIVE games
-        if (!"ACTIVE".equals(game.getStatus())) {
+        if (!GameStatus.ACTIVE.equals(game.getStatus())) {
             log.debug("[WS] Game {} is {} — ignoring disconnect", gameId, game.getStatus());
             return;
         }
@@ -202,7 +203,7 @@ public class WebSocketEventListener {
         }
 
         Game game = gameRepository.findById(gameId).orElse(null);
-        if (game == null || !"ACTIVE".equals(game.getStatus())) {
+        if (game == null || !GameStatus.ACTIVE.equals(game.getStatus())) {
             log.debug("[WS] Game {} no longer ACTIVE after timeout — skipping abandon", gameId);
             return;
         }
@@ -229,7 +230,7 @@ public class WebSocketEventListener {
         } catch (Exception e) {
             log.error("[WS] forceFinishOnAbandon failed for game {} — falling back to simple ABANDONED",
                     gameId, e);
-            game.setStatus("ABANDONED");
+            game.setStatus(GameStatus.ABANDONED);
             gameRepository.save(game);
             candleService.evict(gameId);
             positionStore.evictGame(gameId);

@@ -1,6 +1,7 @@
 package com.tradelearn.server.social.controller;
 
 import com.tradelearn.server.game.model.Game;
+import com.tradelearn.server.game.model.GameStatus;
 import com.tradelearn.server.social.model.GameChallenge;
 import com.tradelearn.server.user.model.User;
 import com.tradelearn.server.social.repository.GameChallengeRepository;
@@ -103,7 +104,7 @@ public class ChallengeWebSocketController {
         Game game = new Game();
         game.setCreator(challenge.getChallenger());
         game.setOpponent(challenge.getChallenged());
-        game.setStatus("ACTIVE");
+        game.setStatus(GameStatus.ACTIVE);
         // Simplified config for direct challenges
         game.setStockSymbol("AAPL");
         game.setStartingBalance(100000.0);

@@ -1,6 +1,7 @@
 package com.tradelearn.server.profile.service;
 
 import com.tradelearn.server.game.model.Game;
+import com.tradelearn.server.game.model.GameStatus;
 import com.tradelearn.server.game.model.MatchStats;
 import com.tradelearn.server.game.repository.GameRepository;
 import com.tradelearn.server.game.repository.MatchStatsRepository;
@@ -100,7 +101,7 @@ public class ProfileService {
         List<Game> allGames = gameRepository.findByCreatorIdOrOpponentId(userId, userId);
 
         List<Game> finished = allGames.stream()
-                .filter(g -> "FINISHED".equals(g.getStatus()))
+                .filter(g -> GameStatus.FINISHED.equals(g.getStatus()))
                 .collect(Collectors.toList());
 
         int wins = 0, losses = 0, draws = 0;
@@ -165,8 +166,8 @@ public class ProfileService {
                 : (g.getCreator() != null ? g.getCreator().getUsername() : "—");
 
         String result;
-        if (!"FINISHED".equals(g.getStatus())) {
-            result = g.getStatus();
+        if (!GameStatus.FINISHED.equals(g.getStatus())) {
+            result = g.getStatus().name();
         } else if (g.getWinner() == null) {
             result = "DRAW";
         } else if (g.getWinner().getId().equals(userId)) {
@@ -181,7 +182,7 @@ public class ProfileService {
         return new RecentMatch(
                 g.getId(),
                 g.getStockSymbol(),
-                g.getStatus(),
+                g.getStatus().name(),
                 result,
                 opponentName,
                 balance,

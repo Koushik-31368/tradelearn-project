@@ -160,14 +160,14 @@ public class GameLogger {
      * Log game start attempt
      */
     public static void logGameStartAttempt(Logger log, long gameId, long creatorId, 
-                                           Long opponentId, String currentStatus) {
+                                           Long opponentId, Object currentStatus) {
         LogEntry entry = new LogEntry("GAME_START_ATTEMPT")
                 .add("gameId", gameId)
                 .add("creatorId", creatorId)
                 .add("opponentId", opponentId)
                 .add("currentStatus", currentStatus)
                 .add("hasOpponent", opponentId != null)
-                .add("canStart", opponentId != null && "ACTIVE".equals(currentStatus));
+                .add("canStart", opponentId != null && "ACTIVE".equals(String.valueOf(currentStatus)));
         
         log.info("🎮 {}", entry.toReadable());
     }
