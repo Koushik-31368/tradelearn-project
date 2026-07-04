@@ -16,6 +16,7 @@ import com.tradelearn.server.infrastructure.scheduling.GameMetricsService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -23,6 +24,10 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
@@ -42,6 +47,8 @@ import static org.mockito.Mockito.*;
  *   <li>Create custom match</li>
  *   <li>Join an existing match</li>
  *   <li>Delete (host cancel) a WAITING match</li>
+ *   <li>afterCommit retry + fail + notify path (Issue 2)</li>
+ *   <li>Sweep job for orphaned ACTIVE games (Issue 2)</li>
  * </ul>
  */
 @ExtendWith(MockitoExtension.class)
@@ -200,5 +207,169 @@ class MatchLifecycleServiceTest {
         assertThat(result.getCreator().getId()).isEqualTo(1L);
         assertThat(result.getOpponent().getId()).isEqualTo(2L);
         verify(metrics).recordMatchCreated();
+    }
+
+    // ── afterCommitWithRetry — Issue 2 ───────────────────────────────────────
+
+    /**
+     * Verifies the happy path: action succeeds on first attempt — no retries, no failure path.
+     */
+    @Test
+    void afterCommitWithRetry_succeedsOnFirstAttempt_noFailurePath() {
+        Runnable action = mock(Runnable.class);
+        doNothing().when(action).run();
+
+        service.afterCommitWithRetry("test", 99L, 1L, 2L, action);
+
+        verify(action, times(1)).run();
+        verify(gameRepository, never()).findById(anyLong());
+        verify(broadcaster, never()).sendToGame(anyLong(), eq("match-failed"), any());
+    }
+
+    /**
+     * Verifies the retry path: action fails twice then succeeds on the third attempt.
+     * The game must NOT be marked FAILED, and players must NOT be notified.
+     */
+    @Test
+    void afterCommitWithRetry_succeeds_onThirdAttempt_noFailurePath() {
+        Runnable action = mock(Runnable.class);
+        // Fail twice, succeed on third
+        doThrow(new RuntimeException("Redis unavailable"))
+                .doThrow(new RuntimeException("Redis unavailable"))
+                .doNothing()
+                .when(action).run();
+
+        service.afterCommitWithRetry("test", 99L, 1L, 2L, action);
+
+        verify(action, times(3)).run();
+        verify(broadcaster, never()).sendToGame(anyLong(), eq("match-failed"), any());
+    }
+
+    /**
+     * Verifies the exhaustion path: action fails on all 3 attempts.
+     * <ul>
+     *   <li>The game should be fetched and transitioned to FAILED.</li>
+     *   <li>{@code match-failed} should be broadcast to both players.</li>
+     * </ul>
+     */
+    @Test
+    void afterCommitWithRetry_allAttemptsFail_marksGameFailedAndNotifiesPlayers() {
+        // Arrange: action always throws
+        Runnable action = mock(Runnable.class);
+        doThrow(new RuntimeException("Redis is down")).when(action).run();
+
+        // findById returns an ACTIVE game
+        Game activeGame = new Game();
+        activeGame.setId(99L);
+        activeGame.setStatus(GameStatus.ACTIVE);
+        activeGame.setCreator(creator);
+        activeGame.setOpponent(opponent);
+        when(gameRepository.findById(99L)).thenReturn(Optional.of(activeGame));
+        when(gameRepository.save(any(Game.class))).thenReturn(activeGame);
+
+        // Act
+        service.afterCommitWithRetry("test", 99L, 1L, 2L, action);
+
+        // Assert: action attempted exactly 3 times
+        verify(action, times(3)).run();
+
+        // Assert: game saved with FAILED status
+        ArgumentCaptor<Game> savedGame = ArgumentCaptor.forClass(Game.class);
+        verify(gameRepository).save(savedGame.capture());
+        assertThat(savedGame.getValue().getStatus()).isEqualTo(GameStatus.FAILED);
+
+        // Assert: match-failed broadcast fired
+        verify(broadcaster).sendToGame(eq(99L), eq("match-failed"), any(Map.class));
+    }
+
+    /**
+     * Verifies markGameFailed is idempotent: if the game is already in a terminal
+     * status (not ACTIVE), it should not be overwritten.
+     */
+    @Test
+    void markGameFailed_isIdempotent_doesNotOverwriteTerminalStatus() {
+        Game finishedGame = new Game();
+        finishedGame.setId(88L);
+        finishedGame.setStatus(GameStatus.FINISHED);  // already terminal
+        when(gameRepository.findById(88L)).thenReturn(Optional.of(finishedGame));
+
+        service.markGameFailed(88L, 1L, 2L, "test");
+
+        // save should NOT be called because status is not ACTIVE
+        verify(gameRepository, never()).save(any());
+        // broadcast is still sent regardless (players may still be waiting)
+        verify(broadcaster).sendToGame(eq(88L), eq("match-failed"), any());
+    }
+
+    // ── sweepOrphanedActiveGames — Issue 2 ───────────────────────────────────
+
+    /**
+     * Verifies that the sweep skips games that have a valid Redis room.
+     */
+    @Test
+    void sweep_skipsGamesWithExistingRedisRoom() {
+        Game game = buildOldActiveGame(77L);
+        when(gameRepository.findByStatus(GameStatus.ACTIVE)).thenReturn(List.of(game));
+        when(roomManager.hasRoom(77L)).thenReturn(true);  // room exists — healthy
+
+        service.sweepOrphanedActiveGames();
+
+        verify(broadcaster, never()).sendToGame(anyLong(), eq("match-failed"), any());
+        verify(gameRepository, never()).save(any());
+    }
+
+    /**
+     * Verifies that the sweep skips games younger than the age threshold.
+     */
+    @Test
+    void sweep_skipsGamesThatAreTooYoung() {
+        Game youngGame = new Game();
+        youngGame.setId(66L);
+        youngGame.setStatus(GameStatus.ACTIVE);
+        youngGame.setCreator(creator);
+        youngGame.setOpponent(opponent);
+        // Started just 30 seconds ago — below the 2-minute threshold
+        youngGame.setStartTime(LocalDateTime.now().minusSeconds(30));
+
+        when(gameRepository.findByStatus(GameStatus.ACTIVE)).thenReturn(List.of(youngGame));
+        when(roomManager.hasRoom(66L)).thenReturn(false);
+
+        service.sweepOrphanedActiveGames();
+
+        verify(broadcaster, never()).sendToGame(anyLong(), eq("match-failed"), any());
+    }
+
+    /**
+     * Verifies the full sweep path: an old ACTIVE game with no Redis room
+     * is fetched, marked FAILED, and players are notified.
+     */
+    @Test
+    void sweep_marksOrphanedOldActiveGames_asFailed() {
+        Game orphan = buildOldActiveGame(55L);
+        when(gameRepository.findByStatus(GameStatus.ACTIVE)).thenReturn(List.of(orphan));
+        when(roomManager.hasRoom(55L)).thenReturn(false);   // no room — orphaned
+        when(gameRepository.findById(55L)).thenReturn(Optional.of(orphan));
+        when(gameRepository.save(any())).thenReturn(orphan);
+
+        service.sweepOrphanedActiveGames();
+
+        ArgumentCaptor<Game> saved = ArgumentCaptor.forClass(Game.class);
+        verify(gameRepository).save(saved.capture());
+        assertThat(saved.getValue().getStatus()).isEqualTo(GameStatus.FAILED);
+        verify(broadcaster).sendToGame(eq(55L), eq("match-failed"), any(Map.class));
+    }
+
+    // ── helpers ──────────────────────────────────────────────────────────────
+
+    /** Build an ACTIVE game that is old enough to be swept (started 10 min ago). */
+    private Game buildOldActiveGame(long id) {
+        Game g = new Game();
+        g.setId(id);
+        g.setStatus(GameStatus.ACTIVE);
+        g.setCreator(creator);
+        g.setOpponent(opponent);
+        g.setStartTime(LocalDateTime.now().minusMinutes(10));
+        g.setCreatedAt(Timestamp.valueOf(LocalDateTime.now().minusMinutes(10)));
+        return g;
     }
 }
