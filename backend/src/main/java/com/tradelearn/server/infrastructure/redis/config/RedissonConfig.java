@@ -40,7 +40,9 @@ public class RedissonConfig {
         config.useSingleServer()
               .setAddress(redisUrl)
               .setConnectTimeout(3000)   // 3 s — fail fast, don't block startup
-              .setTimeout(3000);
+              .setTimeout(3000)
+              .setConnectionMinimumIdleSize(2)
+              .setConnectionPoolSize(10);
 
         return Redisson.create(config);
     }
