@@ -20,6 +20,7 @@ import MatchHistoryPage from './features/dashboard/pages/MatchHistoryPage';
 import TermsPage from './features/legal/pages/TermsPage';
 import PrivacyPage from './features/legal/pages/PrivacyPage';
 import RiskDisclosurePage from './features/legal/pages/RiskDisclosurePage';
+import LearnPage from './features/learn/pages/LearnPage';
 import Footer from './layout/components/Footer';
 import DailyCheckinModal from './features/dashboard/components/DailyCheckinModal';
 import ChallengeListener from './features/social/components/ChallengeListener';
@@ -38,6 +39,7 @@ function AppContent() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/learn" element={<LearnPage />} />
         <Route path="/multiplayer" element={<LobbyPage />} />
         <Route path="/game/:gameId" element={<GamePage />} />
         <Route path="/match/:gameId/result" element={<MatchResultPage />} />
