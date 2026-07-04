@@ -10,7 +10,7 @@ const { test, expect } = require('@playwright/test');
 const { collectConsoleErrors } = require('../prod-helpers/auth');
 
 // Candidate routes for a Learning Academy page
-const ACADEMY_CANDIDATES = ['/academy', '/learn', '/learning', '/courses', '/curriculum'];
+const ACADEMY_CANDIDATES = ['/learn', '/academy', '/learning', '/courses', '/curriculum'];
 
 test.describe('Learning Academy (Production)', () => {
 
@@ -29,8 +29,9 @@ test.describe('Learning Academy (Production)', () => {
       // Accept route if: returns 200 AND has meaningful content AND not just login page
       const isLoginPage = page.url().includes('/login');
       if (status === 200 && hasContent && !isLoginPage) {
-        // But SPA returns 200 for everything — check for actual academy content
-        const hasAcademyContent = /lesson|quiz|learn|academy|course|module|curriculum|chapter/i.test(bodyText ?? '');
+        // Look inside main content area to avoid navbar false positives (e.g. "TradeLearn")
+        const mainContent = await page.locator('main, .container, .App > div:not(.navbar)').first().textContent().catch(() => bodyText);
+        const hasAcademyContent = /lesson|quiz|learn|academy|course|module|curriculum|chapter/i.test(mainContent ?? '');
         if (hasAcademyContent) {
           academyUrl = candidate;
           console.log(`[prod-academy] Found academy content at: ${candidate}`);
@@ -43,7 +44,7 @@ test.describe('Learning Academy (Production)', () => {
       // Fall back to /strategies (which has Learning Academy content integrated)
       console.warn('[prod-academy] No dedicated /academy or /learn route found — checking /strategies for embedded academy content');
       await page.goto('/strategies');
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
 
       const bodyText = await page.locator('body').textContent();
       const hasStrategyContent = /strategy|indicator|rsi|sma|entry|exit/i.test(bodyText ?? '');
@@ -147,7 +148,7 @@ test.describe('Learning Academy (Production)', () => {
 
     // Check /strategies as the primary educational content area
     await page.goto('/strategies');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Must show at least 1 card/section
     const cards = page.locator('[class*="strategy-card"], [class*="card"], [class*="section"]');
@@ -159,7 +160,7 @@ test.describe('Learning Academy (Production)', () => {
     const limit = Math.min(count, 3);
     for (let i = 0; i < limit; i++) {
       await page.goto('/strategies');
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
 
       const freshCards = page.locator('[class*="strategy-card"], [class*="card"]');
       if (await freshCards.nth(i).isVisible({ timeout: 10_000 }).catch(() => false)) {
