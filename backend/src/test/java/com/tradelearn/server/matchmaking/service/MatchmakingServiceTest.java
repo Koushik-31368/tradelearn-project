@@ -34,6 +34,8 @@ import static org.mockito.Mockito.*;
  *   <li>queueSize — reads ZSET cardinality safely (null → 0)</li>
  *   <li>getWaitTime — parses joinTime from Redis hash</li>
  *   <li>cleanupExpired — removes orphaned ZSET entries (no ticket hash)</li>
+ *   <li><b>Issue 3</b> — createAutoMatch failure: both players re-enqueued
+ *       and receive match-retry; if re-enqueue also fails, match-failed fires</li>
  * </ul>
  */
 @ExtendWith(MockitoExtension.class)
@@ -169,5 +171,61 @@ class MatchmakingServiceTest {
 
         // SimpleMeterRegistry captures all registered meters
         assertThat(meterRegistry.find("matchmaking.queue.size").gauge()).isNotNull();
+    }
+
+    // ── Issue 3: createAutoMatch failure → re-enqueue + match-retry ──────────
+
+    /**
+     * When createAutoMatch throws, recoverPlayers() re-enqueues both players
+     * via ENQUEUE_LUA and sends match-retry to both.
+     *
+     * <p>We test recoverPlayers() directly because tryPair() requires a live
+     * Redisson lock and a full Redis ZSET state.  recoverPlayers() is the
+     * package-private method that the catch block delegates to.
+     */
+    @Test
+    void recoverPlayers_reEnqueuesBothAndSendsMatchRetry_whenCreateAutoMatchFails() {
+        // Arrange: ENQUEUE_LUA returns 1 (success) for both re-enqueue calls
+        when(redis.execute(any(), anyList(),
+                any(String.class), any(String.class),
+                any(String.class), any(String.class), any(String.class)))
+                .thenReturn(1L);
+
+        // Act: simulate the recovery path directly
+        service.recoverPlayers(1L, 1200, "player1",
+                               2L, 1150, "player2");
+
+        // Assert: ENQUEUE_LUA was called twice (once per player)
+        verify(redis, times(2)).execute(any(), anyList(),
+                any(String.class), any(String.class),
+                any(String.class), any(String.class), any(String.class));
+
+        // Assert: match-retry sent to both players (NOT match-failed)
+        verify(broadcaster).sendToUser(eq(1L), eq("match-retry"), any());
+        verify(broadcaster).sendToUser(eq(2L), eq("match-retry"), any());
+        verify(broadcaster, never()).sendToUser(anyLong(), eq("match-failed"), any());
+    }
+
+    /**
+     * When re-enqueue itself throws (e.g. Redis is fully unreachable),
+     * recoverPlayers() falls back to match-failed broadcast for both players
+     * so the frontend shows a hard error instead of hanging indefinitely.
+     */
+    @Test
+    void recoverPlayers_sendsMatchFailed_whenReEnqueueAlsoFails() {
+        // Arrange: ENQUEUE_LUA throws on both attempts
+        when(redis.execute(any(), anyList(),
+                any(String.class), any(String.class),
+                any(String.class), any(String.class), any(String.class)))
+                .thenThrow(new RuntimeException("Redis unreachable"));
+
+        // Act
+        service.recoverPlayers(1L, 1200, "player1",
+                               2L, 1150, "player2");
+
+        // Assert: match-failed sent to both (NOT match-retry)
+        verify(broadcaster).sendToUser(eq(1L), eq("match-failed"), any());
+        verify(broadcaster).sendToUser(eq(2L), eq("match-failed"), any());
+        verify(broadcaster, never()).sendToUser(anyLong(), eq("match-retry"), any());
     }
 }
