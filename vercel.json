@@ -7,6 +7,6 @@
       "source": "/api/:path*",
       "destination": "https://tradelearn-project-g.onrender.com/api/:path*"
     },
-    { "source": "/(.*)", "destination": "/index.html" }
+    { "source": "/((?!static/|.*\\.).*)", "destination": "/index.html" }
   ]
 }
