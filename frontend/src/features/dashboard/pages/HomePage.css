@@ -1,7 +1,15 @@
 /* src/pages/HomePage.css */
 
-/* ── Layout ─────────────────────────────────────────────── */
+/* ── Local design tokens ───────────────────────────────────
+ * A monospace face is used deliberately for anything numeric or
+ * data-like (metrics, ticker rows, step indices, section eyebrows) —
+ * a nod to the terminal/ticker vernacular of a trading platform,
+ * kept separate from the display type used for headlines and body copy.
+ * ─────────────────────────────────────────────────────────── */
 .hp {
+  --hp-mono: 'JetBrains Mono', 'SF Mono', ui-monospace, 'Roboto Mono', Menlo, Consolas, monospace;
+  --hp-hairline: rgba(16, 185, 129, 0.18);
+  --hp-muted: #8b978f;
   background: var(--bg);
   color: #ffffff;
   min-height: 100vh;
@@ -11,6 +19,55 @@
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 24px;
+}
+
+/* ── Eyebrow + axis signature ─────────────────────────────
+ * Reused above every section title: a small mono label plus a
+ * hairline "axis" rule with tick marks, echoing the price-axis
+ * ticks visible in the hero background photo itself.
+ * ─────────────────────────────────────────────────────────── */
+.hp-eyebrow {
+  display: block;
+  font-family: var(--hp-mono);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 1.5px;
+  color: var(--primary);
+  margin-bottom: 14px;
+}
+
+.hp-axis {
+  display: block;
+  width: 64px;
+  height: 8px;
+  margin: 0 0 24px;
+  position: relative;
+  background-image: linear-gradient(var(--primary), var(--primary));
+  background-repeat: no-repeat;
+  background-size: 100% 2px;
+  background-position: top left;
+}
+
+.hp-axis::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 0;
+  right: 0;
+  height: 6px;
+  background-image: repeating-linear-gradient(
+    to right,
+    var(--primary) 0,
+    var(--primary) 1px,
+    transparent 1px,
+    transparent 16px
+  );
+  opacity: 0.55;
+}
+
+.hp-axis--center {
+  margin-left: auto;
+  margin-right: auto;
 }
 
 /* ── SECTION 1 — Hero ──────────────────────────────────── */
@@ -31,19 +88,20 @@
   min-height: 450px;
 }
 
-/* Dark overlay for readability */
+/* Dark overlay for readability — tinted toward the brand green rather
+   than a generic neutral slate, so it reads as one deliberate palette
+   with the rest of the page instead of a stock dark-mode overlay. */
 .hp-hero-overlay {
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(10, 15, 25, 0.55);
   background: linear-gradient(
     180deg,
-    rgba(10, 15, 25, 0.7) 0%,
-    rgba(10, 15, 25, 0.4) 50%,
-    rgba(10, 15, 25, 0.8) 100%
+    rgba(5, 12, 10, 0.78) 0%,
+    rgba(6, 14, 12, 0.5) 45%,
+    rgba(5, 12, 10, 0.86) 100%
   );
   z-index: 1;
 }
@@ -59,24 +117,24 @@
 }
 
 .hp-hero-text {
-  max-width: 580px;
+  max-width: 560px;
   flex-shrink: 0;
 }
 
 .hp-hero-title {
-  font-size: 48px;
-  font-weight: 800;
+  font-size: 46px;
+  font-weight: 700;
   line-height: 1.15;
   margin: 0 0 20px;
-  letter-spacing: -1px;
+  letter-spacing: -0.5px;
   text-shadow: 0 4px 20px rgba(0,0,0,0.5);
 }
 
 .hp-hero-sub {
-  font-size: 20px;
-  color: rgba(255, 255, 255, 0.85);
+  font-size: 19px;
+  color: rgba(255, 255, 255, 0.8);
   margin: 0 0 40px;
-  font-weight: 500;
+  font-weight: 400;
   letter-spacing: 0.2px;
   text-shadow: 0 2px 10px rgba(0,0,0,0.4);
 }
@@ -94,7 +152,7 @@
   font-size: 15px;
   font-weight: 700;
   border: none;
-  border-radius: 8px;
+  border-radius: 6px;
   cursor: pointer;
   text-decoration: none;
   transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
@@ -111,103 +169,105 @@
 .hp-btn-secondary {
   display: inline-block;
   padding: 14px 32px;
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: transparent;
   color: #ffffff;
   font-size: 15px;
   font-weight: 600;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 6px;
   cursor: pointer;
   text-decoration: none;
   transition: background 0.2s, border-color 0.2s;
 }
 
 .hp-btn-secondary:hover {
-  background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.35);
 }
 
-/* ── Glassmorphism Card ────────────────────────────────── */
+/* ── Terminal panel (replaces the old glassmorphism card) ──
+ * Flat, static, hairline-bordered — closer to a real market data
+ * panel than a marketing-site glass card. No blur, no glow, no motion.
+ * ─────────────────────────────────────────────────────────── */
 .hp-hero-card-wrapper {
   flex: 1;
   display: flex;
   justify-content: flex-end;
-  perspective: 1000px;
 }
 
-.hp-glass-card {
-  background: rgba(16, 22, 34, 0.65);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 16px;
-  padding: 28px;
+.hp-terminal-card {
+  background: rgba(9, 14, 12, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 2px solid var(--primary);
+  border-radius: 4px;
+  padding: 24px 28px;
   width: 100%;
   max-width: 380px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.35), inset 0 0 0 1px rgba(255,255,255,0.05);
-  transition: box-shadow 0.3s ease;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.3);
 }
 
-.hp-glass-card:hover {
-  box-shadow: 0 14px 36px rgba(0,0,0,0.4), inset 0 0 0 1px rgba(255,255,255,0.08);
-}
-
-.hp-glass-header {
+.hp-terminal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
-  padding-bottom: 16px;
+  margin-bottom: 20px;
+  padding-bottom: 14px;
   border-bottom: 1px solid rgba(255,255,255,0.08);
 }
 
-.hp-glass-title {
-  font-size: 14px;
+.hp-terminal-title {
+  font-family: var(--hp-mono);
+  font-size: 12px;
   font-weight: 600;
-  text-transform: uppercase;
   letter-spacing: 1px;
-  color: rgba(255,255,255,0.7);
+  color: rgba(255,255,255,0.65);
 }
 
-.hp-glass-badge {
-  background: rgba(16, 185, 129, 0.15);
-  color: var(--primary);
-  padding: 4px 10px;
-  border-radius: 20px;
+.hp-terminal-badge {
+  font-family: var(--hp-mono);
   font-size: 11px;
-  font-weight: 700;
-  border: 1px solid rgba(16, 185, 129, 0.3);
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  color: var(--primary);
 }
 
-.hp-glass-metrics {
+.hp-terminal-rows {
   display: flex;
   flex-direction: column;
-  gap: 16px;
 }
 
-.hp-glass-metric {
+.hp-terminal-row {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: baseline;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.hp-terminal-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.hp-terminal-label {
+  font-size: 14px;
+  color: rgba(255,255,255,0.55);
+  font-weight: 400;
+}
+
+.hp-terminal-value {
+  font-family: var(--hp-mono);
   font-size: 15px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: #ffffff;
 }
 
-.hp-glass-metric span:first-child {
-  color: rgba(255,255,255,0.6);
-  font-weight: 500;
-}
+.hp-terminal-value.pos { color: var(--primary); }
+.hp-terminal-value.xp { color: #d4af6a; }
+.hp-terminal-value.league { color: #b8c2cc; }
 
-.hp-glass-metric span:last-child {
-  font-weight: 700;
-  color: #fff;
-}
-
-.hp-glass-metric .pos { color: var(--primary); }
-.hp-glass-metric .xp-text { color: #ffd700; }
-.hp-glass-metric .league-text { color: #b8c2cc; }
-
+/* ── Entrance animation — one-time, quiet ─────────────────── */
 .fade-up-enter {
   animation: fadeUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   opacity: 0;
@@ -224,116 +284,128 @@
 /* ── SECTION 2 — How it works ──────────────────────────── */
 .hp-how {
   padding: 100px 0;
-  border-top: 1px solid #30363d;
+  border-top: 1px solid var(--hp-hairline);
 }
 
 .hp-section-title {
-  font-size: 24px;
+  font-size: 26px;
   font-weight: 700;
+  margin: 0 0 48px;
+  letter-spacing: -0.3px;
+}
+
+.hp-section-title--center {
   text-align: center;
-  margin: 0 0 56px;
+}
+
+.hp-how .hp-inner,
+.hp-why .hp-inner {
+  text-align: left;
 }
 
 .hp-steps {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 32px;
+  gap: 0;
 }
 
 .hp-step {
-  text-align: center;
-  padding: 32px 24px;
+  padding: 24px 32px 0 0;
+  border-top: 1px solid var(--hp-hairline);
 }
 
 .hp-step-num {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  border: 1px solid #30363d;
-  border-radius: 50%;
-  font-size: 14px;
+  display: block;
+  font-family: var(--hp-mono);
+  font-size: 13px;
   font-weight: 600;
+  letter-spacing: 1px;
   color: var(--primary);
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 
 .hp-step-title {
-  font-size: 16px;
+  font-size: 17px;
   font-weight: 600;
   margin: 0 0 10px;
 }
 
 .hp-step-desc {
   font-size: 14px;
-  color: #8b949e;
-  line-height: 1.6;
+  color: var(--hp-muted);
+  line-height: 1.65;
   margin: 0;
 }
 
 /* ── SECTION 3 — Why different ─────────────────────────── */
 .hp-why {
   padding: 100px 0;
-  border-top: 1px solid #30363d;
+  border-top: 1px solid var(--hp-hairline);
 }
 
 .hp-features {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 24px;
+  gap: 40px;
 }
 
 .hp-feature {
-  background: #161b22;
-  border: 1px solid #30363d;
-  border-radius: 8px;
-  padding: 32px 28px;
+  border-left: 2px solid var(--primary);
+  padding: 4px 0 4px 20px;
 }
 
 .hp-feature-title {
   font-size: 16px;
   font-weight: 600;
-  margin: 0 0 12px;
+  margin: 0 0 10px;
 }
 
 .hp-feature-desc {
   font-size: 14px;
-  color: #8b949e;
-  line-height: 1.6;
+  color: var(--hp-muted);
+  line-height: 1.65;
   margin: 0;
 }
 
 /* ── SECTION 4 — Platform metrics ──────────────────────── */
 .hp-metrics {
   padding: 100px 0;
-  border-top: 1px solid #30363d;
+  border-top: 1px solid var(--hp-hairline);
+  text-align: center;
+}
+
+.hp-metrics .hp-eyebrow,
+.hp-metrics .hp-axis {
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .hp-stats {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 24px;
 }
 
 .hp-stat {
-  background: #161b22;
-  border: 1px solid #30363d;
-  border-radius: 8px;
-  padding: 32px 24px;
-  text-align: center;
+  padding: 8px 24px;
+  border-left: 1px solid var(--hp-hairline);
+}
+
+.hp-stat:first-child {
+  border-left: none;
 }
 
 .hp-stat-value {
-  font-size: 32px;
-  font-weight: 700;
+  font-family: var(--hp-mono);
+  font-size: 30px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
   margin: 0 0 8px;
   color: var(--primary);
 }
 
 .hp-stat-label {
-  font-size: 13px;
-  color: #8b949e;
+  font-size: 12px;
+  color: var(--hp-muted);
   text-transform: uppercase;
   letter-spacing: 0.6px;
   margin: 0;
@@ -342,41 +414,69 @@
 /* ── SECTION 5 — Final CTA ─────────────────────────────── */
 .hp-final {
   padding: 100px 0 120px;
-  border-top: 1px solid #30363d;
+  border-top: 1px solid var(--hp-hairline);
   text-align: center;
+}
+
+.hp-final .hp-axis {
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .hp-final-title {
   font-size: 28px;
   font-weight: 700;
   margin: 0 0 32px;
+  letter-spacing: -0.3px;
 }
 
 /* ── Responsive ────────────────────────────────────────── */
 @media (max-width: 900px) {
   .hp-hero .hp-inner {
     flex-direction: column;
-    text-align: center;
+    text-align: left;
+  }
+
+  .hp-hero-card-wrapper {
+    justify-content: flex-start;
+    width: 100%;
+  }
+
+  .hp-terminal-card {
+    max-width: 100%;
   }
 
   .hp-hero-ctas {
-    justify-content: center;
+    justify-content: flex-start;
   }
 
-  .hp-hero-chart {
-    max-width: 100%;
-    height: 140px;
+  .hp-steps {
+    grid-template-columns: 1fr;
+    gap: 24px;
   }
 
-  .hp-steps,
+  .hp-step {
+    padding: 20px 0 0 0;
+  }
+
   .hp-features {
     grid-template-columns: 1fr;
-    max-width: 480px;
-    margin: 0 auto;
+    gap: 28px;
   }
 
   .hp-stats {
     grid-template-columns: repeat(2, 1fr);
+    row-gap: 24px;
+  }
+
+  .hp-stat {
+    border-left: none;
+    border-top: 1px solid var(--hp-hairline);
+    padding: 20px 12px 0;
+  }
+
+  .hp-stat:nth-child(odd) {
+    border-right: 1px solid var(--hp-hairline);
   }
 }
 
@@ -386,7 +486,7 @@
   }
 
   .hp-hero-title {
-    font-size: 28px;
+    font-size: 30px;
   }
 
   .hp-hero-sub {
@@ -395,6 +495,10 @@
 
   .hp-stats {
     grid-template-columns: 1fr;
+  }
+
+  .hp-stat:nth-child(odd) {
+    border-right: none;
   }
 
   .hp-how,
@@ -427,4 +531,3 @@
     transform: rotate(360deg);
   }
 }
-
