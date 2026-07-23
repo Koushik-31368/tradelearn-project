@@ -7,22 +7,26 @@ import DashboardPanel from '../components/DashboardPanel';
 import bgImage from '../../../assets/background.jpg';
 import './HomePage.css';
 
-
+/* Small signature mark reused across sections — a hairline rule with tick
+   marks, echoing the price-axis ticks visible in the hero background photo. */
+const AxisMark = ({ center }) => (
+  <span className={`hp-axis${center ? ' hp-axis--center' : ''}`} aria-hidden="true" />
+);
 
 /* ── Section 2 data ────────────────────────────────────── */
 const STEPS = [
   {
-    num: 1,
+    num: '01',
     title: 'Learn Foundations',
     desc: 'Build core market knowledge through structured lessons on candlestick patterns, indicators, and risk management.',
   },
   {
-    num: 2,
+    num: '02',
     title: 'Apply Real Strategies',
     desc: 'Practice proven trading strategies in a realistic simulator with live price action and scoring feedback.',
   },
   {
-    num: 3,
+    num: '03',
     title: 'Compete in Ranked Matches',
     desc: 'Enter head-to-head matches where skill determines your ELO rating and leaderboard position.',
   },
@@ -122,6 +126,8 @@ const HomePage = () => {
         <div className="hp-hero-overlay"></div>
         <div className="hp-inner hp-hero-content fade-up-enter">
           <div className="hp-hero-text">
+            <span className="hp-eyebrow">TRADELEARN — MARKET SKILL PLATFORM</span>
+            <AxisMark />
             <h1 className="hp-hero-title">
               Master Market Skill Through Competition
             </h1>
@@ -141,29 +147,29 @@ const HomePage = () => {
               </button>
             </div>
           </div>
-          
+
           <div className="hp-hero-card-wrapper">
-            <div className="hp-glass-card">
-              <div className="hp-glass-header">
-                <div className="hp-glass-title">Sample Portfolio</div>
-                <div className="hp-glass-badge">PREVIEW</div>
+            <div className="hp-terminal-card">
+              <div className="hp-terminal-header">
+                <span className="hp-terminal-title">SAMPLE PORTFOLIO</span>
+                <span className="hp-terminal-badge">[ PREVIEW ]</span>
               </div>
-              <div className="hp-glass-metrics">
-                <div className="hp-glass-metric">
-                  <span>Total P&L</span>
-                  <span className="pos">+$12,450.00</span>
+              <div className="hp-terminal-rows">
+                <div className="hp-terminal-row">
+                  <span className="hp-terminal-label">Total P&amp;L</span>
+                  <span className="hp-terminal-value pos">+$12,450.00</span>
                 </div>
-                <div className="hp-glass-metric">
-                  <span>Win Rate</span>
-                  <span>68.5%</span>
+                <div className="hp-terminal-row">
+                  <span className="hp-terminal-label">Win Rate</span>
+                  <span className="hp-terminal-value">68.5%</span>
                 </div>
-                <div className="hp-glass-metric">
-                  <span>Today's XP</span>
-                  <span className="xp-text">+450 XP</span>
+                <div className="hp-terminal-row">
+                  <span className="hp-terminal-label">Today's XP</span>
+                  <span className="hp-terminal-value xp">+450 XP</span>
                 </div>
-                <div className="hp-glass-metric">
-                  <span>League</span>
-                  <span className="league-text">Gold League</span>
+                <div className="hp-terminal-row">
+                  <span className="hp-terminal-label">League</span>
+                  <span className="hp-terminal-value league">Gold League</span>
                 </div>
               </div>
             </div>
@@ -174,6 +180,8 @@ const HomePage = () => {
       {/* ── Section 2 — How it works ───────────────────── */}
       <section className="hp-how">
         <div className="hp-inner">
+          <span className="hp-eyebrow">PROCESS</span>
+          <AxisMark />
           <h2 className="hp-section-title">How TradeLearn Works</h2>
           <div className="hp-steps">
             {STEPS.map((s) => (
@@ -190,6 +198,8 @@ const HomePage = () => {
       {/* ── Section 3 — Why different ──────────────────── */}
       <section className="hp-why">
         <div className="hp-inner">
+          <span className="hp-eyebrow">DIFFERENTIATORS</span>
+          <AxisMark />
           <h2 className="hp-section-title">Why TradeLearn Is Different</h2>
           <div className="hp-features">
             {FEATURES.map((f) => (
@@ -205,7 +215,9 @@ const HomePage = () => {
       {/* ── Section 4 — Live platform metrics ──────────── */}
       <section className="hp-metrics">
         <div className="hp-inner">
-          <h2 className="hp-section-title">Live Platform Metrics</h2>
+          <span className="hp-eyebrow">PLATFORM METRICS</span>
+          <AxisMark center />
+          <h2 className="hp-section-title hp-section-title--center">Live Platform Metrics</h2>
           <div className="hp-stats">
             <div className="hp-stat">
               <p className="hp-stat-value">{metrics.totalMatches.toLocaleString()}</p>
@@ -230,6 +242,7 @@ const HomePage = () => {
       {/* ── Section 5 — Final CTA ──────────────────────── */}
       <section className="hp-final">
         <div className="hp-inner">
+          <AxisMark center />
           <h2 className="hp-final-title">Ready to Compete Like a Professional?</h2>
           <button
             className="hp-btn-primary"
