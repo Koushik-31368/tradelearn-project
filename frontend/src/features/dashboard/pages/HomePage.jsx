@@ -120,11 +120,6 @@ const HomePage = () => {
       {/* ── Section 1 — Hero ───────────────────────────── */}
       <section className="hp-hero" style={{ backgroundImage: `url(${bgImage})` }}>
         <div className="hp-hero-overlay"></div>
-        <div className="hp-particles">
-          <div className="hp-particle p1"></div>
-          <div className="hp-particle p2"></div>
-          <div className="hp-particle p3"></div>
-        </div>
         <div className="hp-inner hp-hero-content fade-up-enter">
           <div className="hp-hero-text">
             <h1 className="hp-hero-title">
@@ -150,8 +145,8 @@ const HomePage = () => {
           <div className="hp-hero-card-wrapper">
             <div className="hp-glass-card">
               <div className="hp-glass-header">
-                <div className="hp-glass-title">Live Portfolio</div>
-                <div className="hp-glass-badge">PRO</div>
+                <div className="hp-glass-title">Sample Portfolio</div>
+                <div className="hp-glass-badge">PREVIEW</div>
               </div>
               <div className="hp-glass-metrics">
                 <div className="hp-glass-metric">
