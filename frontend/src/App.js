@@ -1,7 +1,6 @@
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { AuthProvider } from './features/auth/AuthContext';
 import Navbar from './layout/components/Navbar';
-import StockTicker from './layout/components/StockTicker';
 import HomePage from './features/dashboard/pages/HomePage';
 import LoginPage from './features/auth/pages/LoginPage';
 import RegisterPage from './features/auth/pages/RegisterPage';
@@ -55,7 +54,6 @@ function AppContent() {
         <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="/risk-disclosure" element={<RiskDisclosurePage />} />
       </Routes>
-      {!hideTickerOnAuth && <StockTicker />}
       {!hideTickerOnAuth && <Footer />}
       <DailyCheckinModal />
       <ChallengeListener />
