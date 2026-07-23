@@ -439,3 +439,27 @@
     padding: 60px 0;
   }
 }
+
+/* ── Auth hydration loading state ─────────────────────────── */
+.hp-loading {
+  min-height: 60vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hp-loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(255, 255, 255, 0.15);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: hp-spin 0.8s linear infinite;
+}
+
+@keyframes hp-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+

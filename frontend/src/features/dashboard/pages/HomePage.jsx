@@ -84,7 +84,19 @@ const HomePage = () => {
     return () => { cancelled = true; };
   }, []);
 
-  const { user } = useAuth();
+  const { user, isHydrating } = useAuth();
+
+  // Wait for the silent /api/auth/refresh call to resolve before deciding
+  // which view to show. Without this, a stale `user` object read from
+  // localStorage briefly renders the logged-in dashboard (and fires its
+  // data fetches) before we know whether the session is actually valid.
+  if (isHydrating) {
+    return (
+      <div className="hp hp-loading">
+        <div className="hp-loading-spinner" />
+      </div>
+    );
+  }
 
   if (user) {
     return (

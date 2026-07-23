@@ -5,7 +5,7 @@ import TierBadge from '../../features/leaderboard/components/TierBadge';
 import './Navbar.css';
 
 const Navbar = () => {
-  const { isAuthenticated, user, logout } = useAuth();
+  const { isAuthenticated, user, logout, isHydrating } = useAuth();
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -27,7 +27,7 @@ const Navbar = () => {
         <li><NavLink to="/leaderboard">Leaderboard</NavLink></li>
       </ul>
       <div className="navbar-login">
-        {isAuthenticated ? (
+        {isHydrating ? null : isAuthenticated ? (
           <>
             {user && (
               <div className="nav-stats">

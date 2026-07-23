@@ -17,12 +17,17 @@ root.render(
 // or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
 reportWebVitals();
 
+// The service worker previously registered here used a cache-first fetch
+// strategy with no cache invalidation, which served stale index.html/JS/CSS
+// on normal refreshes after every deploy (fixed by hard refresh only because
+// that bypasses the SW). It provided no real offline/PWA functionality, so
+// it has been removed rather than patched.
+//
+// This unregister call must stay in production for a couple of weeks so
+// that users who already have the old service worker installed get it
+// evicted. After that window it can be deleted.
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/service-worker.js').then(registration => {
-      console.log('SW registered: ', registration);
-    }).catch(registrationError => {
-      console.log('SW registration failed: ', registrationError);
-    });
+  navigator.serviceWorker.getRegistrations().then((registrations) => {
+    registrations.forEach((registration) => registration.unregister());
   });
 }
