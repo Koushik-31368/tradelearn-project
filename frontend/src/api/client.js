@@ -18,6 +18,8 @@
 import axios from 'axios';
 
 const API_URL = process.env.REACT_APP_API_URL || '';
+// REACT_APP_WS_URL should be set explicitly in Vercel dashboard to
+// https://tradelearn-project-g.onrender.com so SockJS always targets Render.
 const WS_URL = process.env.REACT_APP_WS_URL || '';
 
 // ── URL helpers ──────────────────────────────────────────────────────────────
@@ -32,19 +34,37 @@ export function backendUrl(path) {
 }
 
 /**
- * Derive the WebSocket base from the HTTP base URL, or use WS_URL if provided.
+ * Return the WebSocket base URL for SockJS.
+ *
+ * Priority:
+ *   1. REACT_APP_WS_URL  — explicit override (recommended for prod)
+ *      e.g. https://tradelearn-project-g.onrender.com
+ *   2. Derived from REACT_APP_API_URL by swapping the scheme to wss://
+ *      e.g. https://tradelearn-project-g.onrender.com → wss://tradelearn-project-g.onrender.com
+ *
+ * NOTE: We deliberately do NOT fall back to window.location.host.
+ * Vercel is a serverless CDN — it cannot host WebSocket connections.
+ * If neither env var is set the function logs an error and returns an
+ * empty string so the STOMP client fails fast with a clear message.
  */
 export function wsBase() {
+  // 1. Explicit WS override — highest priority
   if (WS_URL) return WS_URL;
-  if (!API_URL) return '';
+
+  // 2. Derive wss:// from the HTTP API URL
   if (API_URL.startsWith('https://'))
-    return 'wss://' + API_URL.replace(/^https?:\/\//, '');
+    return 'https://' + API_URL.slice('https://'.length); // keep https — SockJS handles the upgrade
   if (API_URL.startsWith('http://'))
-    return 'ws://' + API_URL.replace(/^https?:\/\//, '');
-  
-  // Fallback for relative API_URL (e.g. '/' or '')
-  const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
-  return protocol + window.location.host;
+    return API_URL; // local dev: SockJS over plain http
+
+  // 3. Neither var is configured — fail loudly instead of silently
+  //    connecting to the Vercel frontend domain.
+  console.error(
+    '[wsBase] Neither REACT_APP_WS_URL nor REACT_APP_API_URL is set.\n' +
+    'Add REACT_APP_WS_URL=https://tradelearn-project-g.onrender.com to\n' +
+    'your Vercel Environment Variables (Settings → Environment Variables).'
+  );
+  return '';
 }
 
 // ── In-memory access token (replaced localStorage) ───────────────────────────

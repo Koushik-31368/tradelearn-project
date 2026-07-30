@@ -6,6 +6,7 @@ import com.tradelearn.server.infrastructure.redis.store.PositionSnapshotStore;
 import com.tradelearn.server.infrastructure.scheduling.MatchSchedulerService;
 import com.tradelearn.server.market.service.CandleService;
 import com.tradelearn.server.quests.service.QuestService;
+import com.tradelearn.fairness.adapter.TradeLearnEpochAdapter;
 import com.tradelearn.server.common.util.EloUtil;
 import com.tradelearn.server.common.util.GameLogger;
 import com.tradelearn.server.common.util.ScoringUtil;
@@ -82,6 +83,7 @@ public class MatchScoringService {
     private final PositionSnapshotStore positionStore;
     private final TradeRateLimiter rateLimiter;
     private final QuestService questService;
+    private final TradeLearnEpochAdapter epochGate;
 
     /** Optional — null when redis.enabled is not set (MVP / no-Redis deployment). */
     @Autowired(required = false)
@@ -97,7 +99,8 @@ public class MatchScoringService {
                                RoomManager roomManager,
                                PositionSnapshotStore positionStore,
                                TradeRateLimiter rateLimiter,
-                               @Lazy QuestService questService) {
+                               @Lazy QuestService questService,
+                               TradeLearnEpochAdapter epochGate) {
         this.gameRepository = gameRepository;
         this.userRepository = userRepository;
         this.matchTradeService = matchTradeService;
@@ -109,6 +112,7 @@ public class MatchScoringService {
         this.positionStore = positionStore;
         this.rateLimiter = rateLimiter;
         this.questService = questService;
+        this.epochGate = epochGate;
     }
 
     // ==================== END MATCH & CALCULATE WINNER ====================
@@ -227,6 +231,7 @@ public class MatchScoringService {
                     candleService.evict(gameId);
                     positionStore.evictGame(gameId);
                     rateLimiter.evictGame(gameId);
+                    epochGate.evictGame(gameId); // ← fairness gate cleanup
                     roomManager.endGame(gameId, false);
                 } catch (Exception e) {
                     log.error("[endMatch] afterCommit side effects failed for game {}: {}",
@@ -347,6 +352,7 @@ public class MatchScoringService {
                 candleService.evict(gameId);
                 positionStore.evictGame(gameId);
                 rateLimiter.evictGame(gameId);
+                epochGate.evictGame(gameId); // ← fairness gate cleanup
             }
         });
 

@@ -5,6 +5,7 @@ import com.tradelearn.server.infrastructure.redis.room.RoomManager;
 import com.tradelearn.server.infrastructure.redis.store.PositionSnapshotStore;
 import com.tradelearn.server.infrastructure.scheduling.MatchSchedulerService;
 import com.tradelearn.server.market.service.CandleService;
+import com.tradelearn.fairness.adapter.TradeLearnEpochAdapter;
 import com.tradelearn.server.common.exception.GameNotFoundException;
 import com.tradelearn.server.common.exception.InvalidGameStateException;
 import com.tradelearn.server.common.exception.RoomFullException;
@@ -94,6 +95,7 @@ public class MatchLifecycleService {
     private final RoomManager roomManager;
     private final PositionSnapshotStore positionStore;
     private final GameMetricsService metrics;
+    private final TradeLearnEpochAdapter epochGate;
 
     public MatchLifecycleService(GameRepository gameRepository,
                                  UserRepository userRepository,
@@ -102,7 +104,8 @@ public class MatchLifecycleService {
                                  GameBroadcaster broadcaster,
                                  RoomManager roomManager,
                                  PositionSnapshotStore positionStore,
-                                 GameMetricsService metrics) {
+                                 GameMetricsService metrics,
+                                 TradeLearnEpochAdapter epochGate) {
         this.gameRepository = gameRepository;
         this.userRepository = userRepository;
         this.candleService = candleService;
@@ -111,6 +114,7 @@ public class MatchLifecycleService {
         this.roomManager = roomManager;
         this.positionStore = positionStore;
         this.metrics = metrics;
+        this.epochGate = epochGate;
     }
 
     // ==================== RETRY HELPER ====================
@@ -326,6 +330,7 @@ public class MatchLifecycleService {
                     matchSchedulerService.startProgression(gameId);
                     positionStore.initializePosition(gameId, creatorId, startingBalance);
                     positionStore.initializePosition(gameId, opponentId, startingBalance);
+                    epochGate.initGame(gameId); // ← fairness gate: enable epoch-isolation
 
                     GameLogger.logGameStarted(log, gameId, creatorId, opponentId);
 
@@ -407,6 +412,7 @@ public class MatchLifecycleService {
 
                     positionStore.initializePosition(gameId, p1Id, startBal);
                     positionStore.initializePosition(gameId, p2Id, startBal);
+                    epochGate.initGame(gameId); // ← fairness gate
 
                     GameLogger.logDiagnosticSnapshot(log, "Auto-Match Created", Map.of(
                         "gameId", gameId,
@@ -484,6 +490,7 @@ public class MatchLifecycleService {
                         matchSchedulerService.startProgression(gameId);
                         positionStore.initializePosition(gameId, cId, startBal);
                         positionStore.initializePosition(gameId, oId, startBal);
+                        epochGate.initGame(gameId); // ← fairness gate
                         GameLogger.logGameStarted(log, gameId, cId, oId);
                         GameLogger.logDiagnosticSnapshot(log, "Match Started", Map.of(
                             "gameId", gameId,

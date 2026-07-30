@@ -1,0 +1,34 @@
+{
+  "name": "tradelearn-e2e",
+  "version": "1.0.0",
+  "description": "Playwright black-box E2E tests for TradeLearn",
+  "private": true,
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:debug": "playwright test --debug",
+    "test:report": "playwright show-report",
+    "test:auth": "playwright test tests/auth.spec.js",
+    "test:simulator": "playwright test tests/simulator.spec.js",
+    "test:strategies": "playwright test tests/strategies.spec.js",
+    "test:multiplayer": "playwright test tests/multiplayer.spec.js",
+    "test:leaderboard": "playwright test tests/leaderboard.spec.js",
+    "test:profile": "playwright test tests/profile.spec.js",
+    "test:navigation": "playwright test tests/navigation.spec.js",
+    "test:prod": "playwright test --config=playwright.prod.config.js",
+    "test:prod:headed": "playwright test --config=playwright.prod.config.js --headed",
+    "test:prod:auth": "playwright test --config=playwright.prod.config.js prod-tests/prod-auth.spec.js",
+    "test:prod:strategies": "playwright test --config=playwright.prod.config.js prod-tests/prod-strategies.spec.js",
+    "test:prod:simulator": "playwright test --config=playwright.prod.config.js prod-tests/prod-simulator.spec.js",
+    "test:prod:multiplayer": "playwright test --config=playwright.prod.config.js prod-tests/prod-multiplayer.spec.js",
+    "test:prod:leaderboard": "playwright test --config=playwright.prod.config.js prod-tests/prod-leaderboard.spec.js",
+    "test:prod:profile": "playwright test --config=playwright.prod.config.js prod-tests/prod-profile.spec.js",
+    "test:prod:navigation": "playwright test --config=playwright.prod.config.js prod-tests/prod-navigation.spec.js",
+    "test:prod:academy": "playwright test --config=playwright.prod.config.js prod-tests/prod-learning-academy.spec.js",
+    "test:prod:mobile": "playwright test --config=playwright.prod.config.js prod-tests/prod-mobile-viewport.spec.js",
+    "test:prod:report": "playwright show-report playwright-prod-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.48.0"
+  }
+}

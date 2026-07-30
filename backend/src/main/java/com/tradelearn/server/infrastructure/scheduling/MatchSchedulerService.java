@@ -7,6 +7,7 @@ import com.tradelearn.server.market.service.CandleService;
 import com.tradelearn.server.infrastructure.resilience.GameFreezeService;
 import com.tradelearn.server.infrastructure.scheduling.GameMetricsService;
 import com.tradelearn.server.game.service.MatchTradeService;
+import com.tradelearn.fairness.adapter.TradeLearnEpochAdapter;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -74,6 +75,9 @@ public class MatchSchedulerService {
     /** ScheduledFuture per game — the ONLY in-memory per-game state */
     private final Map<Long, ScheduledFuture<?>> runningTasks = new ConcurrentHashMap<>();
 
+    /** Epoch gate for per-candle trade fairness */
+    private final TradeLearnEpochAdapter epochGate;
+
     /**
      * Self-injection so that tick() calls autoFinishGame() through the Spring proxy,
      * ensuring the @Transactional annotation is actually honoured.
@@ -97,7 +101,8 @@ public class MatchSchedulerService {
                                  PositionSnapshotStore positionStore,
                                  TradeRateLimiter rateLimiter,
                                  GameMetricsService metrics,
-                                 GameFreezeService freezeService) {
+                                 GameFreezeService freezeService,
+                                 TradeLearnEpochAdapter epochGate) {
         this.taskScheduler = taskScheduler;
         this.gameRepository = gameRepository;
         this.tradeRepository = tradeRepository;
@@ -110,6 +115,7 @@ public class MatchSchedulerService {
         this.rateLimiter = rateLimiter;
         this.metrics = metrics;
         this.freezeService = freezeService;
+        this.epochGate = epochGate;
     }
 
     // ==================== START / STOP ====================
@@ -247,7 +253,16 @@ public class MatchSchedulerService {
                 return;
             }
 
-            // Advance to next candle
+            // ── EPOCH SETTLEMENT: settle all queued trades at current epoch price
+            // BEFORE advancing the candle index. This is the key correctness invariant:
+            // trades submitted for epoch N must be settled while currentCandleIndex == N,
+            // so CandleService.getCurrentPrice() returns the correct epoch-N close price.
+            // ─────────────────────────────────────────────────────────────────────────
+            int currentEpoch = game.getCurrentCandleIndex();
+            long opponentId = game.getOpponent() != null ? game.getOpponent().getId() : -1L;
+            epochGate.settleEpoch(gameId, currentEpoch, opponentId);
+
+            // Advance to next candle (after settlement so price is still at epoch N)
             CandleService.Candle nextCandle = candleService.advanceCandle(gameId);
 
             if (nextCandle == null) {
@@ -409,6 +424,7 @@ public class MatchSchedulerService {
                         candleService.evict(gameId);
                         positionStore.evictGame(gameId);
                         rateLimiter.evictGame(gameId);
+                        epochGate.evictGame(gameId); // ← fairness gate cleanup
 
                         broadcaster.sendToGame(gameId, "finished", payload);
                         roomManager.endGame(gameId, false);

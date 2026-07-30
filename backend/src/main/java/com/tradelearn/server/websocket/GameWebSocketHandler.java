@@ -18,11 +18,15 @@ import com.tradelearn.server.game.model.Game;
 import com.tradelearn.server.game.model.GameStatus;
 import com.tradelearn.server.game.model.Trade;
 import com.tradelearn.server.game.repository.GameRepository;
+import com.tradelearn.server.market.service.CandleService;
 import com.tradelearn.server.auth.security.WebSocketChannelInterceptor;
 import com.tradelearn.server.infrastructure.resilience.GameFreezeService;
 import com.tradelearn.server.infrastructure.scheduling.GameMetricsService;
 import com.tradelearn.server.infrastructure.resilience.GracefulDegradationManager;
 import com.tradelearn.server.game.service.MatchTradeService;
+import com.tradelearn.fairness.adapter.TradeLearnEpochAdapter;
+import com.tradelearn.fairness.engine.EngineQueueResult;
+import com.tradelearn.server.game.epoch.EpochTradeQueue;
 import com.tradelearn.server.infrastructure.redis.store.PositionSnapshotStore;
 import com.tradelearn.server.infrastructure.redis.room.RoomManager;
 import com.tradelearn.server.infrastructure.ratelimit.TradeProcessingPipeline;
@@ -81,6 +85,9 @@ public class GameWebSocketHandler {
     private final GracefulDegradationManager degradationManager;
     private final GameFreezeService freezeService;
     private final TradeProcessingPipeline tradePipeline;
+    // ── Fairness mechanism: candle-epoch isolation (via EpochLockstepEngine) ──
+    private final TradeLearnEpochAdapter epochGate;
+    private final CandleService candleService;
 
     public GameWebSocketHandler(GameBroadcaster broadcaster,
                                 GameRepository gameRepository,
@@ -92,7 +99,9 @@ public class GameWebSocketHandler {
                                 GameMetricsService metrics,
                                 GracefulDegradationManager degradationManager,
                                 GameFreezeService freezeService,
-                                TradeProcessingPipeline tradePipeline) {
+                                TradeProcessingPipeline tradePipeline,
+                                TradeLearnEpochAdapter epochGate,
+                                CandleService candleService) {
         this.broadcaster = broadcaster;
         this.gameRepository = gameRepository;
         this.matchTradeService = matchTradeService;
@@ -104,6 +113,8 @@ public class GameWebSocketHandler {
         this.degradationManager = degradationManager;
         this.freezeService = freezeService;
         this.tradePipeline = tradePipeline;
+        this.epochGate = epochGate;
+        this.candleService = candleService;
     }
 
     // ===== HELPER: extract authenticated userId from Principal =====
@@ -220,70 +231,85 @@ public class GameWebSocketHandler {
                     ? trade.symbol
                     : game.getStockSymbol();
 
-            // ── Submit trade to async pipeline (non-blocking) ──
             long opponentId = -1L;
             if (game.getOpponent() != null) {
                 opponentId = game.getOpponent().getId();
             }
-            final long finalOpponentId = opponentId;
 
-            MatchTradeRequest req = new MatchTradeRequest();
-            req.setGameId(gameId);
-            req.setUserId(playerId);    // Server-validated userId
-            req.setSymbol(symbol);
-            req.setType(trade.type);
-            req.setQuantity(trade.amount);
+            // ── FAIRNESS MECHANISM: Candle-Epoch Trade Isolation ──────────────
+            // Read the current candle epoch HERE, at WebSocket-receipt time,
+            // before any thread hand-off or DB round-trip. This is the epoch
+            // the player was watching when they decided to trade — regardless
+            // of network latency differences between players.
+            //
+            // The trade is queued in the CandleEpochGate. It will be settled
+            // at end-of-epoch (just before the candle advances), at the same
+            // price for all players who traded in this window. No player can
+            // gain an advantage by having lower latency to the server.
+            // ─────────────────────────────────────────────────────────────────
+            if (epochGate.getCurrentEpoch(gameId) >= 0) {
+                // Epoch gate is active for this game → use epoch-isolation path
+                int epoch = game.getCurrentCandleIndex();
+                long receivedNanos = System.nanoTime(); // capture before any async work
 
-            TradeProcessingPipeline.SubmitResult result = tradePipeline.submitTrade(gameId, () -> {
-                try {
-                    Trade saved = matchTradeService.placeTrade(req);
+                EpochTradeQueue qt = new EpochTradeQueue(
+                        gameId, playerId, symbol,
+                        trade.type.toUpperCase(), trade.amount,
+                        epoch, receivedNanos);
 
-                    // Broadcast trade event on the broadcast pool
-                    tradePipeline.submitBroadcast(() -> {
-                        broadcaster.sendToGame(gameId, "trade", saved);
+                EngineQueueResult queueResult = epochGate.queueTrade(qt);
+                switch (queueResult) {
+                    case ACCEPTED -> {
+                        // Acknowledge to the client that the order is queued for this candle
+                        broadcaster.sendToGame(gameId, "order-queued", Map.of(
+                                "userId", playerId,
+                                "epoch", epoch,
+                                "type", trade.type.toUpperCase(),
+                                "quantity", trade.amount,
+                                "symbol", symbol,
+                                "message", "Order queued — will settle at candle close"
+                        ));
+                        metrics.recordTrade();
+                    }
+                    case STALE_EPOCH -> broadcaster.sendErrorToUser(playerId, gameId,
+                            "Order rejected: candle has already advanced. Please resubmit.");
+                    case QUEUE_FULL -> broadcaster.sendErrorToUser(playerId, gameId,
+                            "Too many orders queued for this candle — please slow down.");
+                    case SESSION_NOT_FOUND -> broadcaster.sendErrorToUser(playerId, gameId,
+                            "Game not active in fairness gate — please rejoin.");
+                }
+            } else {
+                // Fallback: epoch gate not initialized (e.g. server restart mid-game)
+                // Use legacy direct-execution path to avoid losing the trade.
+                final long finalOpponentId = opponentId;
+                MatchTradeRequest req = new MatchTradeRequest();
+                req.setGameId(gameId);
+                req.setUserId(playerId);
+                req.setSymbol(symbol);
+                req.setType(trade.type);
+                req.setQuantity(trade.amount);
 
-                        // Broadcast updated scoreboard
-                        if (finalOpponentId > 0) {
-                            Map<String, Object> scoreboard = positionStore.buildScoreboardPayload(
-                                    gameId, req.getUserId(), finalOpponentId, saved.getPrice());
-                            broadcaster.sendToGame(gameId, "scoreboard", scoreboard);
-                        }
-                    });
-                } catch (Exception e) {
-                    GameLogger.logError(log, "handleTrade - placeTrade", gameId, e, Map.of(
-                            "playerId", req.getUserId(),
-                            "type", req.getType(),
-                            "amount", req.getQuantity(),
-                            "symbol", req.getSymbol()
-                    ));
-                    broadcaster.sendErrorToUser(req.getUserId(), gameId, e.getMessage());
-                }
-            });
-
-            // Handle pipeline rejection
-            switch (result) {
-                case HEAP_PRESSURE -> {
-                    log.warn("[WS] Trade rejected (heap pressure): player {} in game {}", playerId, gameId);
-                    broadcaster.sendErrorToUser(playerId, gameId,
-                            "Server under load — please retry in a moment");
-                }
-                case BACKPRESSURE -> {
-                    log.warn("[WS] Trade rejected (backpressure): player {} in game {}", playerId, gameId);
-                    broadcaster.sendErrorToUser(playerId, gameId,
-                            "Too many pending trades for this game — please slow down");
-                }
-                case REJECTED -> {
-                    log.warn("[WS] Trade rejected (queue full): player {} in game {}", playerId, gameId);
-                    metrics.recordTradeRejectedRateLimit();
-                    broadcaster.sendErrorToUser(playerId, gameId,
-                            "Server at capacity — trade not processed");
-                }
-                case SHUTDOWN -> {
-                    broadcaster.sendErrorToUser(playerId, gameId,
-                            "Server is shutting down — trade not accepted");
-                }
-                case ACCEPTED -> {
-                    // Trade queued successfully — will be processed async
+                TradeProcessingPipeline.SubmitResult result = tradePipeline.submitTrade(gameId, () -> {
+                    try {
+                        Trade saved = matchTradeService.placeTrade(req);
+                        tradePipeline.submitBroadcast(() -> {
+                            broadcaster.sendToGame(gameId, "trade", saved);
+                            if (finalOpponentId > 0) {
+                                Map<String, Object> scoreboard = positionStore.buildScoreboardPayload(
+                                        gameId, req.getUserId(), finalOpponentId, saved.getPrice());
+                                broadcaster.sendToGame(gameId, "scoreboard", scoreboard);
+                            }
+                        });
+                    } catch (Exception e) {
+                        GameLogger.logError(log, "handleTrade - placeTrade (legacy)", gameId, e, Map.of(
+                                "playerId", req.getUserId(), "type", req.getType(),
+                                "amount", req.getQuantity(), "symbol", req.getSymbol()));
+                        broadcaster.sendErrorToUser(req.getUserId(), gameId, e.getMessage());
+                    }
+                });
+                if (result == TradeProcessingPipeline.SubmitResult.REJECTED ||
+                        result == TradeProcessingPipeline.SubmitResult.SHUTDOWN) {
+                    broadcaster.sendErrorToUser(playerId, gameId, "Server at capacity — trade not processed");
                 }
             }
 
