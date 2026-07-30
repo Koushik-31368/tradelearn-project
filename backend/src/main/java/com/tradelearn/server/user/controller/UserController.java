@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.tradelearn.server.user.model.User;
 import com.tradelearn.server.user.service.UserService;
-import org.springframework.security.core.userdetails.UserDetails;
 
 @RestController
 @RequestMapping("/api/user")

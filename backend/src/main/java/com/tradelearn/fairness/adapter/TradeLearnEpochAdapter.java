@@ -14,8 +14,6 @@ import com.tradelearn.server.websocket.GameBroadcaster;
 
 import java.util.Map;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 /**
@@ -41,7 +39,6 @@ import org.springframework.stereotype.Service;
 @Service
 public class TradeLearnEpochAdapter {
 
-    private static final Logger log = LoggerFactory.getLogger(TradeLearnEpochAdapter.class);
 
     /**
      * The generic engine, parameterised over {@link EpochTradeQueue} as the

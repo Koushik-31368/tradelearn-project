@@ -18,7 +18,6 @@ import com.tradelearn.server.game.model.Game;
 import com.tradelearn.server.game.model.GameStatus;
 import com.tradelearn.server.game.model.Trade;
 import com.tradelearn.server.game.repository.GameRepository;
-import com.tradelearn.server.market.service.CandleService;
 import com.tradelearn.server.auth.security.WebSocketChannelInterceptor;
 import com.tradelearn.server.infrastructure.resilience.GameFreezeService;
 import com.tradelearn.server.infrastructure.scheduling.GameMetricsService;
@@ -87,7 +86,6 @@ public class GameWebSocketHandler {
     private final TradeProcessingPipeline tradePipeline;
     // ── Fairness mechanism: candle-epoch isolation (via EpochLockstepEngine) ──
     private final TradeLearnEpochAdapter epochGate;
-    private final CandleService candleService;
 
     public GameWebSocketHandler(GameBroadcaster broadcaster,
                                 GameRepository gameRepository,
@@ -100,8 +98,7 @@ public class GameWebSocketHandler {
                                 GracefulDegradationManager degradationManager,
                                 GameFreezeService freezeService,
                                 TradeProcessingPipeline tradePipeline,
-                                TradeLearnEpochAdapter epochGate,
-                                CandleService candleService) {
+                                TradeLearnEpochAdapter epochGate) {
         this.broadcaster = broadcaster;
         this.gameRepository = gameRepository;
         this.matchTradeService = matchTradeService;
@@ -114,7 +111,6 @@ public class GameWebSocketHandler {
         this.freezeService = freezeService;
         this.tradePipeline = tradePipeline;
         this.epochGate = epochGate;
-        this.candleService = candleService;
     }
 
     // ===== HELPER: extract authenticated userId from Principal =====

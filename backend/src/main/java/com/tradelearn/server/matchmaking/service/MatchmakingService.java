@@ -155,6 +155,7 @@ public class MatchmakingService {
     }
 
     @PostConstruct
+    @SuppressWarnings("null") // MatchmakingService::queueSize: Eclipse @NonNull false positive on gauge method ref
     public void init() {
         housekeeper = Executors.newSingleThreadScheduledExecutor(r -> {
             Thread t = new Thread(r, "mm-housekeeper");

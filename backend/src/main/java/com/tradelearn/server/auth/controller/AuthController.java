@@ -79,6 +79,7 @@ public class AuthController {
     // ── helpers ───────────────────────────────────────────────────────────────
 
     /** Build the Set-Cookie header value for a new refresh token. */
+    @SuppressWarnings("null") // ResponseCookie.from: Eclipse @NonNull false positive
     private ResponseCookie buildRefreshCookie(String refreshToken) {
         long maxAgeSeconds = jwtUtil.getRefreshExpirationMs() / 1000;
         return ResponseCookie.from(REFRESH_COOKIE_NAME, refreshToken)

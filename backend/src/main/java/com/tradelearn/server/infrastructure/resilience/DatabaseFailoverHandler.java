@@ -90,6 +90,7 @@ public class DatabaseFailoverHandler {
      * thread pool (enabled by @EnableScheduling in AsyncConfig).
      */
     @Scheduled(fixedDelayString = "${tradelearn.db.probe-interval-ms:5000}")
+    @SuppressWarnings("null") // Runnable::run: Eclipse @NonNull false positive on method reference
     public void probe() {
         CircuitBreakerRegistry.CircuitBreaker breaker = cb();
         if (breaker == null) return;

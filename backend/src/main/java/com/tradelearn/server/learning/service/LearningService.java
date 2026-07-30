@@ -29,6 +29,7 @@ public class LearningService {
         this.questService = questService;
     }
 
+    @SuppressWarnings("null") // UserLessonProgress::getLessonId: Eclipse @NonNull false positive
     public List<String> getCompletedLessons(Long userId) {
         return progressRepository.findByUserId(userId).stream()
                 .map(UserLessonProgress::getLessonId)

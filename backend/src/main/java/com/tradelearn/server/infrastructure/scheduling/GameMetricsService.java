@@ -46,6 +46,7 @@ public class GameMetricsService {
 
     // ===================== CONSTRUCTION =====================
 
+    @SuppressWarnings("null") // RoomManager::activeRoomCount: Eclipse @NonNull false positive on gauge method ref
         public GameMetricsService(MeterRegistry registry,
                                                           RoomManager roomManager) {
 

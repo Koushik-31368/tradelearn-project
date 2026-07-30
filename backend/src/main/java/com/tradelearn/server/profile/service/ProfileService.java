@@ -97,6 +97,7 @@ public class ProfileService {
 
     // ── Private helpers ──────────────────────────────────────────────────────
 
+    @SuppressWarnings("null") // MatchStats/Game method refs: Eclipse @NonNull false positives
     private ProfileResponse buildProfile(Long userId, User user) {
         List<Game> allGames = gameRepository.findByCreatorIdOrOpponentId(userId, userId);
 

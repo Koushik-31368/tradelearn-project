@@ -303,6 +303,7 @@ public class EpochLockstepEngine<A> {
     }
 
     /** Total pending action count across all epochs for a session. */
+    @SuppressWarnings("null") // List::size method ref: ConcurrentHashMap.values() never returns null entries
     public int pendingActionCount(String sessionId) {
         ConcurrentHashMap<Integer, List<PendingAction<A>>> epochMap = sessionQueues.get(sessionId);
         if (epochMap == null) return 0;

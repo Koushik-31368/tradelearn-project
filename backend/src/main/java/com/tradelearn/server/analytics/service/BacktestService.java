@@ -36,7 +36,9 @@ public class BacktestService {
 
         // Copy and sort candles by date ascending
         List<Candle> candles = new ArrayList<>(req.getCandles());
-        candles.sort(Comparator.comparing(Candle::getLocalDate));
+        @SuppressWarnings("null") // Candle::getLocalDate: Eclipse @NonNull false positive on method ref
+        List<Candle> sorted = candles.stream().sorted(Comparator.comparing(Candle::getLocalDate)).toList();
+        candles = new ArrayList<>(sorted);
 
         int fast = req.getSmaFast();
         int slow = req.getSmaSlow();

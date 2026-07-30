@@ -119,6 +119,7 @@ public class SecurityConfig {
     }
 
     @Bean
+    @SuppressWarnings("null") // String::trim: Eclipse @NonNull false positive on method reference
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
 
