@@ -1,8 +1,6 @@
 package com.tradelearn.fairness;
 
 import com.tradelearn.fairness.engine.EpochLockstepEngine;
-import com.tradelearn.fairness.engine.EngineQueueResult;
-import com.tradelearn.fairness.engine.EpochSettlementResult;
 import com.tradelearn.fairness.engine.PendingAction;
 
 import org.junit.jupiter.api.Test;
@@ -13,8 +11,6 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.Path;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * <h1>Latency-Asymmetry Benchmark Harness</h1>
@@ -141,10 +137,6 @@ class LatencyAsymmetrySimulation {
             // In gated mode: both actions are tagged with the current epoch
             // and settled at oldPrice before the epoch advances.
 
-            final long fastReceiptNanos;
-            final long slowReceiptNanos;
-            final int epochAtFastReceipt;
-            final int epochAtSlowReceipt;
 
             if (!gated) {
                 // ── Naive mode: simulate time passing ───────────────────────
@@ -161,13 +153,9 @@ class LatencyAsymmetrySimulation {
 
                 // Fast client always acts on newPrice (saw the advance early)
                 boolean fastBuys = newPrice > oldPrice; // using new info
-                // Slow client acts on oldPrice info (still delayed)
-                boolean slowBuys = oldPrice > prices[Math.max(0, round - 1)]; // using prev epoch's direction
 
                 // Naive settlement: trade at whatever price is current
-                // Fast client settled at newPrice (already advanced)
                 double fastTradePrice = newPrice;
-                double slowTradePrice = oldPrice; // slow client settled before advance
 
                 if (fastBuys) fastPnl += (newPrice - fastTradePrice) * SHARES;  // bought at newPrice, marked at newPrice → 0 for this round
                 else           fastPnl += (fastTradePrice - newPrice) * SHARES;  // sold at newPrice → 0
