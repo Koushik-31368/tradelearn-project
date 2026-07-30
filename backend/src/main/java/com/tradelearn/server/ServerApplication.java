@@ -3,7 +3,10 @@ package com.tradelearn.server;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = {
+        "com.tradelearn.server",
+        "com.tradelearn.fairness"
+})
 public class ServerApplication {
 
     public static void main(String[] args) {
