@@ -1,19 +1,22 @@
 <div align="center">
 
-# 📈 TradeLearn
+<img src="https://img.shields.io/badge/TradeLearn-Educational%20Trading%20Platform-0d9488?style=for-the-badge&labelColor=0f172a" alt="TradeLearn" height="40"/>
 
-### Competitive Trading Education Platform
+# TradeLearn
 
-**Real-time head-to-head matches · ELO ranking · Candlestick simulator · SMA backtesting**
+### Gamified Multiplayer Trading Simulator
 
-[![Build](https://github.com/koushik31368/tradelearn/actions/workflows/build.yml/badge.svg)](https://github.com/koushik31368/tradelearn/actions/workflows/build.yml)
-![Java](https://img.shields.io/badge/Java-21-orange?logo=openjdk)
-![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.x-brightgreen?logo=springboot)
-![React](https://img.shields.io/badge/React-18-blue?logo=react)
-![Redis](https://img.shields.io/badge/Redis-7-red?logo=redis)
-![License](https://img.shields.io/badge/License-Proprietary-lightgrey)
+**Compete head-to-head · Build real trading skills · Climb the ELO leaderboard**
 
-[🎮 Live Demo](#-live-demo) · [📸 Screenshots](#-screenshots) · [🚀 Quick Start](#-quick-start) · [🛠 Tech Stack](#-tech-stack)
+[![CI](https://github.com/Koushik-31368/tradelearn-project/actions/workflows/ci.yml/badge.svg)](https://github.com/Koushik-31368/tradelearn-project/actions/workflows/ci.yml)
+![Java](https://img.shields.io/badge/Java-21-ED8B00?logo=openjdk&logoColor=white)
+![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.x-6DB33F?logo=springboot&logoColor=white)
+![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Neon-336791?logo=postgresql&logoColor=white)
+![Redis](https://img.shields.io/badge/Redis-7-DC382D?logo=redis&logoColor=white)
+![License](https://img.shields.io/badge/License-Proprietary-64748b)
+
+[🎮 Live Demo](#-live-demo) · [✨ Features](#-features) · [🏗 Architecture](#-architecture) · [🚀 Quick Start](#-quick-start) · [🛠 Tech Stack](#-tech-stack)
 
 </div>
 
@@ -21,54 +24,89 @@
 
 ## 🎮 Live Demo
 
-> **Try it now — no signup required with demo accounts**
-
-| URL | Status |
+| | URL |
 |---|---|
-| **Frontend** | [tradelearn.vercel.app](https://tradelearn.vercel.app) |
-| **API Health** | [api.tradelearn.onrender.com/actuator/health](https://api.tradelearn.onrender.com/actuator/health) |
+| 🌐 **Frontend** | [tradelearn-project.vercel.app](https://tradelearn-project.vercel.app) |
+| 🔌 **API Health** | [tradelearn-project-g.onrender.com/actuator/health](https://tradelearn-project-g.onrender.com/actuator/health) |
 
-**Demo Accounts** (password: `Demo1234`):
+> **Note:** Backend is hosted on Render free tier — first request may take ~30s to cold-start.
 
-| Account | ELO | Tier | Login |
-|---|---|---|---|
-| ArjunMehra | 1820 | 💎 Diamond | `demo.diamond@tradelearn.com` |
-| PriyaNair | 1245 | 🥇 Gold | `demo.gold@tradelearn.com` |
-| RohanSingh | 820 | 🥈 Silver | `demo.silver@tradelearn.com` |
-
-→ Full demo guide: [docs/demo-accounts.md](docs/demo-accounts.md)
+> [!NOTE]
+> **Educational use only.** TradeLearn is a gamified learning simulator — not a licensed broker, financial advisor, or investment platform. Market data sourced from public APIs (yfinance, Finnhub) for non-commercial, academic use only.
 
 ---
 
-## 📸 Screenshots
+## ✨ Features
 
-> *(Add screenshots to `docs/screenshots/` — see [Screenshot Guide](docs/screenshot-guide.md))*
+### ⚔️ Real-Time Multiplayer Matches
+Head-to-head trading battles via WebSocket. Both players receive identical market candles simultaneously — no latency advantage. Results feed into an ELO rating system.
 
-| Home | Live Match | Leaderboard |
-|:---:|:---:|:---:|
-| ![Home](docs/screenshots/home.png) | ![Match](docs/screenshots/match.png) | ![Leaderboard](docs/screenshots/leaderboard.png) |
+**Scoring formula:**
+```
+Score = (Profit% × 0.60) + (Risk Score × 0.20) + (Accuracy% × 0.20)
+```
 
-| Simulator | Practice Mode | Profile |
-|:---:|:---:|:---:|
-| ![Simulator](docs/screenshots/simulator.png) | ![Practice](docs/screenshots/practice.png) | ![Profile](docs/screenshots/profile.png) |
+### 📈 DB-Backed Historical Replay Engine
+Every multiplayer match replays a **random window** of real NSE historical data pulled from a PostgreSQL database — not dummy JSON. 10 symbols, 2 years of daily OHLCV candles (4,970+ rows).
+
+### 🕹 Solo Trading Simulator
+Real-time candlestick chart with SMA overlays, live portfolio P&L, equity curve, market sentiment panel, and full order management. Seeded with NSE blue-chip stocks.
+
+### 🎓 Learning Academy
+Structured curriculum: candlestick patterns → technical indicators → risk management → trading psychology. Progressive sections with embedded quizzes.
+
+### 📊 Strategy Engine
+Eight documented strategies (RSI Mean Reversion, SMA Crossover, Breakout, Momentum, S&R, Scalping, Buy & Hold, MACD) with entry/exit rules and direct simulator links.
+
+### 🔬 Backtest Engine
+SMA crossover backtester against any OHLCV dataset. Outputs equity curve, return %, max drawdown %, and trade-by-trade breakdown.
+
+### 🏆 ELO Leaderboard
+Chess-style rating adjusted after every match. Tier badges (Bronze → Silver → Gold → Diamond) with seasonal rankings.
 
 ---
 
-## ✨ Key Technical Highlights
+## 🏗 Architecture
 
-> What makes TradeLearn technically interesting:
+```
+┌─────────────────────────────────────────────────────────────┐
+│                          Browser                            │
+│            React 18  ·  STOMP.js  ·  Axios                 │
+└──────────────────┬──────────────────────┬───────────────────┘
+                   │ HTTPS/REST           │ WSS WebSocket
+                   ▼                      ▼
+┌─────────────────────────────────────────────────────────────┐
+│                  Spring Boot 3  (Java 21)                   │
+│                                                             │
+│  ┌────────────────┐  ┌─────────────────┐  ┌─────────────┐  │
+│  │ REST Controllers│  │ WebSocket Handler│  │JWT Security │  │
+│  └───────┬────────┘  └────────┬────────┘  └─────────────┘  │
+│          │                    │                              │
+│  ┌───────▼────────────────────▼──────────────────────────┐  │
+│  │                 Domain Services Layer                  │  │
+│  │  MatchLifecycle · MatchScoring · EpochLockstep         │  │
+│  │  ReplaySession  · CandleService · FinnhubProvider      │  │
+│  │  Matchmaking    · Backtest      · ELO / XP             │  │
+│  └───────┬─────────────────────┬─────────────────────────┘  │
+│          │                     │                             │
+│  ┌───────▼────────┐   ┌────────▼────────┐                   │
+│  │ PostgreSQL/Neon│   │   Redis (7)      │                   │
+│  │  games         │   │  Match rooms     │                   │
+│  │  stock_candles │   │  Pub/Sub relay   │                   │
+│  │  replay_sess.  │   │  Matchmaking     │                   │
+│  └────────────────┘   └─────────────────┘                   │
+└─────────────────────────────────────────────────────────────┘
+```
 
-- **Real-time multiplayer via WebSocket** — STOMP-over-SockJS with cross-instance Redis Pub/Sub broadcasting. Both players receive the same price candle simultaneously with sub-100ms delivery.
+### Key Design Decisions
 
-- **ELO ranking system** — Chess-style rating with a 3-factor composite score: `60% Profit · 20% Risk Management (drawdown) · 20% Trade Accuracy`. Rating adjusts after every match using a configurable K-factor.
-
-- **Atomic Redis matchmaking** — Queue implemented as a Redis ZSET (score = ELO rating). Matching uses Lua scripts for atomic compare-and-set to prevent race conditions when two players join simultaneously.
-
-- **Transaction-safe side effects** — Redis mutations and WebSocket broadcasts are registered as `TransactionSynchronization.afterCommit()` hooks, guaranteeing they only fire if the DB transaction commits successfully.
-
-- **LRU-cached market data** — Yahoo Finance OHLCV data cached with a bounded LinkedHashMap (200 entries, access-order eviction) to avoid redundant API calls during active matches.
-
-- **SMA crossover backtest engine** — Configurable fast/slow SMA strategy that runs against historical candle data and produces an equity curve, max drawdown %, and trade-by-trade breakdown.
+| Decision | Rationale |
+|---|---|
+| **Epoch-lockstep fairness engine** | Both players trade against identical candle snapshots — impossible to gain an advantage via network latency |
+| **`afterCommit()` side effects** | Redis/WebSocket mutations only fire if the DB transaction committed — prevents Redis/DB split-brain on rollback |
+| **Replay session per game** | Random historical window assigned at game creation — every match is a fresh, unpredictable market scenario |
+| **DB-first candle load, JSON fallback** | Production uses real NSE data; dev/test environments fall back to classpath JSON transparently |
+| **`@ConditionalOnProperty` Finnhub** | US real-time feed activates only when `FINNHUB_ENABLED=true` — zero overhead when disabled |
 
 ---
 
@@ -78,15 +116,15 @@
 | Technology | Version | Purpose |
 |---|---|---|
 | Java | 21 | Application language |
-| Spring Boot | 3.x | REST API + WebSocket server |
-| Spring Security + JWT | — | Authentication & authorization |
-| Spring Data JPA | — | Database ORM layer |
-| MySQL / PostgreSQL | — | Primary database |
+| Spring Boot | 3.2 | REST API + WebSocket server |
+| Spring Security + JWT | — | Stateless auth with refresh tokens |
+| Spring Data JPA | — | ORM — PostgreSQL via Hibernate |
+| PostgreSQL (Neon) | — | Primary database + Flyway migrations |
 | Redis | 7 | Matchmaking queue, session state, Pub/Sub |
-| Redisson | — | Distributed locks for match creation |
 | STOMP / SockJS | — | Real-time WebSocket protocol |
 | Bucket4j | — | API rate limiting |
 | Micrometer + Actuator | — | Metrics & health endpoints |
+| yfinance (Python) | — | Historical NSE market data ingestion |
 
 ### Frontend
 | Technology | Version | Purpose |
@@ -98,121 +136,12 @@
 | React Router | 6 | Client-side routing |
 
 ### Infrastructure
-| Technology | Purpose |
+| Service | Purpose |
 |---|---|
-| Docker + Docker Compose | Containerized local development |
-| GitHub Actions | CI — build & test on every PR |
-| Render | Backend production hosting |
-| Vercel | Frontend CDN deployment |
-
----
-
-## 🏗 Architecture
-
-```
-┌─────────────────────────────────────────────────────────┐
-│                        Browser                          │
-│          React 18  ·  STOMP.js  ·  Axios               │
-└────────────────┬─────────────────────┬──────────────────┘
-                 │ HTTPS REST          │ WSS WebSocket
-                 ▼                     ▼
-┌───────────────────────────────────────────────────────────┐
-│                  Spring Boot 3  (Java 21)                  │
-│                                                           │
-│  ┌──────────────┐  ┌────────────────┐  ┌──────────────┐  │
-│  │ REST Controllers│  │ WebSocket Handler│  │ JWT Security │  │
-│  └──────┬───────┘  └───────┬────────┘  └──────────────┘  │
-│         │                  │                               │
-│  ┌──────▼──────────────────▼──────────────────────────┐   │
-│  │              Domain Services Layer                  │   │
-│  │  MatchLifecycle · MatchScoring · MatchTrade         │   │
-│  │  Matchmaking · MarketData · Backtest · Profile      │   │
-│  └──────┬──────────────────┬──────────────────────────┘   │
-│         │                  │                               │
-│  ┌──────▼──────┐    ┌──────▼──────┐                       │
-│  │  MySQL/PgSQL│    │    Redis     │                       │
-│  │  (JPA/JDBC) │    │  Queue+Pub  │                       │
-│  └─────────────┘    └─────────────┘                       │
-└───────────────────────────────────────────────────────────┘
-```
-
-**Request paths:**
-- `REST` → Controller → Service → Repository → Database
-- `WebSocket Trade` → GameWebSocketHandler → MatchTradeService → Redis snapshot → Broadcaster → all clients
-- `Matchmaking` → Redis ZSET (Lua atomic enqueue) → match found → `afterCommit` room creation → WebSocket notify
-
----
-
-## 🎯 Core Features
-
-### 🎓 Learning Academy
-Structured curriculum covering candlestick patterns, technical indicators, risk management, and trading psychology. Progressive sections with embedded quizzes and visual examples.
-
-### 📊 Strategy Engine
-Eight documented trading strategies (RSI Mean Reversion, SMA Crossover, Breakout, Momentum, S&R, Scalping, Buy & Hold, MACD) with entry/exit rules and direct links to the simulator.
-
-### 🕹 Trading Simulator
-Real-time candlestick chart with SMA overlays, market sentiment panel (trend/volatility/momentum), portfolio tracking, equity curve, and watchlist. Seeded with NSE stocks.
-
-### ⚔️ Multiplayer Ranked Matches
-Head-to-head real-time matches via WebSocket. Both players receive the same market data simultaneously. Match results update ELO ratings with a composite skill score.
-
-**Scoring formula:** `Score = (Profit% × 0.60) + (Risk Score × 0.20) + (Accuracy% × 0.20)`
-
-### 📉 Historical Practice Mode
-Replay iconic NSE market events (2020 COVID crash, sectoral crashes, rallies) using real OHLCV data. Strategy detection surfaces pattern hints in real time. Optional AI opponent for comparison.
-
-### 🔬 Backtest Engine
-SMA crossover backtest that runs against any OHLCV dataset. Outputs equity curve, return %, max drawdown %, and win rate across all generated signals.
-
----
-
-## 🚀 Quick Start
-
-```bash
-# 1. Clone
-git clone https://github.com/koushik31368/tradelearn.git
-cd tradelearn
-
-# 2. Configure environment
-cp backend/.env.example backend/.env
-# Edit backend/.env with your DB credentials
-
-# 3. Start everything with Docker
-docker-compose up --build
-```
-
-**App:** `http://localhost:3000`  
-**API:** `http://localhost:8080/actuator/health`
-
-> **Load demo data** after first boot:
-> ```bash
-> mysql -u root -p tradelearn < backend/src/main/resources/db/seed-demo.sql
-> ```
-
-→ Manual setup: [docs/developer-setup.md](docs/developer-setup.md)
-
----
-
-## ⚙️ Environment Variables
-
-### Backend (`.env` or Render dashboard)
-
-| Variable | Required | Default | Description |
-|---|---|---|---|
-| `SPRING_PROFILES_ACTIVE` | Yes | `local` | `local` or `prod` |
-| `DATABASE_URL` | Yes (prod) | — | Full JDBC connection string |
-| `DATABASE_USERNAME` | Yes (prod) | — | DB username |
-| `DATABASE_PASSWORD` | Yes (prod) | — | DB password |
-| `JWT_SECRET` | Yes (prod) | — | Min 64-char random string |
-| `REDIS_HOST` | Yes | `localhost` | Redis hostname |
-| `CORS_ALLOWED_ORIGINS` | Yes | `http://localhost:3000` | Comma-separated allowed origins |
-
-### Frontend (`.env` or Vercel dashboard)
-
-| Variable | Required | Default | Description |
-|---|---|---|---|
-| `REACT_APP_API_URL` | No | `""` (relative) | Backend API base URL |
+| Neon (PostgreSQL) | Serverless DB — 4,970+ candle rows, Flyway migrations |
+| Render | Backend production hosting (auto-deploy from `main`) |
+| Vercel | Frontend CDN deployment (auto-deploy from `main`) |
+| GitHub Actions | CI — `mvn verify` on every push (113 tests) |
 
 ---
 
@@ -220,51 +149,145 @@ docker-compose up --build
 
 ```
 tradelearn/
-├── backend/                         Spring Boot application
-│   └── src/main/java/com/tradelearn/server/
-│       ├── analytics/               Backtest engine, readiness scoring
-│       ├── auth/                    JWT authentication, security config
-│       ├── common/                  Shared utilities, exception handlers, filters
-│       ├── game/                    Match lifecycle, scoring, trading, queries
-│       ├── infrastructure/          Redis rooms, resilience, scheduling, rate limiting
-│       ├── leaderboard/             ELO ranking, tier badges
-│       ├── market/                  Yahoo Finance provider, LRU candle cache
-│       ├── matchmaking/             Redis ZSET queue, ELO expansion, Lua scripts
-│       ├── profile/                 User profile assembly service
-│       ├── simulator/               Solo paper trading portfolio
-│       ├── social/                  Friends, challenges, WebSocket social events
-│       ├── user/                    User management
-│       └── websocket/               STOMP handler, broadcaster, Redis relay
+├── backend/                              Spring Boot application
+│   └── src/main/java/com/tradelearn/
+│       ├── fairness/                     Epoch-lockstep engine (latency fairness)
+│       └── server/
+│           ├── auth/                     JWT authentication, security config
+│           ├── game/                     Match lifecycle, scoring, trading, queries
+│           ├── infrastructure/           Redis rooms, resilience, scheduling, rate limiting
+│           ├── leaderboard/              ELO ranking, tier badges
+│           ├── market/                   ← New: candle DB layer
+│           │   ├── model/                StockSymbol, StockCandleDaily, GameReplaySession
+│           │   ├── repository/           JPA repositories with range queries
+│           │   ├── service/              CandleService, ReplaySessionService
+│           │   ├── replay/               TickReplayEngine (solo simulator)
+│           │   ├── controller/           SimulatorTickController REST API
+│           │   └── provider/             FinnhubWebSocketProvider (US live feed)
+│           ├── matchmaking/              Redis ZSET queue, Lua atomic scripts
+│           ├── profile/                  User profile assembly
+│           └── websocket/               STOMP handler, broadcaster, Redis relay
+│   └── src/main/resources/
+│       └── db/migration/                 Flyway V1–V7 schema migrations
 │
 ├── frontend/src/
-│   ├── api/                         Axios client + domain API modules
-│   ├── features/                    Feature-domain UI components and pages
-│   │   ├── auth/                    Login, register, forgot password
-│   │   ├── game/                    Lobby, live match, match result, history
-│   │   ├── leaderboard/             Rankings, tier badges
-│   │   ├── simulator/               Candlestick chart, missions, practice
-│   │   ├── strategies/              Strategy cards and detail views
-│   │   └── social/                  Friends panel, challenge listener
-│   └── layout/                      Navbar, shared layout components
+│   ├── api/                              Axios client + domain API modules
+│   └── features/
+│       ├── auth/                         Login, register, forgot password
+│       ├── game/                         Lobby, live match, result, history
+│       ├── leaderboard/                  Rankings, tier badges
+│       ├── simulator/                    Candlestick chart, missions, practice
+│       ├── strategies/                   Strategy cards and detail views
+│       └── social/                       Friends panel, challenge listener
 │
-├── docs/                            Architecture, API reference, demo guide
-├── loadtest/                        k6 load tests + monitoring dashboards
-├── docker-compose.yml               Full-stack local dev environment
-└── .github/workflows/               CI/CD pipelines
+├── scripts/
+│   ├── ingest_market_data.py             NSE historical data ingestion (yfinance)
+│   └── requirements.txt
+│
+├── docs/                                 Architecture, API reference, demo guide
+├── e2e/                                  Playwright production E2E tests
+├── loadtest/                             k6 load tests + monitoring dashboards
+└── .github/workflows/                    CI/CD pipelines
 ```
+
+---
+
+## 🚀 Quick Start
+
+### Prerequisites
+- Java 21+, Maven 3.9+
+- Node.js 18+, npm
+- Redis 7 (local or Docker)
+- PostgreSQL or a [Neon](https://neon.tech) serverless DB
+
+### 1. Clone & configure
+
+```bash
+git clone https://github.com/Koushik-31368/tradelearn-project.git
+cd tradelearn-project
+
+# Backend config
+cp backend/.env.example backend/src/main/resources/application-local.properties
+# Fill in: SPRING_DATASOURCE_URL, JWT_SECRET, REDIS_HOST
+```
+
+### 2. Populate market data (one-time)
+
+```bash
+cd scripts
+pip install -r requirements.txt
+
+# Add NEON_DATABASE_URL to scripts/.env, then:
+python ingest_market_data.py --days 730
+# → Ingests 4,970 rows of NSE daily OHLCV data
+```
+
+### 3. Start backend
+
+```bash
+cd backend
+mvn spring-boot:run -Dspring-boot.run.profiles=local
+# → http://localhost:8080/actuator/health
+```
+
+### 4. Start frontend
+
+```bash
+cd frontend
+npm install
+npm run dev
+# → http://localhost:5173
+```
+
+---
+
+## ⚙️ Environment Variables
+
+### Backend
+
+| Variable | Required | Description |
+|---|---|---|
+| `SPRING_DATASOURCE_URL` | ✅ | JDBC PostgreSQL URL |
+| `SPRING_DATASOURCE_USERNAME` | ✅ | DB username |
+| `SPRING_DATASOURCE_PASSWORD` | ✅ | DB password |
+| `JWT_SECRET` | ✅ | Min 64-char random string |
+| `REDIS_HOST` | ✅ | Redis hostname |
+| `CORS_ALLOWED_ORIGINS` | ✅ | Comma-separated allowed origins |
+| `FINNHUB_ENABLED` | ❌ | `true` to enable US real-time feed |
+| `FINNHUB_API_KEY` | ❌ | Finnhub API key (if enabled) |
+
+### Frontend
+
+| Variable | Required | Description |
+|---|---|---|
+| `REACT_APP_API_URL` | ❌ | Backend base URL (empty = relative) |
+| `REACT_APP_WS_URL` | ❌ | WebSocket base URL |
 
 ---
 
 ## 🗺 Roadmap
 
-- [ ] Trade replay system — candle-by-candle animated replay of completed matches
-- [ ] Advanced analytics dashboard — win rate trends, strategy performance breakdown
+- [x] Real NSE market data replay engine (4,970 rows, 10 symbols)
+- [x] Epoch-lockstep fairness engine (latency-immune trading)
+- [x] ELO ranking + composite scoring
+- [x] Solo simulator with SMA overlays
+- [x] Finnhub real-time US feed (optional)
+- [ ] Trade replay — animated candle-by-candle match review
 - [ ] Tournament mode — bracket-style multi-round competitions
-- [ ] Mobile-responsive simulator — full trading experience on tablet/mobile
-- [ ] OpenAPI/Swagger — auto-generated REST API documentation
+- [ ] Advanced analytics — win-rate trends, strategy performance heatmap
+- [ ] Mobile-responsive simulator
+- [ ] OpenAPI/Swagger — auto-generated REST docs
 
 ---
 
 ## 📄 License
 
-Proprietary. All rights reserved. © 2024 Koushik Reedy
+Proprietary. All rights reserved. © 2026 Koushik Reedy
+
+---
+
+<div align="center">
+
+Built with ☕ Java + ⚛️ React · Deployed on Render + Vercel + Neon
+
+</div>
