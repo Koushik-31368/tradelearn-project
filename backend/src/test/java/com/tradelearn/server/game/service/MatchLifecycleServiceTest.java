@@ -9,6 +9,7 @@ import com.tradelearn.server.user.repository.UserRepository;
 import com.tradelearn.server.infrastructure.redis.room.RoomManager;
 import com.tradelearn.server.infrastructure.scheduling.MatchSchedulerService;
 import com.tradelearn.server.market.service.CandleService;
+import com.tradelearn.server.market.service.ReplaySessionService;
 import com.tradelearn.server.websocket.GameBroadcaster;
 import com.tradelearn.server.infrastructure.redis.store.PositionSnapshotStore;
 import com.tradelearn.server.infrastructure.scheduling.GameMetricsService;
@@ -59,6 +60,7 @@ class MatchLifecycleServiceTest {
     @Mock private GameRepository gameRepository;
     @Mock private UserRepository userRepository;
     @Mock private CandleService candleService;
+    @Mock private ReplaySessionService replaySessionService;
     @Mock private MatchSchedulerService matchSchedulerService;
     @Mock private GameBroadcaster broadcaster;
     @Mock private RoomManager roomManager;
