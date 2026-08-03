@@ -53,3 +53,23 @@
     gap: 16px;
   }
 }
+
+/* ── Educational disclaimer ───────────────────────────────── */
+.site-footer__disclaimer {
+  max-width: 1200px;
+  margin: 20px auto 0;
+  padding-top: 16px;
+  border-top: 1px solid #21262d;
+}
+
+.site-footer__disclaimer p {
+  font-size: 11px;
+  color: #484f58;
+  line-height: 1.6;
+  margin: 0;
+  text-align: center;
+}
+
+.site-footer__disclaimer strong {
+  color: #6e7681;
+}

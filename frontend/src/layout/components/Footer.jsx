@@ -14,6 +14,15 @@ const Footer = () => (
         <a href="mailto:contact@tradelearn.app">Contact</a>
       </nav>
     </div>
+    <div className="site-footer__disclaimer">
+      <p>
+        <strong>Educational use only.</strong> TradeLearn is a gamified learning simulator —
+        not a licensed broker, financial advisor, or investment platform. Nothing on this site
+        constitutes real trading advice or a solicitation to trade. Market data is sourced from
+        public APIs (yfinance, Finnhub) for non-commercial, academic use only. Past simulated
+        performance is not indicative of future real-world results.
+      </p>
+    </div>
   </footer>
 );
 

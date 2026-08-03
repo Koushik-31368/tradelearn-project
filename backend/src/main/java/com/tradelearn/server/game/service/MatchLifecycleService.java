@@ -5,6 +5,7 @@ import com.tradelearn.server.infrastructure.redis.room.RoomManager;
 import com.tradelearn.server.infrastructure.redis.store.PositionSnapshotStore;
 import com.tradelearn.server.infrastructure.scheduling.MatchSchedulerService;
 import com.tradelearn.server.market.service.CandleService;
+import com.tradelearn.server.market.service.ReplaySessionService;
 import com.tradelearn.fairness.adapter.TradeLearnEpochAdapter;
 import com.tradelearn.server.common.exception.GameNotFoundException;
 import com.tradelearn.server.common.exception.InvalidGameStateException;
@@ -79,17 +80,26 @@ public class MatchLifecycleService {
 
     /**
      * Stock symbols used for ranked/auto-match game creation.
-     * Kept here (lifecycle concern: who picks the symbol when creating a game).
+     * Must be a subset of the NSE watchlist that has been ingested into
+     * {@code stock_candles_daily} by the Python ingestion script.
      */
     static final String[] RANKED_SYMBOLS = {
-        "TCS", "INFY", "RELIANCE", "HDFCBANK", "ICICIBANK",
-        "WIPRO", "SBIN", "BHARTIARTL", "ITC", "KOTAKBANK",
-        "LT", "AXISBANK", "HINDUNILVR", "MARUTI", "TATASTEEL"
+        "RELIANCE", "TCS", "INFY", "HDFCBANK", "ICICIBANK",
+        "WIPRO", "SBIN", "ADANIENT", "BAJFINANCE", "HINDUNILVR"
     };
+
+    /**
+     * Default number of candles per match session.
+     * 60 daily candles ≈ 3 months of trading data.
+     * Passed to {@link ReplaySessionService#createSession} so it can pick a
+     * valid random window from the available historical data.
+     */
+    private static final int DEFAULT_CANDLE_COUNT = 60;
 
     private final GameRepository gameRepository;
     private final UserRepository userRepository;
     private final CandleService candleService;
+    private final ReplaySessionService replaySessionService;
     private final MatchSchedulerService matchSchedulerService;
     private final GameBroadcaster broadcaster;
     private final RoomManager roomManager;
@@ -100,6 +110,7 @@ public class MatchLifecycleService {
     public MatchLifecycleService(GameRepository gameRepository,
                                  UserRepository userRepository,
                                  CandleService candleService,
+                                 ReplaySessionService replaySessionService,
                                  MatchSchedulerService matchSchedulerService,
                                  GameBroadcaster broadcaster,
                                  RoomManager roomManager,
@@ -109,6 +120,7 @@ public class MatchLifecycleService {
         this.gameRepository = gameRepository;
         this.userRepository = userRepository;
         this.candleService = candleService;
+        this.replaySessionService = replaySessionService;
         this.matchSchedulerService = matchSchedulerService;
         this.broadcaster = broadcaster;
         this.roomManager = roomManager;
@@ -315,6 +327,21 @@ public class MatchLifecycleService {
             "totalCandles", game.getTotalCandles()
         ));
 
+        // ── Create replay session BEFORE afterCommit so CandleService finds it ──
+        // This runs inside the @Transactional boundary — the session row commits
+        // with the game row, guaranteeing that candleService.loadCandles() (which
+        // runs in afterCommit) will find the DB data and load from stock_candles_daily
+        // instead of the classpath JSON fallback.
+        replaySessionService.createSession(gameId, game.getStockSymbol(), DEFAULT_CANDLE_COUNT)
+                .ifPresentOrElse(
+                        session -> log.info("[joinMatch] Replay session created for game {} "
+                                + "(ticker={}, window={} → {})",
+                                gameId, session.getTicker(),
+                                session.getWindowStart(), session.getWindowEnd()),
+                        () -> log.warn("[joinMatch] No DB candle data for '{}' — "
+                                + "using JSON fallback", game.getStockSymbol())
+                );
+
         // ── Phase 3: Register afterCommit side effects (with retry) ──
         final long creatorId = game.getCreator().getId();
         final double startingBalance = game.getStartingBalance();
@@ -400,6 +427,17 @@ public class MatchLifecycleService {
         final int p2Rating = player2.getRating();
         final double startBal = saved.getStartingBalance();
 
+        // ── Create replay session inside the transaction, before afterCommit ──
+        replaySessionService.createSession(gameId, saved.getStockSymbol(), DEFAULT_CANDLE_COUNT)
+                .ifPresentOrElse(
+                        session -> log.info("[createAutoMatch] Replay session created for game {} "
+                                + "(ticker={}, window={} → {})",
+                                gameId, session.getTicker(),
+                                session.getWindowStart(), session.getWindowEnd()),
+                        () -> log.warn("[createAutoMatch] No DB candle data for '{}' — "
+                                + "using JSON fallback", saved.getStockSymbol())
+                );
+
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
             @Override
             public void afterCommit() {
@@ -477,6 +515,17 @@ public class MatchLifecycleService {
 
             game.setStartTime(LocalDateTime.now());
             Game saved = gameRepository.save(game);
+
+            // ── Create replay session inside the transaction, before afterCommit ──
+            replaySessionService.createSession(gameId, game.getStockSymbol(), DEFAULT_CANDLE_COUNT)
+                    .ifPresentOrElse(
+                            session -> log.info("[startMatch] Replay session created for game {} "
+                                    + "(ticker={}, window={} → {})",
+                                    gameId, session.getTicker(),
+                                    session.getWindowStart(), session.getWindowEnd()),
+                            () -> log.warn("[startMatch] No DB candle data for '{}' — "
+                                    + "using JSON fallback", game.getStockSymbol())
+                    );
 
             final long cId = creator.getId();
             final long oId = opponent.getId();
