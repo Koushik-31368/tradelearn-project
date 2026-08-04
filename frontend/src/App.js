@@ -1,4 +1,5 @@
-import { BrowserRouter, Routes, Route, useLocation, Suspense, lazy } from 'react-router-dom';
+import { Suspense, lazy } from 'react';
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { AuthProvider } from './features/auth/AuthContext';
 import Navbar from './layout/components/Navbar';
 import Footer from './layout/components/Footer';
