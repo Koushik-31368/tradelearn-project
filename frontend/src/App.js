@@ -1,28 +1,49 @@
-import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useLocation, Suspense, lazy } from 'react-router-dom';
 import { AuthProvider } from './features/auth/AuthContext';
 import Navbar from './layout/components/Navbar';
-import HomePage from './features/dashboard/pages/HomePage';
-import LoginPage from './features/auth/pages/LoginPage';
-import RegisterPage from './features/auth/pages/RegisterPage';
-import ForgotPasswordPage from './features/auth/pages/ForgotPasswordPage';
-import LobbyPage from './features/matchmaking/pages/LobbyPage';
-import GamePage from './features/game/pages/GamePage';
-import SimulatorPage from './features/simulator/pages/SimulatorPage';
-import PracticePage from './features/practice/pages/PracticePage';
-import MissionSelectionPage from './features/simulator/pages/MissionSelectionPage';
-import MissionDashboard from './features/simulator/components/MissionDashboard';
-import StrategiesPage from './features/strategies/pages/StrategiesPage';
-import MatchResultPage from './features/game/pages/MatchResultPage';
-import LeaderboardPage from './features/leaderboard/pages/LeaderboardPage';
-import ProfilePage from './features/dashboard/pages/ProfilePage';
-import MatchHistoryPage from './features/dashboard/pages/MatchHistoryPage';
-import TermsPage from './features/legal/pages/TermsPage';
-import PrivacyPage from './features/legal/pages/PrivacyPage';
-import RiskDisclosurePage from './features/legal/pages/RiskDisclosurePage';
-import LearnPage from './features/learn/pages/LearnPage';
 import Footer from './layout/components/Footer';
 import DailyCheckinModal from './features/dashboard/components/DailyCheckinModal';
 import ChallengeListener from './features/social/components/ChallengeListener';
+
+// ── Lazy-loaded pages: each page's code is downloaded only when first visited ──
+const HomePage          = lazy(() => import('./features/dashboard/pages/HomePage'));
+const LoginPage         = lazy(() => import('./features/auth/pages/LoginPage'));
+const RegisterPage      = lazy(() => import('./features/auth/pages/RegisterPage'));
+const ForgotPasswordPage= lazy(() => import('./features/auth/pages/ForgotPasswordPage'));
+const LobbyPage         = lazy(() => import('./features/matchmaking/pages/LobbyPage'));
+const GamePage          = lazy(() => import('./features/game/pages/GamePage'));
+const SimulatorPage     = lazy(() => import('./features/simulator/pages/SimulatorPage'));
+const PracticePage      = lazy(() => import('./features/practice/pages/PracticePage'));
+const MissionSelectionPage = lazy(() => import('./features/simulator/pages/MissionSelectionPage'));
+const MissionDashboard  = lazy(() => import('./features/simulator/components/MissionDashboard'));
+const StrategiesPage    = lazy(() => import('./features/strategies/pages/StrategiesPage'));
+const MatchResultPage   = lazy(() => import('./features/game/pages/MatchResultPage'));
+const LeaderboardPage   = lazy(() => import('./features/leaderboard/pages/LeaderboardPage'));
+const ProfilePage       = lazy(() => import('./features/dashboard/pages/ProfilePage'));
+const MatchHistoryPage  = lazy(() => import('./features/dashboard/pages/MatchHistoryPage'));
+const TermsPage         = lazy(() => import('./features/legal/pages/TermsPage'));
+const PrivacyPage       = lazy(() => import('./features/legal/pages/PrivacyPage'));
+const RiskDisclosurePage= lazy(() => import('./features/legal/pages/RiskDisclosurePage'));
+const LearnPage         = lazy(() => import('./features/learn/pages/LearnPage'));
+
+// ── Minimal loading spinner shown while a lazy page chunk downloads ──
+function PageLoader() {
+  return (
+    <div style={{
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      minHeight: '60vh',
+      fontSize: '1rem',
+      color: '#888',
+      gap: '10px'
+    }}>
+      <span style={{ animation: 'spin 1s linear infinite', display: 'inline-block' }}>⟳</span>
+      Loading...
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    </div>
+  );
+}
 
 const AUTH_PATHS = ['/login', '/register', '/forgot-password'];
 
@@ -33,27 +54,29 @@ function AppContent() {
   return (
     <div className="App">
       <Navbar />
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
-        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-        <Route path="/learn" element={<LearnPage />} />
-        <Route path="/multiplayer" element={<LobbyPage />} />
-        <Route path="/game/:gameId" element={<GamePage />} />
-        <Route path="/match/:gameId/result" element={<MatchResultPage />} />
-        <Route path="/leaderboard" element={<LeaderboardPage />} />
-        <Route path="/profile" element={<ProfilePage />} />
-        <Route path="/history" element={<MatchHistoryPage />} />
-        <Route path="/missions" element={<MissionSelectionPage />} />
-        <Route path="/mission-dashboard/:missionId" element={<MissionDashboard />} />
-        <Route path="/strategies" element={<StrategiesPage />} />
-        <Route path="/simulator" element={<SimulatorPage />} />
-        <Route path="/practice" element={<PracticePage />} />
-        <Route path="/terms" element={<TermsPage />} />
-        <Route path="/privacy" element={<PrivacyPage />} />
-        <Route path="/risk-disclosure" element={<RiskDisclosurePage />} />
-      </Routes>
+      <Suspense fallback={<PageLoader />}>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/learn" element={<LearnPage />} />
+          <Route path="/multiplayer" element={<LobbyPage />} />
+          <Route path="/game/:gameId" element={<GamePage />} />
+          <Route path="/match/:gameId/result" element={<MatchResultPage />} />
+          <Route path="/leaderboard" element={<LeaderboardPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/history" element={<MatchHistoryPage />} />
+          <Route path="/missions" element={<MissionSelectionPage />} />
+          <Route path="/mission-dashboard/:missionId" element={<MissionDashboard />} />
+          <Route path="/strategies" element={<StrategiesPage />} />
+          <Route path="/simulator" element={<SimulatorPage />} />
+          <Route path="/practice" element={<PracticePage />} />
+          <Route path="/terms" element={<TermsPage />} />
+          <Route path="/privacy" element={<PrivacyPage />} />
+          <Route path="/risk-disclosure" element={<RiskDisclosurePage />} />
+        </Routes>
+      </Suspense>
       {!hideTickerOnAuth && <Footer />}
       <DailyCheckinModal />
       <ChallengeListener />
