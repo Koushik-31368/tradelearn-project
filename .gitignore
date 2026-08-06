@@ -5,6 +5,11 @@
 # ── Local dev config (contains real credentials) ──────────
 backend/src/main/resources/application-local.properties
 
+# ── git-filter-repo secret scrubbing artefact ─────────────
+# replacements.txt holds old plaintext credential values —
+# NEVER commit this file.
+replacements.txt
+
 # ── Environment files ──────────────────────────────────────
 .env
 *.env
