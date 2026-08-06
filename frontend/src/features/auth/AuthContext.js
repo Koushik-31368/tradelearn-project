@@ -82,8 +82,13 @@ export const AuthProvider = ({ children }) => {
     if (hydratedRef.current) return;
     hydratedRef.current = true;
 
+    // Use a 6-second timeout so the page never hangs indefinitely when the
+    // backend is sleeping (Render free-tier cold start can take 30–50 s).
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 6000);
+
     apiClient
-      .post('/api/auth/refresh')
+      .post('/api/auth/refresh', undefined, { signal: controller.signal })
       .then((res) => {
         const token = res.data?.token;
         if (token) {
@@ -93,9 +98,12 @@ export const AuthProvider = ({ children }) => {
         }
       })
       .catch(() => {
-        // No valid cookie — user needs to log in
+        // No valid cookie, network error, or timeout — treat as logged out
         setAccessToken(null);
         setUser(null);
+      })
+      .finally(() => {
+        clearTimeout(timeoutId);
       });
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
