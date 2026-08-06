@@ -1,4 +1,7 @@
-/* src/components/simulator/TradingPanel.css */
+/* src/components/simulator/TradingPanel.css
+ * Color update: #00ff88 neon green → var(--primary) (#10b981)
+ * All other colors preserved as-is per spec.
+ */
 
 .trading-panel {
   background: #161b22;
@@ -87,7 +90,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 10px 18px;
-  background: rgba(0, 255, 136, 0.03);
+  background: rgba(16, 185, 129, 0.04);  /* was rgba(0,255,136,0.03) */
   border-bottom: 1px solid #21262d;
 }
 
@@ -104,8 +107,8 @@
   font-weight: 700;
 }
 
-.text-profit { color: #00ff88; }
-.text-loss { color: #ff4d4f; }
+.text-profit { color: var(--primary); }   /* was #00ff88 */
+.text-loss   { color: #ff4d4f; }
 
 /* Tabs */
 .trading-panel__tabs {
@@ -134,9 +137,9 @@
 }
 
 .trading-panel__tab--buy {
-  background: rgba(0, 255, 136, 0.1);
-  border-color: rgba(0, 255, 136, 0.3);
-  color: #00ff88;
+  background: rgba(16, 185, 129, 0.1);       /* was rgba(0,255,136,0.1) */
+  border-color: rgba(16, 185, 129, 0.3);     /* was rgba(0,255,136,0.3) */
+  color: var(--primary);                      /* was #00ff88 */
 }
 
 .trading-panel__tab--sell {
@@ -244,9 +247,9 @@
 }
 
 .trading-panel__preset--active {
-  background: rgba(0, 255, 136, 0.1);
-  border-color: rgba(0, 255, 136, 0.3);
-  color: #00ff88;
+  background: rgba(16, 185, 129, 0.1);     /* was rgba(0,255,136,0.1) */
+  border-color: rgba(16, 185, 129, 0.3);   /* was rgba(0,255,136,0.3) */
+  color: var(--primary);                    /* was #00ff88 */
 }
 
 /* Summary */
@@ -297,13 +300,13 @@
 }
 
 .trading-panel__execute--buy {
-  background: linear-gradient(135deg, #00ff88, #00cc6a);
+  background: linear-gradient(135deg, var(--primary), var(--primary-700));   /* was #00ff88 → #00cc6a */
   color: #0d1117;
-  box-shadow: 0 4px 20px rgba(0, 255, 136, 0.2);
+  box-shadow: 0 4px 20px rgba(16, 185, 129, 0.2);  /* was rgba(0,255,136,0.2) */
 }
 
 .trading-panel__execute--buy:hover {
-  box-shadow: 0 6px 28px rgba(0, 255, 136, 0.3);
+  box-shadow: 0 6px 28px rgba(16, 185, 129, 0.3);  /* was rgba(0,255,136,0.3) */
   transform: translateY(-1px);
 }
 
@@ -388,9 +391,9 @@
 }
 
 .trading-toast--success {
-  background: rgba(0, 255, 136, 0.15);
-  border: 1px solid rgba(0, 255, 136, 0.3);
-  color: #00ff88;
+  background: rgba(16, 185, 129, 0.15);     /* was rgba(0,255,136,0.15) */
+  border: 1px solid rgba(16, 185, 129, 0.3);/* was rgba(0,255,136,0.3) */
+  color: var(--primary);                     /* was #00ff88 */
 }
 
 .trading-toast--error {

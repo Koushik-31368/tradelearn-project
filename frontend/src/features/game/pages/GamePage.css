@@ -1,6 +1,8 @@
-/* src/pages/GamePage.css */
+/* GamePage.css — "trading terminal at night" design language
+ * All colours via design tokens from theme.css.
+ */
 
-/* ── Grid layout ── */
+/* ── Grid layout ───────────────────────────────────────────── */
 .game-page-grid {
   display: grid;
   grid-template-columns: 250px 1fr 250px;
@@ -16,113 +18,125 @@
   box-sizing: border-box;
 }
 
-.game-header  { grid-area: header; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
-.candle-progress-wrapper { grid-area: progress; }
+.game-header              { grid-area: header;   display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+.candle-progress-wrapper  { grid-area: progress; }
 .player-dashboard.player1 { grid-area: player1; }
-.chart-container { grid-area: chart; background-color: #1f2937; border-radius: 8px; padding: 16px; overflow-y: auto; }
+.chart-container          { grid-area: chart;   background: var(--bg-panel-2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 16px; overflow-y: auto; }
 .player-dashboard.player2 { grid-area: player2; }
-.trade-panel { grid-area: trade; }
+.trade-panel              { grid-area: trade; }
 
-/* ── Reconnection banner ── */
+/* ── Reconnection banner ────────────────────────────────────── */
 .reconnect-banner {
   grid-column: 1 / -1;
-  background: linear-gradient(90deg, #f59e0b22, #f59e0b11);
-  border: 1px solid #f59e0b44;
-  border-radius: 8px;
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: var(--radius-sm);
   padding: 10px 16px;
   text-align: center;
-  color: #fbbf24;
+  color: var(--gold);
   font-weight: 600;
   font-size: 0.9rem;
   animation: pulse-reconnect 2s ease-in-out infinite;
 }
 @keyframes pulse-reconnect {
   0%, 100% { opacity: 1; }
-  50%      { opacity: 0.7; }
+  50%       { opacity: 0.65; }
 }
 
-/* ── Header ── */
+/* ── Header ─────────────────────────────────────────────────── */
 .game-header h2 {
   margin: 0;
-  color: #e5e7eb;
-  font-size: 1.1rem;
+  font-family: var(--font-display);
+  color: var(--text);
+  font-size: 1.05rem;
+  font-weight: 600;
 }
 
 .candle-badge {
   display: inline-block;
-  background: #374151;
-  color: #10b981;
+  background: var(--bg-panel-2);
+  border: 1px solid var(--border);
+  color: var(--primary);
   padding: 2px 10px;
-  border-radius: 12px;
-  font-size: 0.85rem;
-  font-weight: 700;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
   margin-right: 6px;
 }
 
 .ws-status {
-  font-size: 0.8rem;
-  color: #9ca3af;
+  font-size: 0.78rem;
+  color: var(--text-muted);
 }
 
 .candle-remaining {
-  font-size: 1rem;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.95rem;
   font-weight: 600;
-  color: var(--primary-green, #10b981);
+  color: var(--primary);
 }
 
-/* ── Candle countdown ── */
+/* ── Candle countdown ───────────────────────────────────────── */
 .candle-countdown {
   display: inline-block;
   margin-left: 10px;
-  font-size: 0.85rem;
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
   font-weight: 700;
-  color: #f59e0b;
+  color: var(--gold);
   background: rgba(245, 158, 11, 0.1);
   padding: 2px 8px;
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   font-variant-numeric: tabular-nums;
 }
 
-/* ── Candle progress bar ── */
+/* ── Candle progress bar ────────────────────────────────────── */
 .candle-progress-wrapper {
-  height: 6px;
-  background: #374151;
-  border-radius: 3px;
+  height: 3px;
+  background: var(--border);
   overflow: hidden;
 }
 .candle-progress-bar {
   height: 100%;
-  background: linear-gradient(90deg, #10b981, #34d399);
-  border-radius: 3px;
+  background: linear-gradient(90deg, var(--primary), var(--primary-700));
   transition: width 0.4s ease;
 }
 
-/* ── Player dashboards ── */
+/* ── Player dashboards ──────────────────────────────────────── */
 .player-dashboard {
-  background-color: #1f2937;
-  padding: 20px;
-  border-radius: 8px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 16px;
 }
 
 .player-dashboard h3 {
   margin-top: 0;
-  border-bottom: 1px solid #374151;
+  font-family: var(--font-display);
+  border-bottom: 1px solid var(--border);
   padding-bottom: 10px;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
+  color: var(--text);
 }
 
 .player-dashboard p {
   display: flex;
   justify-content: space-between;
-  font-size: 0.9rem;
+  font-size: 0.88rem;
+  color: var(--text-muted);
 }
 
 .player-dashboard p strong {
-  font-size: 1.1rem;
-  color: var(--primary-green, #10b981);
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 1.05rem;
+  color: var(--primary);
 }
 
-/* ── Price display ── */
+/* ── Price display ──────────────────────────────────────────── */
 .price-display {
   margin-bottom: 12px;
 }
@@ -135,90 +149,115 @@
 }
 
 .symbol-label {
-  font-size: 1rem;
+  font-family: var(--font-display);
+  font-size: 0.95rem;
   font-weight: 700;
-  color: #9ca3af;
+  color: var(--text-muted);
 }
 
 .price-value {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
   font-size: 1.6rem;
-  font-weight: 800;
+  font-weight: 700;
 }
 
-.positive { color: #10b981; }
-.negative { color: #ef4444; }
+.positive { color: var(--primary); }
+.negative { color: var(--danger); }
 
 .ohlc-data {
   display: flex;
   gap: 16px;
-  font-size: 0.8rem;
-  color: #9ca3af;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.78rem;
+  color: var(--text-muted);
   margin-top: 4px;
 }
 
-/* ── Trade log ── */
+/* ── Trade log ──────────────────────────────────────────────── */
 .trade-log {
   margin-top: 12px;
   font-size: 0.82rem;
-  color: #9ca3af;
-  border-top: 1px solid #374151;
+  color: var(--text-muted);
+  border-top: 1px solid var(--border);
   padding-top: 10px;
 }
 .trade-log h4 {
   margin: 0 0 6px 0;
-  font-size: 0.85rem;
-  color: #d1d5db;
+  font-family: var(--font-display);
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text);
 }
 .trade-log p {
   margin: 2px 0;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
 }
 
-/* ── Trade panel ── */
+/* ── Trade panel ────────────────────────────────────────────── */
 .trade-panel {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 16px;
-  background-color: #1f2937;
-  padding: 16px 20px;
-  border-radius: 8px;
+  gap: 12px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 14px 20px;
+  flex-wrap: wrap;
 }
 
 .trade-input-group {
   display: flex;
   flex-direction: column;
+  gap: 4px;
 }
 .trade-input-group label {
-  font-size: 0.8rem;
-  color: #9ca3af;
-  margin-bottom: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--text-muted);
 }
 .trade-input-group input {
   width: 100px;
-  padding: 10px;
-  background-color: #374151;
-  border: 1px solid #4b5563;
-  border-radius: 5px;
-  color: var(--text-light, #f9fafb);
+  height: 38px;
+  padding: 0 10px;
+  background: var(--bg-panel-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-light);
+  font-family: var(--font-mono);
+  font-size: 0.95rem;
+  font-variant-numeric: tabular-nums;
+  transition: border-color 0.15s ease;
+}
+.trade-input-group input:focus {
+  outline: none;
+  border-color: var(--primary);
 }
 
+/* ── Trade buttons ──────────────────────────────────────────── */
 .trade-btn {
-  padding: 12px 28px;
+  height: 42px;
+  padding: 0 22px;
   border: none;
-  border-radius: 5px;
-  color: white;
-  font-weight: bold;
-  font-size: 1rem;
+  border-radius: var(--radius-sm);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.9rem;
+  letter-spacing: 0.3px;
   cursor: pointer;
-  transition: opacity 0.15s;
+  transition: opacity 0.15s ease, transform 0.15s ease;
 }
 .trade-btn:disabled {
-  opacity: 0.45;
+  opacity: 0.4;
   cursor: not-allowed;
 }
 .trade-btn.cooldown {
   transform: scale(0.97);
-  transition: transform 0.15s ease, opacity 0.15s ease;
 }
 .cooldown-indicator {
   font-size: 1.1rem;
@@ -226,24 +265,18 @@
 }
 @keyframes cd-pulse {
   0%, 100% { opacity: 1; }
-  50%      { opacity: 0.4; }
+  50%       { opacity: 0.4; }
 }
-.trade-btn.buy   { background-color: var(--primary-green, #10b981); }
-.trade-btn.sell   { background-color: #ef4444; }
-.trade-btn.short  { background-color: #dc2626; }
-.trade-btn.cover  { background-color: #f59e0b; }
+.trade-btn.buy   { background: var(--primary); }
+.trade-btn.buy:hover:not(:disabled)   { background: var(--primary-700); }
+.trade-btn.sell  { background: var(--danger); }
+.trade-btn.sell:hover:not(:disabled)  { background: #dc2626; }
+.trade-btn.short { background: #dc2626; }
+.trade-btn.short:hover:not(:disabled) { background: #b91c1c; }
+.trade-btn.cover { background: var(--gold); color: #111; }
+.trade-btn.cover:hover:not(:disabled) { background: #d97706; }
 
-/* ── Result card ── */
-.result-card {
-  margin-top: 16px;
-}
-.result-winner {
-  font-size: 1.4rem;
-  font-weight: 800;
-  margin-bottom: 8px;
-}
-
-/* ── Responsive ── */
+/* ── Responsive ─────────────────────────────────────────────── */
 @media (max-width: 900px) {
   .game-page-grid {
     grid-template-columns: 1fr;
@@ -257,4 +290,10 @@
       "trade";
     height: auto;
   }
+}
+
+@media (max-width: 520px) {
+  .game-page-grid { padding: 12px; gap: 10px; }
+  .trade-panel    { gap: 8px; padding: 12px; }
+  .trade-btn      { padding: 0 14px; font-size: 0.85rem; }
 }

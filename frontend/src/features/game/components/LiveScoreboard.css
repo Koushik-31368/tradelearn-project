@@ -1,17 +1,18 @@
-/* src/components/LiveScoreboard.css — esports trading HUD */
+/* LiveScoreboard.css — "trading terminal at night" design language
+ * All colours via design tokens from theme.css.
+ */
 
 .scoreboard {
-  --sb-accent: #10b981;
-  background: #0d1117;
-  border: 1px solid #1e2733;
-  border-radius: 10px;
+  --sb-accent: var(--primary);
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
   padding: 14px 16px;
-  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
   position: relative;
   overflow: hidden;
 }
 
-/* Subtle glow line at top */
+/* Accent top line */
 .scoreboard::before {
   content: '';
   position: absolute;
@@ -21,20 +22,21 @@
   opacity: 0.7;
 }
 
-.scoreboard.sb-green { --sb-accent: #10b981; }
-.scoreboard.sb-red   { --sb-accent: #ef4444; }
+.scoreboard.sb-green { --sb-accent: var(--primary); }
+.scoreboard.sb-red   { --sb-accent: var(--danger); }
 
-/* ── Label ── */
+/* ── Label ──────────────────────────────────────────────────── */
 .sb-label {
-  font-size: 0.7rem;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
   font-weight: 700;
-  letter-spacing: 0.12em;
+  letter-spacing: 1.2px;
   text-transform: uppercase;
   color: var(--sb-accent);
   margin-bottom: 10px;
 }
 
-/* ── Equity row ── */
+/* ── Equity row ─────────────────────────────────────────────── */
 .sb-row {
   display: flex;
   justify-content: space-between;
@@ -43,42 +45,45 @@
 }
 
 .sb-key {
-  font-size: 0.65rem;
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
   font-weight: 600;
   letter-spacing: 0.08em;
-  color: #6b7280;
+  color: var(--text-muted);
   text-transform: uppercase;
 }
 
 .sb-val {
-  font-size: 1.25rem;
-  font-weight: 800;
+  font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
+  font-size: 1.2rem;
+  font-weight: 700;
 }
 
-.sb-up   { color: #10b981; }
-.sb-down { color: #ef4444; }
+.sb-up   { color: var(--primary); }
+.sb-down { color: var(--danger); }
 
-/* ── P&L badge ── */
+/* ── P&L badge ──────────────────────────────────────────────── */
 .sb-pnl-badge {
   display: inline-block;
+  font-family: var(--font-mono);
   font-size: 0.72rem;
   font-weight: 700;
   padding: 2px 8px;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   margin-bottom: 12px;
   font-variant-numeric: tabular-nums;
 }
 .sb-pnl-badge.sb-up {
   background: rgba(16, 185, 129, 0.15);
-  color: #34d399;
+  color: var(--primary);
 }
 .sb-pnl-badge.sb-down {
-  background: rgba(239, 68, 68, 0.15);
-  color: #f87171;
+  background: rgba(239, 68, 68, 0.12);
+  color: var(--danger);
 }
 
-/* ── Stat pills (2×2 grid) ── */
+/* ── Stat pills (2×2 grid) ──────────────────────────────────── */
 .sb-stats {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -87,35 +92,37 @@
 }
 
 .sb-pill {
-  background: #161b22;
-  border: 1px solid #1e2733;
-  border-radius: 6px;
+  background: var(--bg-panel-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
   padding: 6px 8px;
   text-align: center;
 }
 
 .sb-pill-label {
   display: block;
-  font-size: 0.55rem;
+  font-family: var(--font-mono);
+  font-size: 0.52rem;
   font-weight: 700;
   letter-spacing: 0.1em;
-  color: #4b5563;
+  color: var(--text-muted);
   text-transform: uppercase;
   margin-bottom: 2px;
 }
 
 .sb-pill-value {
   display: block;
-  font-size: 0.85rem;
-  font-weight: 800;
-  color: #e5e7eb;
+  font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text);
 }
 
-/* ── Accuracy progress bar ── */
+/* ── Accuracy progress bar ──────────────────────────────────── */
 .sb-bar-track {
-  height: 4px;
-  background: #1e2733;
+  height: 3px;
+  background: var(--border);
   border-radius: 2px;
   overflow: hidden;
 }
