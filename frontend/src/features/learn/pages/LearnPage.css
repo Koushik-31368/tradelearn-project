@@ -1,7 +1,9 @@
+/* LearnPage.css — token-ified, design system aligned */
+
 .learn-map-page {
-  background: #0d1117;
+  background: var(--bg);
   min-height: 100vh;
-  color: #ffffff;
+  color: var(--text);
   padding: 40px 20px 80px;
   display: flex;
   flex-direction: column;
@@ -10,29 +12,34 @@
 
 .learn-spinner {
   width: 40px; height: 40px;
-  border: 4px solid #1e2733;
-  border-top-color: #00ff88;
+  border: 4px solid var(--bg-panel-2);
+  border-top-color: var(--primary);
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin: 100px auto;
 }
 @keyframes spin { 100% { transform: rotate(360deg); } }
 
+/* ── Header ── */
 .learn-header {
   width: 100%;
   max-width: 600px;
-  background: #161b22;
-  border: 1px solid #30363d;
-  border-radius: 16px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
   padding: 24px;
   margin-bottom: 40px;
   text-align: center;
+  box-shadow: var(--shadow);
 }
 
 .learn-title {
   margin: 0 0 16px 0;
   font-size: 1.8rem;
   font-weight: 800;
+  font-family: var(--font-display);
+  color: var(--text-light);
+  letter-spacing: -0.02em;
 }
 
 .learn-progress {
@@ -43,23 +50,28 @@
 
 .learn-progress-bar {
   flex: 1;
-  height: 12px;
-  background: #1e2733;
-  border-radius: 6px;
+  height: 8px;
+  background: var(--bg-panel-2);
+  border-radius: 4px;
   overflow: hidden;
 }
 
 .learn-progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #10b981, #34d399);
+  background: linear-gradient(90deg, var(--primary), #34d399);
   transition: width 0.4s ease;
 }
 
 .learn-progress-text {
   font-weight: 700;
-  color: #8b949e;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  white-space: nowrap;
 }
 
+/* ── Map container ── */
 .learn-map-container {
   width: 100%;
   max-width: 600px;
@@ -76,8 +88,8 @@
 
 .path-header {
   width: 100%;
-  background: #161b22;
-  border-radius: 12px;
+  background: var(--bg-panel);
+  border-radius: var(--radius-sm);
   padding: 20px;
   margin-bottom: 30px;
   border-bottom: 4px solid;
@@ -87,11 +99,12 @@
   margin: 0 0 8px 0;
   font-size: 1.4rem;
   font-weight: 800;
+  font-family: var(--font-display);
 }
 
 .path-header p {
   margin: 0;
-  color: #8b949e;
+  color: var(--text-muted);
   font-size: 0.95rem;
 }
 
@@ -151,10 +164,10 @@
   position: absolute;
   top: 100%;
   margin-top: 8px;
-  background: #ffffff;
-  color: #000000;
+  background: var(--text-light);
+  color: var(--bg);
   padding: 6px 12px;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   font-size: 0.85rem;
   font-weight: 700;
   white-space: nowrap;
@@ -177,7 +190,7 @@
   z-index: 1;
 }
 
-/* XP Popup Overlay */
+/* ── XP Popup ── */
 .xp-popup-overlay {
   position: fixed;
   top: 50%;
@@ -188,12 +201,13 @@
 }
 
 .xp-popup-content {
-  background: #10b981;
+  background: var(--primary);
   color: #fff;
   font-size: 3rem;
   font-weight: 900;
+  font-family: var(--font-display);
   padding: 20px 40px;
-  border-radius: 20px;
+  border-radius: var(--radius);
   box-shadow: 0 0 40px rgba(16, 185, 129, 0.6);
   animation: floatUp 2.5s forwards;
 }

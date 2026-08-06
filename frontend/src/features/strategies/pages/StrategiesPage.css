@@ -1,12 +1,11 @@
 /* ═══════════════════════════════════════
-   STRATEGIES PAGE — Premium Fintech
-   #0d1117 bg · #161b22 card · #00ff88 accent
+   STRATEGIES PAGE — Design System Aligned
    ═══════════════════════════════════════ */
 
 .strategies-page {
-  background: #0d1117;
+  background: var(--bg);
   min-height: 100vh;
-  color: #ffffff;
+  color: var(--text);
 }
 
 /* ─── Hero ─── */
@@ -14,8 +13,8 @@
   padding: 80px 24px 48px;
   text-align: center;
   background:
-    radial-gradient(ellipse 70% 40% at 50% 0%, rgba(0, 255, 136, 0.06) 0%, transparent 100%),
-    linear-gradient(180deg, #0d1117 0%, #0d1117 100%);
+    radial-gradient(ellipse 70% 40% at 50% 0%, rgba(16, 185, 129, 0.06) 0%, transparent 100%),
+    var(--bg);
 }
 
 .strat-hero__inner {
@@ -23,13 +22,15 @@
   margin: 0 auto;
 }
 
+/* eyebrow tag — uses .eyebrow pattern from theme.css but as inline-block pill */
 .strat-hero__tag {
   display: inline-block;
-  background: rgba(0, 255, 136, 0.08);
-  border: 1px solid rgba(0, 255, 136, 0.2);
-  color: #00ff88;
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  color: var(--primary);
   font-size: 0.78rem;
   font-weight: 700;
+  font-family: var(--font-mono);
   letter-spacing: 1.6px;
   text-transform: uppercase;
   padding: 6px 18px;
@@ -40,17 +41,19 @@
 .strat-hero__heading {
   font-size: 2.8rem;
   font-weight: 800;
+  font-family: var(--font-display);
   line-height: 1.15;
   margin: 0 0 18px;
-  color: #ffffff;
+  color: var(--text-light);
+  letter-spacing: -0.02em;
 }
 
 .strat-hero__accent {
-  color: #00ff88;
+  color: var(--primary);
 }
 
 .strat-hero__sub {
-  color: #8b949e;
+  color: var(--text-muted);
   font-size: 1.05rem;
   line-height: 1.6;
   margin: 0 0 32px;
@@ -64,9 +67,9 @@
   display: inline-flex;
   align-items: center;
   gap: 28px;
-  background: #161b22;
-  border: 1px solid #30363d;
-  border-radius: 14px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
   padding: 16px 32px;
 }
 
@@ -79,12 +82,14 @@
 .strat-hero__stat-value {
   font-size: 1.6rem;
   font-weight: 800;
-  color: #00ff88;
+  font-family: var(--font-mono);
+  color: var(--primary);
+  font-variant-numeric: tabular-nums;
 }
 
 .strat-hero__stat-label {
   font-size: 0.72rem;
-  color: #8b949e;
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.8px;
   margin-top: 2px;
@@ -93,7 +98,7 @@
 .strat-hero__stat-divider {
   width: 1px;
   height: 36px;
-  background: #30363d;
+  background: var(--border);
 }
 
 /* ─── Journey Breadcrumb ─── */
@@ -110,20 +115,20 @@
 }
 
 .strat-journey__step {
-  color: #484f58;
+  color: var(--border);
   font-weight: 600;
 }
 
 .strat-journey__step--active {
-  color: #00ff88;
-  background: rgba(0, 255, 136, 0.08);
+  color: var(--primary);
+  background: rgba(16, 185, 129, 0.08);
   padding: 4px 14px;
   border-radius: 12px;
-  border: 1px solid rgba(0, 255, 136, 0.2);
+  border: 1px solid rgba(16, 185, 129, 0.2);
 }
 
 .strat-journey__arrow {
-  color: #30363d;
+  color: var(--border);
   font-size: 0.75rem;
 }
 
@@ -146,8 +151,8 @@
 .strat-filter {
   padding: 8px 18px;
   background: transparent;
-  color: #8b949e;
-  border: 1px solid #30363d;
+  color: var(--text-muted);
+  border: 1px solid var(--border);
   border-radius: 20px;
   font-size: 0.82rem;
   font-weight: 600;
@@ -156,21 +161,21 @@
 }
 
 .strat-filter:hover {
-  color: #ffffff;
-  border-color: #484f58;
+  color: var(--text);
+  border-color: var(--text-muted);
   background: rgba(255, 255, 255, 0.03);
 }
 
 .strat-filter--active {
-  color: #0d1117;
-  background: #00ff88;
-  border-color: #00ff88;
+  color: var(--bg);
+  background: var(--primary);
+  border-color: var(--primary);
 }
 
 .strat-filter--active:hover {
-  color: #0d1117;
-  background: #00ff88;
-  border-color: #00ff88;
+  color: var(--bg);
+  background: var(--primary-700);
+  border-color: var(--primary-700);
 }
 
 /* ─── Grid ─── */
@@ -184,7 +189,7 @@
 .strat-empty {
   text-align: center;
   padding: 60px 20px;
-  color: #484f58;
+  color: var(--border);
   font-size: 1rem;
 }
 

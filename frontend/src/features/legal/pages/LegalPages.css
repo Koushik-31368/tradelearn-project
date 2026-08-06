@@ -1,11 +1,11 @@
-/* src/pages/LegalPages.css */
+/* src/pages/LegalPages.css — design system aligned */
 
 /* ── Shared layout for Terms, Privacy, Risk Disclosure ── */
 
 .legal-page {
   min-height: calc(100vh - 70px);
-  background: #0d1117;
-  color: #ffffff;
+  background: var(--bg);
+  color: var(--text);
   padding: 80px 24px 100px;
 }
 
@@ -18,13 +18,16 @@
 .legal-title {
   font-size: 32px;
   font-weight: 700;
+  font-family: var(--font-display);
   margin: 0 0 8px;
   letter-spacing: -0.3px;
+  color: var(--text-light);
 }
 
 .legal-updated {
   font-size: 13px;
-  color: #8b949e;
+  font-family: var(--font-mono);
+  color: var(--text-muted);
   margin: 0 0 48px;
 }
 
@@ -36,14 +39,15 @@
 .legal-section-title {
   font-size: 18px;
   font-weight: 600;
+  font-family: var(--font-display);
   margin: 0 0 12px;
-  color: #ffffff;
+  color: var(--text-light);
 }
 
 .legal-section p {
   font-size: 14px;
   line-height: 1.75;
-  color: #8b949e;
+  color: var(--text-muted);
   margin: 0 0 12px;
 }
 
@@ -63,7 +67,7 @@
   padding-left: 16px;
   font-size: 14px;
   line-height: 1.75;
-  color: #8b949e;
+  color: var(--text-muted);
   margin-bottom: 4px;
 }
 
@@ -71,27 +75,27 @@
   content: '—';
   position: absolute;
   left: 0;
-  color: #30363d;
+  color: var(--border);
 }
 
 /* ── Emphasis callout ── */
 .legal-callout {
-  background: #161b22;
-  border: 1px solid #30363d;
-  border-left: 3px solid #00ff88;
-  border-radius: 6px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--primary);
+  border-radius: var(--radius-sm);
   padding: 16px 20px;
   margin: 16px 0;
 }
 
 .legal-callout p {
-  color: #c9d1d9;
+  color: var(--text);
   margin: 0;
 }
 
 /* ── Divider ── */
 .legal-divider {
   border: none;
-  border-top: 1px solid #30363d;
+  border-top: 1px solid var(--border);
   margin: 48px 0;
 }

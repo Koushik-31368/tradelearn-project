@@ -5,6 +5,7 @@ import './LegalPages.css';
 const PrivacyPage = () => (
   <div className="legal-page">
     <div className="legal-inner">
+      <span className="eyebrow">Legal</span>
       <h1 className="legal-title">Privacy Policy</h1>
       <p className="legal-updated">Last Updated: February 28, 2026</p>
 

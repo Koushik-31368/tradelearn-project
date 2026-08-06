@@ -5,6 +5,7 @@ import './LegalPages.css';
 const TermsPage = () => (
   <div className="legal-page">
     <div className="legal-inner">
+      <span className="eyebrow">Legal</span>
       <h1 className="legal-title">Terms of Service</h1>
       <p className="legal-updated">Last Updated: February 28, 2026</p>
 

@@ -8,30 +8,30 @@
 /* ===================== RANKED MATCHMAKING ===================== */
 
 .ranked-section {
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-  border: 1px solid #e94560;
-  border-radius: 12px;
+  background: linear-gradient(135deg, var(--bg-panel) 0%, var(--bg-panel-2) 100%);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
   padding: 30px;
   margin-bottom: 40px;
   position: relative;
   overflow: hidden;
 }
 
+/* axis-mark style hairline top accent — replaces red shimmer */
 .ranked-section::before {
   content: '';
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, #e94560, #f5a623, #e94560);
-  background-size: 200% 100%;
-  animation: shimmer 3s linear infinite;
-}
-
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    var(--primary) 0%,
+    var(--border) 40%,
+    transparent 100%
+  );
+  opacity: 0.7;
 }
 
 .ranked-header {
@@ -44,7 +44,8 @@
 .ranked-header h1 {
   margin: 0;
   font-size: 2rem;
-  color: #fff;
+  font-family: var(--font-display);
+  color: var(--text-light);
   letter-spacing: 0.5px;
 }
 
@@ -52,15 +53,16 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  background: rgba(255, 255, 255, 0.08);
-  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: var(--radius-sm);
   padding: 8px 20px;
-  border: 1px solid rgba(233, 69, 96, 0.3);
+  border: 1px solid var(--border);
 }
 
 .rating-label {
   font-size: 0.75rem;
-  color: #9ca3af;
+  font-family: var(--font-mono);
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 1px;
 }
@@ -68,7 +70,9 @@
 .rating-value {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #f5a623;
+  font-family: var(--font-mono);
+  color: var(--gold);
+  font-variant-numeric: tabular-nums;
 }
 
 .ranked-action {
@@ -76,30 +80,32 @@
 }
 
 .ranked-description {
-  color: #9ca3af;
+  color: var(--text-muted);
   margin-bottom: 20px;
   font-size: 0.95rem;
   line-height: 1.5;
 }
 
 .find-match-btn {
-  background: linear-gradient(135deg, #e94560 0%, #c23152 100%);
-  color: white;
+  background: var(--primary);
+  color: #fff;
   border: none;
   padding: 16px 48px;
   font-size: 1.2rem;
   font-weight: 700;
-  border-radius: 8px;
+  font-family: var(--font-display);
+  border-radius: var(--radius-sm);
   cursor: pointer;
   transition: all 0.3s ease;
   text-transform: uppercase;
   letter-spacing: 1px;
-  box-shadow: 0 4px 15px rgba(233, 69, 96, 0.3);
+  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.25);
 }
 
 .find-match-btn:hover:not(:disabled) {
+  background: var(--primary-700);
   transform: translateY(-2px);
-  box-shadow: 0 6px 25px rgba(233, 69, 96, 0.5);
+  box-shadow: 0 6px 25px rgba(16, 185, 129, 0.4);
 }
 
 .find-match-btn:active:not(:disabled) {
@@ -112,7 +118,7 @@
 }
 
 .login-prompt {
-  color: #6b7280;
+  color: var(--text-muted);
   font-size: 0.85rem;
   margin-top: 12px;
 }
@@ -140,7 +146,7 @@
   position: absolute;
   width: 100%;
   height: 100%;
-  border: 2px solid rgba(233, 69, 96, 0.4);
+  border: 2px solid rgba(16, 185, 129, 0.35);
   border-radius: 50%;
   animation: pulse-expand 2s ease-out infinite;
 }
@@ -176,7 +182,7 @@
 }
 
 .searching-text {
-  color: #e5e7eb;
+  color: var(--text);
   font-size: 1rem;
   margin-bottom: 8px;
   animation: fade-in-out 2s ease-in-out infinite;
@@ -188,35 +194,36 @@
 }
 
 .search-timer {
-  color: #f5a623;
+  color: var(--gold);
   font-size: 1.8rem;
   font-weight: 700;
+  font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
   margin-bottom: 20px;
 }
 
 .cancel-search-btn {
   background: transparent;
-  color: #e94560;
-  border: 1px solid #e94560;
+  color: var(--danger);
+  border: 1px solid var(--danger);
   padding: 10px 28px;
   font-size: 0.9rem;
   font-weight: 600;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .cancel-search-btn:hover {
-  background: rgba(233, 69, 96, 0.1);
+  background: rgba(239, 68, 68, 0.1);
 }
 
 /* ===================== SCORING SYSTEM ===================== */
 
 .scoring-section {
-  background: #161b22;
-  border: 1px solid #30363d;
-  border-radius: 12px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
   padding: 28px 24px;
   margin-bottom: 32px;
   text-align: center;
@@ -226,13 +233,14 @@
   margin: 0 0 4px;
   font-size: 1.15rem;
   font-weight: 700;
-  color: #ffffff;
+  font-family: var(--font-display);
+  color: var(--text-light);
 }
 
 .scoring-subtitle {
   margin: 0 0 20px;
   font-size: 0.85rem;
-  color: #8b949e;
+  color: var(--text-muted);
 }
 
 .scoring-grid {
@@ -242,29 +250,31 @@
 }
 
 .scoring-card {
-  background: rgba(0, 255, 136, 0.04);
-  border: 1px solid #30363d;
-  border-radius: 10px;
+  background: rgba(16, 185, 129, 0.04);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
   padding: 18px 12px;
 }
 
 .scoring-card__pct {
   font-size: 1.6rem;
   font-weight: 800;
-  color: #00ff88;
+  font-family: var(--font-mono);
+  color: var(--primary);
   margin-bottom: 4px;
+  font-variant-numeric: tabular-nums;
 }
 
 .scoring-card__label {
   font-size: 0.88rem;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--text-light);
   margin-bottom: 6px;
 }
 
 .scoring-card__desc {
   font-size: 0.75rem;
-  color: #8b949e;
+  color: var(--text-muted);
   line-height: 1.4;
 }
 
@@ -279,37 +289,38 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
-  border-bottom: 1px solid #374151;
+  border-bottom: 1px solid var(--border);
   padding-bottom: 16px;
 }
 
 .lobby-header h2 {
   margin: 0;
   font-size: 1.5rem;
-  color: #e5e7eb;
+  font-family: var(--font-display);
+  color: var(--text);
 }
 
 .section-subtitle {
   font-size: 1rem;
-  color: #9ca3af;
+  color: var(--text-muted);
   margin-bottom: 16px;
   font-weight: 500;
 }
 
 .create-game-btn {
-  background-color: var(--primary-green);
+  background-color: var(--primary);
   color: white;
   border: none;
   padding: 10px 20px;
   font-size: 0.9rem;
   font-weight: bold;
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   transition: background-color 0.3s ease;
 }
 
 .create-game-btn:hover {
-  background-color: #059669;
+  background-color: var(--primary-700);
 }
 
 .lobby-section {
@@ -322,22 +333,22 @@
 }
 
 .game-card {
-  background-color: #1f2937;
+  background-color: var(--bg-panel-2);
   padding: 20px;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-left: 5px solid #4b5563;
+  border-left: 5px solid var(--border);
 }
 
 .game-card.active {
-  border-left-color: var(--primary-green);
+  border-left-color: var(--primary);
 }
 
 .game-details p {
   margin: 0 0 8px 0;
-  color: #9ca3af;
+  color: var(--text-muted);
 }
 
 .game-details p:last-child {
@@ -349,20 +360,20 @@
 }
 
 .join-btn {
-  background-color: #374151;
+  background-color: var(--bg-panel-2);
   color: var(--text-light);
-  border: 1px solid #4b5563;
+  border: 1px solid var(--border);
   padding: 10px 20px;
   font-size: 0.9rem;
   font-weight: bold;
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .join-btn:hover {
-  background-color: #4b5563;
-  border-color: #6b7280;
+  background-color: var(--bg-panel);
+  border-color: var(--text-muted);
 }
 
 /* Host action buttons (Enter + Cancel) */
@@ -374,29 +385,27 @@
 
 .cancel-game-btn {
   background-color: transparent;
-  color: #f87171;
-  border: 1px solid #f87171;
+  color: var(--danger);
+  border: 1px solid var(--danger);
   padding: 8px 16px;
   font-size: 0.85rem;
   font-weight: bold;
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 .cancel-game-btn:hover {
-  background-color: #7f1d1d;
-  color: #fecaca;
-  border-color: #fca5a5;
+  background-color: rgba(239, 68, 68, 0.1);
 }
 
 .no-games-message {
-    color: #6b7280;
+    color: var(--text-muted);
     text-align: center;
     padding: 20px;
-    background-color: #1f2937;
-    border-radius: 8px;
-    border: 2px dashed #374151;
+    background-color: var(--bg-panel);
+    border-radius: var(--radius-sm);
+    border: 2px dashed var(--border);
 }
 
 /* ===================== RESPONSIVE ===================== */

@@ -4,6 +4,7 @@
   display: inline-block;
   padding: 6px 12px;
   font-size: 12px;
+  font-family: var(--font-mono);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.8px;
@@ -15,6 +16,7 @@
   vertical-align: middle;
 }
 
+/* Elite tier glows — these are intentional league identity, NOT generic brand colors */
 .tier-badge--grandmaster {
   box-shadow: 0 0 10px rgba(255, 0, 85, 0.5);
   background: linear-gradient(90deg, rgba(255, 0, 85, 0.1), rgba(0, 0, 0, 0));

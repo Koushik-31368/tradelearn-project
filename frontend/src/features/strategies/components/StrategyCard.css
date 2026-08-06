@@ -2,9 +2,9 @@
 .strat-card {
   display: flex;
   flex-direction: column;
-  background: #161b22;
-  border: 1px solid #30363d;
-  border-radius: 14px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
   padding: 26px 24px 22px;
   cursor: pointer;
   text-align: left;
@@ -17,8 +17,8 @@
 
 .strat-card:hover {
   transform: translateY(-4px);
-  border-color: #00ff88;
-  box-shadow: 0 8px 32px rgba(0, 255, 136, 0.06);
+  border-color: var(--primary);
+  box-shadow: 0 8px 32px rgba(16, 185, 129, 0.08);
 }
 
 .strat-card__top {
@@ -35,45 +35,47 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 255, 136, 0.06);
-  border-radius: 10px;
+  background: rgba(16, 185, 129, 0.06);
+  border-radius: var(--radius-sm);
 }
 
 .strat-card__risk {
   font-size: 0.68rem;
   font-weight: 700;
+  font-family: var(--font-mono);
   text-transform: uppercase;
   letter-spacing: 0.06em;
   padding: 4px 10px;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
 }
 
 .strat-card__risk--low {
-  color: #00ff88;
-  background: rgba(0, 255, 136, 0.1);
+  color: var(--primary);
+  background: rgba(16, 185, 129, 0.1);
 }
 
 .strat-card__risk--medium {
-  color: #f0b429;
-  background: rgba(240, 180, 41, 0.1);
+  color: var(--gold);
+  background: rgba(245, 158, 11, 0.1);
 }
 
 .strat-card__risk--high {
-  color: #ff4d4f;
-  background: rgba(255, 77, 79, 0.1);
+  color: var(--danger);
+  background: rgba(239, 68, 68, 0.1);
 }
 
 .strat-card__name {
   font-size: 1.1rem;
   font-weight: 600;
-  color: #ffffff;
+  font-family: var(--font-display);
+  color: var(--text-light);
   margin: 0 0 8px 0;
   letter-spacing: -0.01em;
 }
 
 .strat-card__desc {
   font-size: 0.85rem;
-  color: #8b949e;
+  color: var(--text-muted);
   line-height: 1.6;
   margin: 0 0 16px 0;
   flex: 1;
@@ -91,11 +93,11 @@
   align-items: center;
   gap: 6px;
   font-size: 0.78rem;
-  color: #484f58;
+  color: var(--border);
 }
 
 .strat-card__meta-item svg {
-  color: #484f58;
+  color: var(--border);
   flex-shrink: 0;
 }
 
@@ -105,7 +107,7 @@
   gap: 6px;
   font-size: 0.82rem;
   font-weight: 600;
-  color: #00ff88;
+  color: var(--primary);
   opacity: 0;
   transform: translateX(-4px);
   transition: opacity 0.25s ease, transform 0.25s ease;
@@ -117,7 +119,7 @@
 }
 
 .strat-card__cta svg {
-  color: #00ff88;
+  color: var(--primary);
 }
 
 @media (max-width: 640px) {

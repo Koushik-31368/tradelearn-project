@@ -1,8 +1,8 @@
 /* CandleDiagram.css */
 .candle-diagram {
-  background: #161b22;
-  border: 1px solid #30363d;
-  border-radius: 14px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
   padding: 28px;
   margin-top: 12px;
 }
@@ -19,16 +19,18 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: #0d1117;
-  background: #00ff88;
+  font-family: var(--font-mono);
+  color: var(--bg);
+  background: var(--primary);
   padding: 3px 10px;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
 }
 
 .candle-diagram__title {
   font-size: 1.05rem;
   font-weight: 600;
-  color: #ffffff;
+  font-family: var(--font-display);
+  color: var(--text-light);
   margin: 0;
 }
 
@@ -42,10 +44,10 @@
 
 .candle-tab {
   padding: 8px 16px;
-  border-radius: 8px;
-  border: 1px solid #30363d;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
   background: transparent;
-  color: #8b949e;
+  color: var(--text-muted);
   font-size: 0.82rem;
   font-weight: 500;
   cursor: pointer;
@@ -53,14 +55,14 @@
 }
 
 .candle-tab:hover {
-  border-color: #484f58;
-  color: #c9d1d9;
+  border-color: var(--text-muted);
+  color: var(--text);
 }
 
 .candle-tab--active {
-  border-color: #00ff88;
-  color: #00ff88;
-  background: rgba(0, 255, 136, 0.06);
+  border-color: var(--primary);
+  color: var(--primary);
+  background: rgba(16, 185, 129, 0.06);
 }
 
 /* Chart */
@@ -76,10 +78,11 @@
   height: auto;
 }
 
+/* OHLC labels use --font-mono — these ARE numeric data */
 .candle-label {
-  fill: #8b949e;
+  fill: var(--text-muted);
   font-size: 9px;
-  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+  font-family: var(--font-mono);
 }
 
 .candle-label--left {
@@ -98,7 +101,7 @@
   align-items: center;
   gap: 8px;
   font-size: 0.82rem;
-  color: #8b949e;
+  color: var(--text-muted);
 }
 
 .candle-legend-dot {
