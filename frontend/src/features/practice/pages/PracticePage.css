@@ -162,7 +162,7 @@
 
 .event-tag--crash {
   background: rgba(239, 68, 68, 0.15);
-  color: #f87171;
+  color: var(--danger);
   border: 1px solid rgba(239, 68, 68, 0.3);
 }
 

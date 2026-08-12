@@ -1,9 +1,9 @@
 /* src/components/simulator/PerformanceChart.css */
 
 .performance-chart {
-  background: #161b22;
-  border: 1px solid #30363d;
-  border-radius: 12px;
+  background: var(--bg-panel-2);
+  border: 1px solid var(--border-emphasis);
+  border-radius: var(--radius-lg);
   overflow: hidden;
 }
 
@@ -23,7 +23,7 @@
 
 .performance-chart__subtitle {
   font-size: 0.72rem;
-  color: #8b949e;
+  color: var(--text-muted);
 }
 
 .performance-chart__stats {
@@ -37,12 +37,12 @@
   font-variant-numeric: tabular-nums;
 }
 
-.performance-chart__return.up { color: #00ff88; }
-.performance-chart__return.down { color: #ff4d4f; }
+.performance-chart__return.up { color: var(--primary); }
+.performance-chart__return.down { color: var(--danger); }
 
 .performance-chart__period {
   font-size: 0.68rem;
-  color: #484f58;
+  color: var(--text-faint);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -63,6 +63,6 @@
   align-items: center;
   justify-content: center;
   min-height: 180px;
-  color: #484f58;
+  color: var(--text-faint);
   font-size: 0.85rem;
 }

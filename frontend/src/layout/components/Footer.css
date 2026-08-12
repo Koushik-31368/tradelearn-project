@@ -1,9 +1,9 @@
-/* src/components/Footer.css */
+/* src/layout/components/Footer.css */
 
 .site-footer {
-  background: #0d1117;
-  border-top: 1px solid #30363d;
-  padding: 32px 24px;
+  background: var(--bg-panel);
+  border-top: 1px solid var(--border);
+  padding: 28px 24px;
 }
 
 .site-footer__inner {
@@ -17,28 +17,28 @@
 }
 
 .site-footer__copy {
-  font-size: 13px;
-  color: #8b949e;
+  font-size: 12px;
+  color: var(--text-faint);
   margin: 0;
 }
 
 .site-footer__links {
   display: flex;
-  gap: 24px;
+  gap: 20px;
   list-style: none;
   padding: 0;
   margin: 0;
 }
 
 .site-footer__links a {
-  font-size: 13px;
-  color: #8b949e;
+  font-size: 12px;
+  color: var(--text-muted);
   text-decoration: none;
-  transition: color 0.15s;
+  transition: color 0.15s ease;
 }
 
 .site-footer__links a:hover {
-  color: #00ff88;
+  color: var(--text-light);
 }
 
 @media (max-width: 600px) {
@@ -50,26 +50,26 @@
   .site-footer__links {
     flex-wrap: wrap;
     justify-content: center;
-    gap: 16px;
+    gap: 12px;
   }
 }
 
 /* ── Educational disclaimer ───────────────────────────────── */
 .site-footer__disclaimer {
   max-width: 1200px;
-  margin: 20px auto 0;
+  margin: 16px auto 0;
   padding-top: 16px;
-  border-top: 1px solid #21262d;
+  border-top: 1px solid var(--border-muted);
 }
 
 .site-footer__disclaimer p {
   font-size: 11px;
-  color: #484f58;
+  color: var(--text-faint);
   line-height: 1.6;
   margin: 0;
   text-align: center;
 }
 
 .site-footer__disclaimer strong {
-  color: #6e7681;
+  color: var(--text-muted);
 }

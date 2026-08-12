@@ -1,9 +1,9 @@
 /* src/components/simulator/Watchlist.css */
 
 .watchlist {
-  background: #161b22;
-  border: 1px solid #30363d;
-  border-radius: 12px;
+  background: var(--bg-panel-2);
+  border: 1px solid var(--border-emphasis);
+  border-radius: var(--radius-lg);
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -29,10 +29,10 @@
 .watchlist__count {
   font-size: 0.7rem;
   font-weight: 600;
-  color: #8b949e;
-  background: #21262d;
+  color: var(--text-muted);
+  background: var(--border);
   padding: 2px 8px;
-  border-radius: 10px;
+  border-radius: var(--radius);
 }
 
 .watchlist__search {
@@ -49,9 +49,9 @@
 
 .watchlist__input {
   width: 100%;
-  background: #0d1117;
-  border: 1px solid #30363d;
-  border-radius: 8px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-emphasis);
+  border-radius: var(--radius);
   padding: 8px 12px 8px 32px;
   color: #ffffff;
   font-size: 0.82rem;
@@ -61,11 +61,11 @@
 }
 
 .watchlist__input:focus {
-  border-color: #00ff88;
+  border-color: var(--primary);
 }
 
 .watchlist__input::placeholder {
-  color: #484f58;
+  color: var(--text-faint);
 }
 
 .watchlist__list {
@@ -84,8 +84,8 @@
 }
 
 .watchlist__list::-webkit-scrollbar-thumb {
-  background: #30363d;
-  border-radius: 4px;
+  background: var(--border-emphasis);
+  border-radius: var(--radius-sm);
 }
 
 .watchlist__item {
@@ -93,7 +93,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 10px 12px;
-  border-radius: 8px;
+  border-radius: var(--radius);
   cursor: pointer;
   transition: background 0.15s ease, transform 0.1s ease;
   border: 1px solid transparent;
@@ -127,7 +127,7 @@
 
 .watchlist__name {
   font-size: 0.7rem;
-  color: #8b949e;
+  color: var(--text-muted);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -153,12 +153,12 @@
   font-variant-numeric: tabular-nums;
 }
 
-.change--up { color: #00ff88; }
-.change--down { color: #ff4d4f; }
+.change--up { color: var(--primary); }
+.change--down { color: var(--danger); }
 
 .watchlist__empty {
   text-align: center;
   padding: 24px;
-  color: #484f58;
+  color: var(--text-faint);
   font-size: 0.82rem;
 }

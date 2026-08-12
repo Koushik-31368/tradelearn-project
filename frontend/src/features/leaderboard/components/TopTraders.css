@@ -21,7 +21,7 @@
 .trader-card {
   background-color: #ffffff; /* White background for the card */
   padding: 20px 30px;
-  border-radius: 8px;
+  border-radius: var(--radius);
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
   min-width: 180px;
 }

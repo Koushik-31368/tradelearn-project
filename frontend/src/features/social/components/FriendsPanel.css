@@ -1,9 +1,9 @@
 .friends-panel {
-  background: #161b22;
-  border: 1px solid #30363d;
-  border-radius: 12px;
+  background: var(--bg-panel-2);
+  border: 1px solid var(--border-emphasis);
+  border-radius: var(--radius-lg);
   padding: 20px;
-  color: #e5e7eb;
+  color: var(--text-light);
 }
 
 .fp-title {
@@ -20,8 +20,8 @@
 
 .fp-input {
   flex: 1;
-  background: #0d1117;
-  border: 1px solid #30363d;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-emphasis);
   border-radius: 6px;
   padding: 8px 12px;
   color: #fff;
@@ -54,7 +54,7 @@
   font-size: 0.8rem;
   margin-bottom: 16px;
   padding: 8px;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
 }
 
 .fp-msg-success { background: rgba(35, 134, 54, 0.2); color: #3fb950; border: 1px solid #238636; }
@@ -66,7 +66,7 @@
 
 .fp-section-title {
   font-size: 0.85rem;
-  color: #8b949e;
+  color: var(--text-muted);
   text-transform: uppercase;
   margin: 0 0 12px 0;
 }
@@ -82,9 +82,9 @@
   justify-content: space-between;
   align-items: center;
   padding: 10px 12px;
-  background: #0d1117;
-  border: 1px solid #30363d;
-  border-radius: 8px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-emphasis);
+  border-radius: var(--radius);
 }
 
 .fp-info {
@@ -119,5 +119,5 @@
 
 .fp-empty {
   font-size: 0.85rem;
-  color: #8b949e;
+  color: var(--text-muted);
 }

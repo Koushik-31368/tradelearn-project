@@ -12,15 +12,15 @@
 .create-game-form .form-group label {
   display: block;
   margin-bottom: 8px;
-  color: #9ca3af;
+  color: var(--text-muted);
   font-weight: bold;
 }
 .create-game-form .form-group input,
 .create-game-form .form-group select {
   width: 100%;
   padding: 12px;
-  background-color: #374151;
-  border: 1px solid #4b5563;
+  background-color: var(--border);
+  border: 1px solid var(--text-faint);
   border-radius: 5px;
   color: var(--text-light);
   font-size: 1rem;
@@ -43,7 +43,7 @@
 }
 
 .btn-cancel {
-  background-color: #4b5563;
+  background-color: var(--text-faint);
   color: var(--text-light);
 }
 

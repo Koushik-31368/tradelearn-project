@@ -1,11 +1,9 @@
-/* SimulatorPage.css — "trading terminal at night" design language
- * Uses global tokens from theme.css — no local :root overrides.
- */
+/* SimulatorPage.css — design system aligned */
 
 /* ── Page wrapper ─────────────────────────────────────────── */
 .simulator-container {
-  min-height: calc(100vh - 80px);
-  padding: 28px;
+  min-height: calc(100vh - 56px);
+  padding: 24px;
   box-sizing: border-box;
   background: var(--bg);
   color: var(--text);
@@ -14,19 +12,20 @@
 /* ── Top nav ──────────────────────────────────────────────── */
 .simulator-nav {
   display: flex;
-  gap: 10px;
-  margin-bottom: 22px;
+  gap: 4px;
+  margin-bottom: 20px;
   align-items: center;
   border-bottom: 1px solid var(--border);
-  padding-bottom: 14px;
+  padding-bottom: 12px;
 }
 
 .simulator-nav a {
-  padding: 8px 16px;
+  padding: 6px 14px;
   text-decoration: none;
   color: var(--text-muted);
   font-family: var(--font-display);
-  font-weight: 600;
+  font-size: 0.82rem;
+  font-weight: 500;
   border-radius: var(--radius-sm);
   transition: color 0.15s ease, background 0.15s ease;
   background: transparent;
@@ -34,11 +33,11 @@
 
 .simulator-nav a:hover {
   color: var(--text-light);
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--bg-panel-2);
 }
 
 .simulator-nav a.active {
-  color: var(--bg);
+  color: #fff;
   background: var(--primary);
 }
 
@@ -46,14 +45,14 @@
 .simulator-content {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 22px;
+  gap: 16px;
 }
 
 /* ── Sidebar / grid layout ────────────────────────────────── */
 .simulator-grid {
   display: grid;
   grid-template-columns: 2fr 1fr;
-  gap: 20px;
+  gap: 16px;
 }
 
 /* ── Login-required card ──────────────────────────────────── */
@@ -64,42 +63,39 @@
   align-items: center;
   justify-content: center;
   color: var(--text);
-  animation: simFadeIn 0.5s ease-out;
 }
 
 .login-card {
   text-align: center;
-  padding: 38px 48px;
-  border-radius: var(--radius-sm);
+  padding: 36px 40px;
+  border-radius: var(--radius-lg);
   background: var(--bg-panel);
   border: 1px solid var(--border);
-  box-shadow: var(--shadow-lg);
-  max-width: 560px;
+  box-shadow: var(--shadow);
+  max-width: 480px;
   width: 92%;
-  transition: transform 0.22s ease, box-shadow 0.22s ease;
 }
 
 .login-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 20px 50px rgba(16, 185, 129, 0.1);
+  border-color: var(--border-emphasis);
 }
 
 .login-card .title {
   display: block;
   font-family: var(--font-display);
-  font-size: 1.8rem;
+  font-size: 1.5rem;
   font-weight: 700;
-  margin-bottom: 10px;
-  color: var(--primary);
-  letter-spacing: 0.2px;
+  margin-bottom: 8px;
+  color: var(--text-light);
+  letter-spacing: -0.02em;
 }
 
 .login-card .subtitle {
   color: var(--text-muted);
   margin-bottom: 24px;
-  font-size: 1rem;
+  font-size: 0.9rem;
   line-height: 1.5;
-  max-width: 460px;
+  max-width: 400px;
   margin-left: auto;
   margin-right: auto;
 }
@@ -108,37 +104,33 @@
   display: inline-block;
   background: var(--primary);
   color: #fff;
-  font-weight: 700;
+  font-family: var(--font-display);
+  font-weight: 600;
   text-decoration: none;
-  padding: 10px 28px;
+  padding: 10px 24px;
   border-radius: var(--radius-sm);
-  transition: background 0.15s ease, transform 0.15s ease;
+  font-size: 0.88rem;
+  transition: background 0.15s ease;
 }
 
 .login-btn:hover {
   background: var(--primary-700);
-  transform: translateY(-2px);
+  color: #fff;
 }
 
 /* ── Utility ──────────────────────────────────────────────── */
 .center-vertical { display: flex; align-items: center; justify-content: center; }
 .muted { color: var(--text-muted); }
 
-/* ── Animations ───────────────────────────────────────────── */
-@keyframes simFadeIn {
-  0%   { opacity: 0; transform: translateY(10px); }
-  100% { opacity: 1; transform: translateY(0); }
-}
-
 /* ── Responsive ───────────────────────────────────────────── */
 @media (max-width: 980px) {
   .simulator-grid { grid-template-columns: 1fr; }
-  .simulator-nav  { overflow-x: auto; padding-bottom: 12px; gap: 8px; }
+  .simulator-nav  { overflow-x: auto; padding-bottom: 10px; gap: 4px; }
 }
 
 @media (max-width: 520px) {
   .login-card { padding: 24px 18px; }
-  .login-card .title { font-size: 1.4rem; }
+  .login-card .title { font-size: 1.2rem; }
   .simulator-container { padding: 16px; }
-  .simulator-nav a { padding: 7px 10px; font-size: 0.9rem; }
+  .simulator-nav a { padding: 6px 10px; font-size: 0.8rem; }
 }

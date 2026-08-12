@@ -1,21 +1,14 @@
 /* src/pages/HomePage.css */
 
-/* ── Local design tokens ───────────────────────────────────
- * A monospace face is used deliberately for anything numeric or
- * data-like (metrics, ticker rows, step indices, section eyebrows) —
- * a nod to the terminal/ticker vernacular of a trading platform,
- * kept separate from the display type used for headlines and body copy.
- * ─────────────────────────────────────────────────────────── */
+/* ── Local design tokens ───────────────────────────────────── */
 .hp {
-  --hp-mono: 'JetBrains Mono', 'SF Mono', ui-monospace, 'Roboto Mono', Menlo, Consolas, monospace;
-  --hp-hairline: rgba(16, 185, 129, 0.18);
-  --hp-muted: #8b978f;
+  --hp-mono: var(--font-mono);
   background: var(--bg);
-  color: #ffffff;
+  color: var(--text-light);
   min-height: 100vh;
 }
 
-/* ── Full-page loading state (shown while isHydrating) ────── */
+/* ── Full-page loading state ────────────────────────────────── */
 .hp-loading {
   display: flex;
   flex-direction: column;
@@ -27,10 +20,10 @@
 }
 
 .hp-loading-spinner {
-  width: 40px;
-  height: 40px;
-  border: 3px solid rgba(16, 185, 129, 0.2);
-  border-top-color: var(--primary, #10b981);
+  width: 32px;
+  height: 32px;
+  border: 2px solid var(--border);
+  border-top-color: var(--primary);
   border-radius: 50%;
   animation: hp-spin 0.75s linear infinite;
 }
@@ -40,53 +33,30 @@
 }
 
 .hp-inner {
-  max-width: 1200px;
+  max-width: 1100px;
   margin: 0 auto;
   padding: 0 24px;
 }
 
-/* ── Eyebrow + axis signature ─────────────────────────────
- * Reused above every section title: a small mono label plus a
- * hairline "axis" rule with tick marks, echoing the price-axis
- * ticks visible in the hero background photo itself.
- * ─────────────────────────────────────────────────────────── */
+/* ── Eyebrow + axis ──────────────────────────────────────────── */
 .hp-eyebrow {
   display: block;
   font-family: var(--hp-mono);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 500;
-  letter-spacing: 1.5px;
-  color: var(--primary);
-  margin-bottom: 14px;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+  text-transform: uppercase;
 }
 
 .hp-axis {
   display: block;
-  width: 64px;
-  height: 8px;
-  margin: 0 0 24px;
-  position: relative;
-  background-image: linear-gradient(var(--primary), var(--primary));
-  background-repeat: no-repeat;
-  background-size: 100% 2px;
-  background-position: top left;
-}
-
-.hp-axis::after {
-  content: '';
-  position: absolute;
-  top: 2px;
-  left: 0;
-  right: 0;
-  height: 6px;
-  background-image: repeating-linear-gradient(
-    to right,
-    var(--primary) 0,
-    var(--primary) 1px,
-    transparent 1px,
-    transparent 16px
-  );
-  opacity: 0.55;
+  width: 32px;
+  height: 2px;
+  margin: 0 0 20px;
+  background: var(--primary);
+  border-radius: 1px;
 }
 
 .hp-axis--center {
@@ -94,12 +64,12 @@
   margin-right: auto;
 }
 
-/* ── SECTION 1 — Hero ──────────────────────────────────── */
+/* ── SECTION 1 — Hero ──────────────────────────────────────── */
 .hp-hero {
   position: relative;
   overflow: hidden;
   height: 100vh;
-  min-height: 700px;
+  min-height: 650px;
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -108,25 +78,17 @@
 }
 
 .hp-hero--logged-in {
-  height: 60vh;
-  min-height: 450px;
+  height: 50vh;
+  min-height: 380px;
 }
 
-/* Dark overlay for readability — tinted toward the brand green rather
-   than a generic neutral slate, so it reads as one deliberate palette
-   with the rest of the page instead of a stock dark-mode overlay. */
 .hp-hero-overlay {
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(
-    180deg,
-    rgba(5, 12, 10, 0.78) 0%,
-    rgba(6, 14, 12, 0.5) 45%,
-    rgba(5, 12, 10, 0.86) 100%
-  );
+  background: rgba(6, 10, 16, 0.8);
   z-index: 1;
 }
 
@@ -141,78 +103,78 @@
 }
 
 .hp-hero-text {
-  max-width: 560px;
+  max-width: 520px;
   flex-shrink: 0;
 }
 
 .hp-hero-title {
-  font-size: 46px;
+  font-family: var(--font-display);
+  font-size: 40px;
   font-weight: 700;
   line-height: 1.15;
-  margin: 0 0 20px;
-  letter-spacing: -0.5px;
-  text-shadow: 0 4px 20px rgba(0,0,0,0.5);
+  margin: 0 0 16px;
+  letter-spacing: -0.03em;
+  color: var(--text-light);
 }
 
 .hp-hero-sub {
-  font-size: 19px;
-  color: rgba(255, 255, 255, 0.8);
-  margin: 0 0 40px;
+  font-size: 16px;
+  color: var(--text-muted);
+  margin: 0 0 32px;
   font-weight: 400;
-  letter-spacing: 0.2px;
-  text-shadow: 0 2px 10px rgba(0,0,0,0.4);
+  line-height: 1.6;
 }
 
 .hp-hero-ctas {
   display: flex;
-  gap: 16px;
+  gap: 12px;
 }
 
 .hp-btn-primary {
-  display: inline-block;
-  padding: 14px 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 24px;
   background: var(--primary);
-  color: #06120d;
-  font-size: 15px;
-  font-weight: 700;
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 600;
   border: none;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   text-decoration: none;
-  transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
-  box-shadow: 0 2px 10px rgba(16, 185, 129, 0.2);
+  transition: background 0.15s ease;
 }
 
 .hp-btn-primary:hover {
-  background: var(--primary-700, #059669);
-  color: #ffffff;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
+  background: var(--primary-700);
+  color: #fff;
 }
 
 .hp-btn-secondary {
-  display: inline-block;
-  padding: 14px 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 24px;
   background: transparent;
-  color: #ffffff;
-  font-size: 15px;
-  font-weight: 600;
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  border-radius: 6px;
+  color: var(--text);
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 500;
+  border: 1px solid var(--border-emphasis);
+  border-radius: var(--radius-sm);
   cursor: pointer;
   text-decoration: none;
-  transition: background 0.2s, border-color 0.2s;
+  transition: background 0.15s ease, border-color 0.15s ease;
 }
 
 .hp-btn-secondary:hover {
-  background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.04);
+  border-color: var(--text-faint);
 }
 
-/* ── Terminal panel (replaces the old glassmorphism card) ──
- * Flat, static, hairline-bordered — closer to a real market data
- * panel than a marketing-site glass card. No blur, no glow, no motion.
- * ─────────────────────────────────────────────────────────── */
+/* ── Terminal panel ──────────────────────────────────────────── */
 .hp-hero-card-wrapper {
   flex: 1;
   display: flex;
@@ -220,39 +182,38 @@
 }
 
 .hp-terminal-card {
-  background: rgba(9, 14, 12, 0.72);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-top: 2px solid var(--primary);
-  border-radius: 4px;
-  padding: 24px 28px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px 24px;
   width: 100%;
-  max-width: 380px;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+  max-width: 340px;
 }
 
 .hp-terminal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
-  padding-bottom: 14px;
-  border-bottom: 1px solid rgba(255,255,255,0.08);
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
 }
 
 .hp-terminal-title {
   font-family: var(--hp-mono);
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 1px;
-  color: rgba(255,255,255,0.65);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  text-transform: uppercase;
 }
 
 .hp-terminal-badge {
   font-family: var(--hp-mono);
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.5px;
-  color: var(--primary);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--text-faint);
 }
 
 .hp-terminal-rows {
@@ -264,8 +225,8 @@
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  padding: 10px 0;
-  border-bottom: 1px solid rgba(255,255,255,0.05);
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border-muted);
 }
 
 .hp-terminal-row:last-child {
@@ -274,28 +235,28 @@
 }
 
 .hp-terminal-label {
-  font-size: 14px;
-  color: rgba(255,255,255,0.55);
+  font-size: 13px;
+  color: var(--text-muted);
   font-weight: 400;
 }
 
 .hp-terminal-value {
   font-family: var(--hp-mono);
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
-  color: #ffffff;
+  color: var(--text-light);
 }
 
 .hp-terminal-value.pos { color: var(--primary); }
-.hp-terminal-value.xp { color: #d4af6a; }
-.hp-terminal-value.league { color: #b8c2cc; }
+.hp-terminal-value.xp { color: var(--gold); }
+.hp-terminal-value.league { color: var(--text-muted); }
 
-/* ── Entrance animation — one-time, quiet ─────────────────── */
+/* ── Entrance animation ──────────────────────────────────────── */
 .fade-up-enter {
-  animation: fadeUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: fadeUp 0.5s ease-out forwards;
   opacity: 0;
-  transform: translateY(20px);
+  transform: translateY(12px);
 }
 
 @keyframes fadeUp {
@@ -305,17 +266,19 @@
   }
 }
 
-/* ── SECTION 2 — How it works ──────────────────────────── */
+/* ── SECTION 2 — How it works ──────────────────────────────── */
 .hp-how {
-  padding: 100px 0;
-  border-top: 1px solid var(--hp-hairline);
+  padding: 80px 0;
+  border-top: 1px solid var(--border);
 }
 
 .hp-section-title {
-  font-size: 26px;
-  font-weight: 700;
-  margin: 0 0 48px;
-  letter-spacing: -0.3px;
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 600;
+  margin: 0 0 40px;
+  letter-spacing: -0.02em;
+  color: var(--text-light);
 }
 
 .hp-section-title--center {
@@ -330,71 +293,80 @@
 .hp-steps {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 0;
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
 }
 
 .hp-step {
-  padding: 24px 32px 0 0;
-  border-top: 1px solid var(--hp-hairline);
+  padding: 28px 24px;
+  background: var(--bg-panel);
 }
 
 .hp-step-num {
   display: block;
   font-family: var(--hp-mono);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
-  letter-spacing: 1px;
   color: var(--primary);
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
 .hp-step-title {
-  font-size: 17px;
+  font-family: var(--font-display);
+  font-size: 15px;
   font-weight: 600;
-  margin: 0 0 10px;
+  margin: 0 0 8px;
+  color: var(--text-light);
 }
 
 .hp-step-desc {
-  font-size: 14px;
-  color: var(--hp-muted);
-  line-height: 1.65;
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.6;
   margin: 0;
 }
 
-/* ── SECTION 3 — Why different ─────────────────────────── */
+/* ── SECTION 3 — Why different ─────────────────────────────── */
 .hp-why {
-  padding: 100px 0;
-  border-top: 1px solid var(--hp-hairline);
+  padding: 80px 0;
+  border-top: 1px solid var(--border);
 }
 
 .hp-features {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 40px;
+  gap: 20px;
 }
 
 .hp-feature {
-  border-left: 2px solid var(--primary);
-  padding: 4px 0 4px 20px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
 }
 
 .hp-feature-title {
-  font-size: 16px;
+  font-family: var(--font-display);
+  font-size: 15px;
   font-weight: 600;
-  margin: 0 0 10px;
+  margin: 0 0 8px;
+  color: var(--text-light);
 }
 
 .hp-feature-desc {
-  font-size: 14px;
-  color: var(--hp-muted);
-  line-height: 1.65;
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.6;
   margin: 0;
 }
 
-/* ── SECTION 4 — Platform metrics ──────────────────────── */
+/* ── SECTION 4 — Platform metrics ──────────────────────────── */
 .hp-metrics {
-  padding: 100px 0;
-  border-top: 1px solid var(--hp-hairline);
+  padding: 80px 0;
+  border-top: 1px solid var(--border);
   text-align: center;
 }
 
@@ -407,38 +379,42 @@
 .hp-stats {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
 }
 
 .hp-stat {
-  padding: 8px 24px;
-  border-left: 1px solid var(--hp-hairline);
+  padding: 24px 20px;
+  border-right: 1px solid var(--border);
 }
 
-.hp-stat:first-child {
-  border-left: none;
+.hp-stat:last-child {
+  border-right: none;
 }
 
 .hp-stat-value {
   font-family: var(--hp-mono);
-  font-size: 30px;
-  font-weight: 600;
+  font-size: 24px;
+  font-weight: 700;
   font-variant-numeric: tabular-nums;
-  margin: 0 0 8px;
-  color: var(--primary);
+  margin: 0 0 4px;
+  color: var(--text-light);
 }
 
 .hp-stat-label {
-  font-size: 12px;
-  color: var(--hp-muted);
+  font-size: 11px;
+  color: var(--text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.6px;
+  letter-spacing: 0.06em;
   margin: 0;
 }
 
-/* ── SECTION 5 — Final CTA ─────────────────────────────── */
+/* ── SECTION 5 — Final CTA ─────────────────────────────────── */
 .hp-final {
-  padding: 100px 0 120px;
-  border-top: 1px solid var(--hp-hairline);
+  padding: 80px 0 100px;
+  border-top: 1px solid var(--border);
   text-align: center;
 }
 
@@ -448,13 +424,15 @@
 }
 
 .hp-final-title {
-  font-size: 28px;
-  font-weight: 700;
-  margin: 0 0 32px;
-  letter-spacing: -0.3px;
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 600;
+  margin: 0 0 28px;
+  letter-spacing: -0.02em;
+  color: var(--text-light);
 }
 
-/* ── Responsive ────────────────────────────────────────── */
+/* ── Responsive ────────────────────────────────────────────── */
 @media (max-width: 900px) {
   .hp-hero .hp-inner {
     flex-direction: column;
@@ -476,31 +454,28 @@
 
   .hp-steps {
     grid-template-columns: 1fr;
-    gap: 24px;
-  }
-
-  .hp-step {
-    padding: 20px 0 0 0;
   }
 
   .hp-features {
     grid-template-columns: 1fr;
-    gap: 28px;
+    gap: 12px;
   }
 
   .hp-stats {
     grid-template-columns: repeat(2, 1fr);
-    row-gap: 24px;
   }
 
   .hp-stat {
-    border-left: none;
-    border-top: 1px solid var(--hp-hairline);
-    padding: 20px 12px 0;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
   }
 
   .hp-stat:nth-child(odd) {
-    border-right: 1px solid var(--hp-hairline);
+    border-right: 1px solid var(--border);
+  }
+
+  .hp-stat:nth-last-child(-n+2) {
+    border-bottom: none;
   }
 }
 
@@ -510,15 +485,19 @@
   }
 
   .hp-hero-title {
-    font-size: 30px;
+    font-size: 28px;
   }
 
   .hp-hero-sub {
-    font-size: 16px;
+    font-size: 14px;
   }
 
   .hp-stats {
     grid-template-columns: 1fr;
+  }
+
+  .hp-stat {
+    border-right: none;
   }
 
   .hp-stat:nth-child(odd) {
@@ -529,29 +508,6 @@
   .hp-why,
   .hp-metrics,
   .hp-final {
-    padding: 60px 0;
-  }
-}
-
-/* ── Auth hydration loading state ─────────────────────────── */
-.hp-loading {
-  min-height: 60vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.hp-loading-spinner {
-  width: 40px;
-  height: 40px;
-  border: 3px solid rgba(255, 255, 255, 0.15);
-  border-top-color: #ffffff;
-  border-radius: 50%;
-  animation: hp-spin 0.8s linear infinite;
-}
-
-@keyframes hp-spin {
-  to {
-    transform: rotate(360deg);
+    padding: 56px 0;
   }
 }
