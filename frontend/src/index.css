@@ -1,6 +1,16 @@
-/* src/index.css
- * Global entry point.
- * All design tokens (colors, spacing, typography) live in styles/theme.css.
- */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+/* TradeLearn — Global Styles */
+/* All design tokens are loaded via theme.css import inside theme.css itself */
+
 @import './styles/theme.css';
+
+/* Ensure App fills the viewport */
+.App {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Page content wrapper — clears fixed navbar */
+.App > * + * {
+  flex: 1;
+}
