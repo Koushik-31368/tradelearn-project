@@ -29,14 +29,14 @@
 .candlestick-chart__symbol {
   font-size: 1rem;
   font-weight: 800;
-  color: #ffffff;
+  color: var(--text-light);
   letter-spacing: 0.5px;
 }
 
 .candlestick-chart__last-price {
   font-size: 1.2rem;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--text-light);
   font-variant-numeric: tabular-nums;
 }
 
@@ -81,7 +81,7 @@
 
 .candlestick-chart__tf-btn--active {
   background: var(--border);
-  color: #ffffff;
+  color: var(--text-light);
 }
 
 .candlestick-chart__sma-btn {
@@ -98,7 +98,7 @@
 
 .candlestick-chart__sma-btn:hover {
   border-color: var(--text-faint);
-  color: #ffffff;
+  color: var(--text-light);
 }
 
 .candlestick-chart__sma-btn--active {
@@ -181,7 +181,7 @@
 
 .candlestick-chart__live-btn:hover {
   border-color: var(--text-faint);
-  color: #ffffff;
+  color: var(--text-light);
 }
 
 .candlestick-chart__live-btn--running {

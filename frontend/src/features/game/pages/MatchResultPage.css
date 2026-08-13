@@ -133,8 +133,8 @@
   animation: mr-glow-pulse 2s ease-in-out infinite alternate;
 }
 @keyframes mr-glow-pulse {
-  0%   { opacity: 0.35; }
-  100% { opacity: 0.9; }
+  0%   { opacity: 0.2; }
+  100% { opacity: 0.5; }
 }
 
 .mr-card-loser { border-color: rgba(239, 68, 68, 0.25); }
@@ -409,7 +409,7 @@
 }
 .mr-btn-primary:hover:not(:disabled) {
   background: var(--primary-700);
-  box-shadow: 0 6px 24px rgba(16, 185, 129, 0.25);
+  box-shadow: none;
 }
 .mr-btn-ghost {
   background: transparent;

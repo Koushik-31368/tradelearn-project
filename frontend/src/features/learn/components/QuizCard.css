@@ -203,7 +203,7 @@
 
 .quiz-card__btn--check:hover:not(:disabled) {
   background: var(--primary-700);
-  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.2);
+  box-shadow: none;
 }
 
 .quiz-card__btn--retry {

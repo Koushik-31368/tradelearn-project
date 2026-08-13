@@ -1,15 +1,17 @@
 .friends-panel {
-  background: var(--bg-panel-2);
-  border: 1px solid var(--border-emphasis);
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   padding: 20px;
-  color: var(--text-light);
+  color: var(--text);
 }
 
 .fp-title {
   margin: 0 0 16px 0;
-  font-size: 1.2rem;
-  font-weight: 800;
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-light);
 }
 
 .fp-add-form {
@@ -20,61 +22,79 @@
 
 .fp-input {
   flex: 1;
-  background: var(--bg-panel);
-  border: 1px solid var(--border-emphasis);
-  border-radius: 6px;
+  background: var(--bg-panel-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
   padding: 8px 12px;
-  color: #fff;
-  font-size: 0.9rem;
+  color: var(--text-light);
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  transition: border-color 0.15s ease;
 }
 
 .fp-input:focus {
   outline: none;
-  border-color: #58a6ff;
+  border-color: var(--primary);
 }
 
 .fp-btn {
   border: none;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-display);
   font-weight: 600;
   cursor: pointer;
   padding: 8px 12px;
-  transition: opacity 0.2s;
+  font-size: 0.82rem;
+  transition: background 0.15s ease;
 }
 
-.fp-btn:hover { opacity: 0.8; }
-
 .fp-btn-add {
-  background: #238636;
+  background: var(--primary);
   color: #fff;
   padding: 8px 16px;
+}
+
+.fp-btn-add:hover {
+  background: var(--primary-700);
 }
 
 .fp-msg {
   font-size: 0.8rem;
   margin-bottom: 16px;
-  padding: 8px;
+  padding: 8px 12px;
   border-radius: var(--radius-sm);
 }
 
-.fp-msg-success { background: rgba(35, 134, 54, 0.2); color: #3fb950; border: 1px solid #238636; }
-.fp-msg-error { background: rgba(248, 81, 73, 0.2); color: #ff7b72; border: 1px solid #da3633; }
+.fp-msg-success {
+  background: var(--primary-surface);
+  color: var(--primary);
+  border: 1px solid var(--primary-border);
+}
+
+.fp-msg-error {
+  background: rgba(248, 81, 73, 0.06);
+  color: var(--danger);
+  border: 1px solid rgba(248, 81, 73, 0.15);
+}
 
 .fp-section {
-  margin-top: 24px;
+  margin-top: 20px;
 }
 
 .fp-section-title {
-  font-size: 0.85rem;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 600;
   color: var(--text-muted);
   text-transform: uppercase;
-  margin: 0 0 12px 0;
+  letter-spacing: 0.06em;
+  margin: 0 0 10px 0;
 }
 
 .fp-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
 .fp-item {
@@ -82,42 +102,58 @@
   justify-content: space-between;
   align-items: center;
   padding: 10px 12px;
-  background: var(--bg-panel);
-  border: 1px solid var(--border-emphasis);
+  background: var(--bg-panel-2);
+  border: 1px solid var(--border);
   border-radius: var(--radius);
+  transition: border-color 0.15s ease;
+}
+
+.fp-item:hover {
+  border-color: var(--border-emphasis);
 }
 
 .fp-info {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
 .fp-name {
-  font-weight: 700;
-  font-size: 0.95rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--text-light);
 }
 
 .fp-badge {
   transform: scale(0.8);
-  margin-left: -8px;
+  margin-left: -6px;
 }
 
 .fp-btn-accept {
-  background: #238636;
+  background: var(--primary);
   color: #fff;
-  font-size: 0.8rem;
-  padding: 6px 12px;
+  font-size: 0.78rem;
+  padding: 5px 10px;
+}
+
+.fp-btn-accept:hover {
+  background: var(--primary-700);
 }
 
 .fp-btn-challenge {
-  background: #8b5cf6;
-  color: #fff;
-  font-size: 0.8rem;
-  padding: 6px 12px;
+  background: var(--bg-panel-3);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: 0.78rem;
+  padding: 5px 10px;
+}
+
+.fp-btn-challenge:hover {
+  border-color: var(--primary);
+  color: var(--primary);
 }
 
 .fp-empty {
-  font-size: 0.85rem;
-  color: var(--text-muted);
+  font-size: 0.82rem;
+  color: var(--text-faint);
 }

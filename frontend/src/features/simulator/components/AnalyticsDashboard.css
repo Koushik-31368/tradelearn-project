@@ -98,7 +98,7 @@
 
 .setup-badge {
   background-color: #238636;
-  color: #ffffff;
+  color: var(--text-light);
   padding: 2px 8px;
   border-radius: var(--radius-lg);
   font-size: 12px;

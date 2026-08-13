@@ -269,7 +269,7 @@
 .strat-detail__sim-btn:hover {
   background: var(--primary-700);
   transform: translateY(-2px);
-  box-shadow: 0 6px 24px rgba(16, 185, 129, 0.2);
+  box-shadow: none;
 }
 
 /* ── Responsive ── */

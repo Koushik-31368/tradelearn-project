@@ -20,7 +20,7 @@
 .watchlist__title {
   font-size: 0.9rem;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--text-light);
   margin: 0;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -53,7 +53,7 @@
   border: 1px solid var(--border-emphasis);
   border-radius: var(--radius);
   padding: 8px 12px 8px 32px;
-  color: #ffffff;
+  color: var(--text-light);
   font-size: 0.82rem;
   outline: none;
   transition: border-color 0.2s ease;
@@ -122,7 +122,7 @@
 .watchlist__symbol {
   font-size: 0.85rem;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--text-light);
 }
 
 .watchlist__name {
@@ -143,7 +143,7 @@
 .watchlist__price {
   font-size: 0.82rem;
   font-weight: 600;
-  color: #ffffff;
+  color: var(--text-light);
   font-variant-numeric: tabular-nums;
 }
 

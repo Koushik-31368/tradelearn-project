@@ -208,7 +208,7 @@
   font-family: var(--font-display);
   padding: 20px 40px;
   border-radius: var(--radius);
-  box-shadow: 0 0 40px rgba(16, 185, 129, 0.6);
+  box-shadow: var(--shadow-lg);
   animation: floatUp 2.5s forwards;
 }
 

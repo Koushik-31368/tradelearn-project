@@ -82,7 +82,7 @@
 .summary-card__value {
   font-size: 1.55rem;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--text-light);
   font-variant-numeric: tabular-nums;
   line-height: 1.2;
 }

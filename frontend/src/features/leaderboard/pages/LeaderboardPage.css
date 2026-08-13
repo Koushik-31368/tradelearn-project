@@ -183,7 +183,6 @@
 }
 .lb-top-1 .lb-rating-value {
   color: var(--gold);
-  text-shadow: 0 0 8px rgba(245, 158, 11, 0.3);
 }
 
 .lb-top-2 {
@@ -274,7 +273,7 @@
 .lb-tab:hover { background: var(--bg-panel-2); color: var(--text); }
 
 .lb-tab--active {
-  background: linear-gradient(135deg, var(--primary), var(--primary-700));
+  background: var(--primary);
   color: #fff;
 }
 

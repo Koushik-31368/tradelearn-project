@@ -99,13 +99,13 @@
   transition: all 0.3s ease;
   text-transform: uppercase;
   letter-spacing: 1px;
-  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.25);
+  box-shadow: none;
 }
 
 .find-match-btn:hover:not(:disabled) {
   background: var(--primary-700);
   transform: translateY(-2px);
-  box-shadow: 0 6px 25px rgba(16, 185, 129, 0.4);
+  box-shadow: none;
 }
 
 .find-match-btn:active:not(:disabled) {
@@ -297,7 +297,7 @@
   margin: 0;
   font-size: 1.5rem;
   font-family: var(--font-display);
-  color: var(--text);
+  color: var(--text-light);
 }
 
 .section-subtitle {

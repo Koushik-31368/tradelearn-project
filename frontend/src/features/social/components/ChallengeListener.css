@@ -6,6 +6,7 @@
   bottom: 0;
   background: rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   z-index: 99999;
   display: flex;
   align-items: center;
@@ -13,83 +14,76 @@
 }
 
 .challenge-popup {
-  background: var(--bg-panel-2);
-  border: 1px solid var(--border-emphasis);
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   padding: 32px;
   text-align: center;
   max-width: 400px;
   width: 90%;
-  animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  box-shadow: 0 0 40px rgba(139, 92, 246, 0.3);
+  animation: popIn 0.3s ease-out;
+  box-shadow: var(--shadow-xl);
 }
 
 @keyframes popIn {
-  0% { transform: scale(0.8); opacity: 0; }
+  0% { transform: scale(0.95); opacity: 0; }
   100% { transform: scale(1); opacity: 1; }
 }
 
 .challenge-icon {
-  font-size: 3rem;
-  margin-bottom: 16px;
-  animation: shake 2s infinite;
-}
-
-@keyframes shake {
-  0%, 100% { transform: rotate(0); }
-  25% { transform: rotate(-10deg); }
-  75% { transform: rotate(10deg); }
+  font-size: 2.5rem;
+  margin-bottom: 14px;
 }
 
 .challenge-title {
-  font-size: 1.5rem;
-  font-weight: 800;
-  margin: 0 0 8px 0;
-  color: #fff;
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin: 0 0 6px 0;
+  color: var(--text-light);
 }
 
 .challenge-desc {
-  font-size: 1rem;
+  font-size: 0.9rem;
   color: var(--text-muted);
   margin: 0 0 24px 0;
+  line-height: 1.5;
 }
 
 .challenge-actions {
   display: flex;
-  gap: 16px;
+  gap: 10px;
   justify-content: center;
 }
 
 .challenge-btn {
-  padding: 12px 24px;
+  padding: 10px 22px;
   border: none;
-  border-radius: var(--radius);
-  font-weight: 700;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-display);
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
-  font-size: 1rem;
-}
-
-.challenge-btn:hover {
-  transform: translateY(-2px);
+  transition: background 0.15s ease;
+  font-size: 0.9rem;
 }
 
 .challenge-btn-accept {
-  background: #8b5cf6;
+  background: var(--primary);
   color: #fff;
   flex: 1;
 }
 
 .challenge-btn-accept:hover {
-  background: #7c3aed;
-  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);
+  background: var(--primary-700);
 }
 
 .challenge-btn-decline {
-  background: var(--border-emphasis);
-  color: var(--text-light);
+  background: var(--bg-panel-2);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
 }
 
 .challenge-btn-decline:hover {
-  background: var(--text-faint);
+  border-color: var(--border-emphasis);
+  color: var(--text);
 }

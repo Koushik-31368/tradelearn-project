@@ -17,7 +17,7 @@
 .performance-chart__title {
   font-size: 0.9rem;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--text-light);
   margin: 0 0 2px;
 }
 
