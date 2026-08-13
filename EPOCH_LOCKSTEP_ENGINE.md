@@ -1,4 +1,4 @@
-﻿# Epoch-Lockstep Engine: Eliminating Network-Latency-Induced Informational Asymmetry in Real-Time Multiplayer Simulations
+# Epoch-Lockstep Engine: Eliminating Network-Latency-Induced Informational Asymmetry in Real-Time Multiplayer Simulations
 
 **Version:** 1.0 — July 2026
 **Repository:** `com.tradelearn.fairness.engine` (TradeLearn backend)
