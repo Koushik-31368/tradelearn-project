@@ -52,6 +52,8 @@
   --panel-2: var(--bg-panel-2);
   --muted: var(--text-muted);
   --text-dark: #151719;
+  --chalk: #f5f0e8;
+  --field-green: #2e7d32;
   --border-emphasis: var(--border-2);
   --border-muted: var(--border);
   --radius: var(--r);
