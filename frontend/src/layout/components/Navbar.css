@@ -10,3 +10,13 @@
 .logout-button { background: transparent; color: var(--text) !important; border-color: var(--border-2); } .logout-button:hover { border-color: var(--coral); color: var(--coral) !important; }
 @media (max-width: 1050px) { .navbar { padding: 0 20px; } .navbar-links a { padding-inline: 7px; } .nav-profile-link { display: none; } }
 @media (max-width: 760px) { .navbar { min-height: 66px; padding: 0 16px; } .navbar-links { display: none; } .nav-stats { display: none; } .navbar-logo a { font-size: .95rem; } }
+/* Structural shell: a compact pit desk, not a generic SaaS bar. */
+.navbar { min-height: 86px; padding: 0 clamp(18px, 4vw, 54px); background: var(--text-dark); border-bottom: 3px solid var(--gold); box-shadow: 0 6px 0 var(--cobalt); }
+.navbar-logo a { font-size: 1.3rem; letter-spacing: .02em; }
+.navbar-logo a::before { width: 38px; height: 38px; border: 2px solid var(--text-light); box-shadow: 4px 4px 0 var(--coral); }
+.navbar-links { align-self: stretch; gap: 0; }
+.navbar-links a { display: flex; height: 100%; align-items: center; padding-inline: 14px; border-bottom: 0; border-left: 1px solid rgba(255,255,255,.12); }
+.navbar-links a.active { background: var(--cobalt); color: var(--text-light); border-bottom: 5px solid var(--gold); }
+.navbar-links a:hover { background: rgba(36,84,214,.55); }
+.login-button,.logout-button { box-shadow: 4px 4px 0 var(--coral); }
+@media (max-width: 760px) { .navbar { min-height: 72px; } .navbar-logo a::before { width: 32px; height: 32px; } }

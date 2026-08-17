@@ -10,5 +10,7 @@
 .market-ticker__change--up, .market-ticker__change--live { color: var(--green-bright); }
 .market-ticker__change--down { color: var(--coral); }
 @keyframes tickerMove { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+.market-ticker { animation: tickerSettle .9s var(--ease) both; }
+@keyframes tickerSettle { from { opacity: 0; transform: translateY(-18px); } to { opacity: 1; transform: translateY(0); } }
 @media (prefers-reduced-motion: reduce) { .market-ticker__track { animation: none; } }
 @media (max-width: 600px) { .market-ticker__label { padding: 0 12px; } .market-ticker__quote { min-width: 150px; padding: 0 14px; } }
