@@ -2,6 +2,7 @@ import { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { AuthProvider } from './features/auth/AuthContext';
 import Navbar from './layout/components/Navbar';
+import MarketTicker from './layout/components/MarketTicker';
 import Footer from './layout/components/Footer';
 import DailyCheckinModal from './features/dashboard/components/DailyCheckinModal';
 import ChallengeListener from './features/social/components/ChallengeListener';
@@ -46,6 +47,7 @@ function AppContent() {
   return (
     <div className="App">
       <Navbar />
+      <MarketTicker />
       <Suspense fallback={<PageLoader />}>
         <Routes>
           <Route path="/" element={<HomePage />} />

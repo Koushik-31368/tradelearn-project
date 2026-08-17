@@ -2,6 +2,7 @@
 /* All design tokens are loaded via theme.css import inside theme.css itself */
 
 @import './styles/theme.css';
+@import './styles/open-outcry-overrides.css';
 
 /* Ensure App fills the viewport */
 .App {
