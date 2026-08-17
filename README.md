@@ -6,8 +6,6 @@
 
 ### Gamified Multiplayer Trading Simulator
 
-**Compete head-to-head · Build real trading skills · Climb the ELO leaderboard**
-
 [![CI](https://github.com/Koushik-31368/tradelearn-project/actions/workflows/ci.yml/badge.svg)](https://github.com/Koushik-31368/tradelearn-project/actions/workflows/ci.yml)
 ![Java](https://img.shields.io/badge/Java-21-ED8B00?logo=openjdk&logoColor=white)
 ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.x-6DB33F?logo=springboot&logoColor=white)
@@ -16,117 +14,127 @@
 ![Redis](https://img.shields.io/badge/Redis-7-DC382D?logo=redis&logoColor=white)
 ![License](https://img.shields.io/badge/License-Proprietary-64748b)
 
-[🎮 Live Demo](#-live-demo) · [✨ Features](#-features) · [🏗 Architecture](#-architecture) · [🚀 Quick Start](#-quick-start) · [🛠 Tech Stack](#-tech-stack)
+[Live Demo](#live-demo) &nbsp;&middot;&nbsp; [Features](#features) &nbsp;&middot;&nbsp; [Architecture](#architecture) &nbsp;&middot;&nbsp; [Quick Start](#quick-start) &nbsp;&middot;&nbsp; [Tech Stack](#tech-stack)
 
 </div>
 
 ---
 
-## 🎮 Live Demo
+## Live Demo
 
-| | URL |
+| Environment | URL |
 |---|---|
-| 🌐 **Frontend** | [tradelearn-project.vercel.app](https://tradelearn-project.vercel.app) |
-| 🔌 **API Health** | [tradelearn-project-g.onrender.com/actuator/health](https://tradelearn-project-g.onrender.com/actuator/health) |
+| **Frontend** | [tradelearn-project.vercel.app](https://tradelearn-project.vercel.app) |
+| **API Health** | [tradelearn-project-g.onrender.com/actuator/health](https://tradelearn-project-g.onrender.com/actuator/health) |
 
-> **Note:** Backend is hosted on Render free tier — first request may take ~30s to cold-start.
+> **Note:** The backend is hosted on Render's free tier. The first request after inactivity may take approximately 30 seconds to cold-start.
 
 > [!NOTE]
-> **Educational use only.** TradeLearn is a gamified learning simulator — not a licensed broker, financial advisor, or investment platform. Market data sourced from public APIs (yfinance, Finnhub) for non-commercial, academic use only.
+> **Educational use only.** TradeLearn is a gamified learning simulator — not a licensed broker, financial advisor, or investment platform. Market data is sourced from public APIs (yfinance, Finnhub) for non-commercial, academic use only.
 
 ---
 
-## ✨ Features
+## Features
 
-### ⚔️ Real-Time Multiplayer Matches
-Head-to-head trading battles via WebSocket. Both players receive identical market candles simultaneously — no latency advantage. Results feed into an ELO rating system.
+### Real-Time Multiplayer Matches
 
-**Scoring formula:**
+Head-to-head trading battles over WebSocket. Both players receive identical market candles simultaneously — no latency advantage is possible. Match results feed into an ELO rating system.
+
+**Composite scoring formula:**
+
 ```
-Score = (Profit% × 0.60) + (Risk Score × 0.20) + (Accuracy% × 0.20)
+Score = (Profit% x 0.60) + (Risk Score x 0.20) + (Accuracy% x 0.20)
 ```
 
-### 📈 DB-Backed Historical Replay Engine
-Every multiplayer match replays a **random window** of real NSE historical data pulled from a PostgreSQL database — not dummy JSON. 10 symbols, 2 years of daily OHLCV candles (4,970+ rows).
+### Database-Backed Historical Replay Engine
 
-### 🕹 Solo Trading Simulator
-Real-time candlestick chart with SMA overlays, live portfolio P&L, equity curve, market sentiment panel, and full order management. Seeded with NSE blue-chip stocks.
+Every multiplayer match replays a random window of real NSE historical data pulled from a PostgreSQL database — not dummy JSON. The dataset covers 10 symbols and 2 years of daily OHLCV candles (4,970+ rows).
 
-### 🎓 Learning Academy
-Structured curriculum: candlestick patterns → technical indicators → risk management → trading psychology. Progressive sections with embedded quizzes.
+### Solo Trading Simulator
 
-### 📊 Strategy Engine
-Eight documented strategies (RSI Mean Reversion, SMA Crossover, Breakout, Momentum, S&R, Scalping, Buy & Hold, MACD) with entry/exit rules and direct simulator links.
+A real-time candlestick chart with SMA overlays, live portfolio P&L tracking, an equity curve panel, market sentiment analysis, and full order management. Seeded with NSE blue-chip stocks.
 
-### 🔬 Backtest Engine
-SMA crossover backtester against any OHLCV dataset. Outputs equity curve, return %, max drawdown %, and trade-by-trade breakdown.
+### Learning Academy
 
-### 🏆 ELO Leaderboard
-Chess-style rating adjusted after every match. Tier badges (Bronze → Silver → Gold → Diamond) with seasonal rankings.
+A structured curriculum covering candlestick patterns, technical indicators, risk management, and trading psychology — with progressive sections and embedded quizzes.
+
+### Strategy Engine
+
+Eight documented strategies (RSI Mean Reversion, SMA Crossover, Breakout, Momentum, Support & Resistance, Scalping, Buy & Hold, MACD) with clearly defined entry/exit rules and direct simulator links.
+
+### Backtest Engine
+
+SMA crossover backtester against any OHLCV dataset. Outputs an equity curve, total return percentage, maximum drawdown percentage, and a trade-by-trade breakdown.
+
+### ELO Leaderboard
+
+Chess-style rating adjusted after every match. Tier badges (Bronze, Silver, Gold, Diamond) with seasonal rankings.
 
 ---
 
-## 🏗 Architecture
+## Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                          Browser                            │
-│            React 18  ·  STOMP.js  ·  Axios                 │
-└──────────────────┬──────────────────────┬───────────────────┘
-                   │ HTTPS/REST           │ WSS WebSocket
-                   ▼                      ▼
-┌─────────────────────────────────────────────────────────────┐
-│                  Spring Boot 3  (Java 21)                   │
-│                                                             │
-│  ┌────────────────┐  ┌─────────────────┐  ┌─────────────┐  │
-│  │ REST Controllers│  │ WebSocket Handler│  │JWT Security │  │
-│  └───────┬────────┘  └────────┬────────┘  └─────────────┘  │
-│          │                    │                              │
-│  ┌───────▼────────────────────▼──────────────────────────┐  │
-│  │                 Domain Services Layer                  │  │
-│  │  MatchLifecycle · MatchScoring · EpochLockstep         │  │
-│  │  ReplaySession  · CandleService · FinnhubProvider      │  │
-│  │  Matchmaking    · Backtest      · ELO / XP             │  │
-│  └───────┬─────────────────────┬─────────────────────────┘  │
-│          │                     │                             │
-│  ┌───────▼────────┐   ┌────────▼────────┐                   │
-│  │ PostgreSQL/Neon│   │   Redis (7)      │                   │
-│  │  games         │   │  Match rooms     │                   │
-│  │  stock_candles │   │  Pub/Sub relay   │                   │
-│  │  replay_sess.  │   │  Matchmaking     │                   │
-│  └────────────────┘   └─────────────────┘                   │
-└─────────────────────────────────────────────────────────────┘
++-------------------------------------------------------------+
+|                          Browser                            |
+|            React 18  .  STOMP.js  .  Axios                 |
++------------------+----------------------+-------------------+
+                   | HTTPS / REST         | WSS WebSocket
+                   v                      v
++-------------------------------------------------------------+
+|                  Spring Boot 3  (Java 21)                   |
+|                                                             |
+|  +----------------+  +-----------------+  +-------------+  |
+|  | REST Controllers|  | WebSocket Handler|  |JWT Security |  |
+|  +-------+--------+  +--------+--------+  +-------------+  |
+|          |                    |                             |
+|  +-------v--------------------v--------------------------+  |
+|  |                 Domain Services Layer                  |  |
+|  |  MatchLifecycle . MatchScoring . EpochLockstep         |  |
+|  |  ReplaySession  . CandleService . FinnhubProvider      |  |
+|  |  Matchmaking    . Backtest      . ELO / XP             |  |
+|  +-------+-----------------------+-----------------------+  |
+|          |                       |                          |
+|  +-------v--------+   +----------v------+                  |
+|  | PostgreSQL/Neon|   |   Redis (7)     |                  |
+|  |  games         |   |  Match rooms    |                  |
+|  |  stock_candles |   |  Pub/Sub relay  |                  |
+|  |  replay_sess.  |   |  Matchmaking    |                  |
+|  +----------------+   +-----------------+                  |
++-------------------------------------------------------------+
 ```
 
 ### Key Design Decisions
 
 | Decision | Rationale |
 |---|---|
-| **Epoch-lockstep fairness engine** | Both players trade against identical candle snapshots — impossible to gain an advantage via network latency |
-| **`afterCommit()` side effects** | Redis/WebSocket mutations only fire if the DB transaction committed — prevents Redis/DB split-brain on rollback |
-| **Replay session per game** | Random historical window assigned at game creation — every match is a fresh, unpredictable market scenario |
-| **DB-first candle load, JSON fallback** | Production uses real NSE data; dev/test environments fall back to classpath JSON transparently |
-| **`@ConditionalOnProperty` Finnhub** | US real-time feed activates only when `FINNHUB_ENABLED=true` — zero overhead when disabled |
+| **Epoch-lockstep fairness engine** | Both players trade against identical candle snapshots — network latency cannot confer an advantage |
+| **`afterCommit()` side effects** | Redis and WebSocket mutations fire only after the DB transaction commits — prevents split-brain on rollback |
+| **Replay session per game** | A random historical window is assigned at game creation — every match presents a fresh, unpredictable scenario |
+| **DB-first candle load, JSON fallback** | Production uses real NSE data; development and test environments fall back to classpath JSON transparently |
+| **`@ConditionalOnProperty` Finnhub** | The US real-time feed activates only when `FINNHUB_ENABLED=true` — zero overhead when disabled |
 
 ---
 
-## 🛠 Tech Stack
+## Tech Stack
 
 ### Backend
+
 | Technology | Version | Purpose |
 |---|---|---|
 | Java | 21 | Application language |
-| Spring Boot | 3.2 | REST API + WebSocket server |
-| Spring Security + JWT | — | Stateless auth with refresh tokens |
+| Spring Boot | 3.2 | REST API and WebSocket server |
+| Spring Security + JWT | — | Stateless authentication with refresh tokens |
 | Spring Data JPA | — | ORM — PostgreSQL via Hibernate |
-| PostgreSQL (Neon) | — | Primary database + Flyway migrations |
-| Redis | 7 | Matchmaking queue, session state, Pub/Sub |
+| PostgreSQL (Neon) | — | Primary database with Flyway migrations |
+| Redis | 7 | Matchmaking queue, session state, Pub/Sub relay |
 | STOMP / SockJS | — | Real-time WebSocket protocol |
 | Bucket4j | — | API rate limiting |
-| Micrometer + Actuator | — | Metrics & health endpoints |
+| Micrometer + Actuator | — | Metrics and health endpoints |
 | yfinance (Python) | — | Historical NSE market data ingestion |
 
 ### Frontend
+
 | Technology | Version | Purpose |
 |---|---|---|
 | React | 18 | Single-page application |
@@ -136,16 +144,17 @@ Chess-style rating adjusted after every match. Tier badges (Bronze → Silver �
 | React Router | 6 | Client-side routing |
 
 ### Infrastructure
+
 | Service | Purpose |
 |---|---|
-| Neon (PostgreSQL) | Serverless DB — 4,970+ candle rows, Flyway migrations |
+| Neon (PostgreSQL) | Serverless database — 4,970+ candle rows, Flyway migrations |
 | Render | Backend production hosting (auto-deploy from `main`) |
 | Vercel | Frontend CDN deployment (auto-deploy from `main`) |
 | GitHub Actions | CI — `mvn verify` on every push (113 tests) |
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 tradelearn/
@@ -157,7 +166,7 @@ tradelearn/
 │           ├── game/                     Match lifecycle, scoring, trading, queries
 │           ├── infrastructure/           Redis rooms, resilience, scheduling, rate limiting
 │           ├── leaderboard/              ELO ranking, tier badges
-│           ├── market/                   ← New: candle DB layer
+│           ├── market/
 │           │   ├── model/                StockSymbol, StockCandleDaily, GameReplaySession
 │           │   ├── repository/           JPA repositories with range queries
 │           │   ├── service/              CandleService, ReplaySessionService
@@ -168,10 +177,10 @@ tradelearn/
 │           ├── profile/                  User profile assembly
 │           └── websocket/               STOMP handler, broadcaster, Redis relay
 │   └── src/main/resources/
-│       └── db/migration/                 Flyway V1–V7 schema migrations
+│       └── db/migration/                 Flyway V1-V7 schema migrations
 │
 ├── frontend/src/
-│   ├── api/                              Axios client + domain API modules
+│   ├── api/                              Axios client and domain API modules
 │   └── features/
 │       ├── auth/                         Login, register, forgot password
 │       ├── game/                         Lobby, live match, result, history
@@ -185,28 +194,29 @@ tradelearn/
 │   └── requirements.txt
 │
 ├── docs/                                 Architecture, API reference, demo guide
-├── e2e/                                  Playwright production E2E tests
-├── loadtest/                             k6 load tests + monitoring dashboards
+├── e2e/                                  Playwright production end-to-end tests
+├── loadtest/                             k6 load tests and monitoring dashboards
 └── .github/workflows/                    CI/CD pipelines
 ```
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
+
 - Java 21+, Maven 3.9+
 - Node.js 18+, npm
 - Redis 7 (local or Docker)
-- PostgreSQL or a [Neon](https://neon.tech) serverless DB
+- PostgreSQL or a [Neon](https://neon.tech) serverless database
 
-### 1. Clone & configure
+### 1. Clone and configure
 
 ```bash
 git clone https://github.com/Koushik-31368/tradelearn-project.git
 cd tradelearn-project
 
-# Backend config
+# Copy the backend environment template
 cp backend/.env.example backend/src/main/resources/application-local.properties
 # Fill in: SPRING_DATASOURCE_URL, JWT_SECRET, REDIS_HOST
 ```
@@ -217,12 +227,12 @@ cp backend/.env.example backend/src/main/resources/application-local.properties
 cd scripts
 pip install -r requirements.txt
 
-# Add NEON_DATABASE_URL to scripts/.env, then:
+# Add NEON_DATABASE_URL to scripts/.env, then run:
 python ingest_market_data.py --days 730
-# → Ingests 4,970 rows of NSE daily OHLCV data
+# Ingests 4,970 rows of NSE daily OHLCV data
 ```
 
-### 3. Start backend
+### 3. Start the backend
 
 ```bash
 cd backend
