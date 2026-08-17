@@ -31,8 +31,8 @@ const Navbar = () => {
           <>
             {user && (
               <div className="nav-stats">
-                <span className="nav-xp">🌟 {user.xp || 0} XP</span>
-                <span className="nav-streak">🔥 {user.loginStreak || 0}</span>
+                <span className="nav-xp">XP {user.xp || 0}</span>
+                <span className="nav-streak">STREAK {user.loginStreak || 0}</span>
                 <TierBadge rating={user.rating} />
               </div>
             )}

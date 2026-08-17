@@ -30,18 +30,9 @@ const LearnPage         = lazy(() => import('./features/learn/pages/LearnPage'))
 // ── Minimal loading spinner shown while a lazy page chunk downloads ──
 function PageLoader() {
   return (
-    <div style={{
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      minHeight: '60vh',
-      fontSize: '1rem',
-      color: '#888',
-      gap: '10px'
-    }}>
-      <span style={{ animation: 'spin 1s linear infinite', display: 'inline-block' }}>⟳</span>
-      Loading...
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    <div className="page-loader" role="status" aria-live="polite">
+      <span className="page-loader__mark" aria-hidden="true">TL</span>
+      <span>Opening the market...</span>
     </div>
   );
 }
