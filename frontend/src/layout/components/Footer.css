@@ -112,3 +112,12 @@
 @media (max-width: 480px) {
   .footer-inner { grid-template-columns: 1fr; }
 }
+.footer { margin-top: 42px; padding: 78px clamp(20px, 5vw, 72px) 30px; background: var(--cobalt); border-top: 0; clip-path: polygon(0 12%, 100% 0, 100% 100%, 0 100%); }
+.footer-inner { max-width: 1280px; grid-template-columns: 1.4fr repeat(3, 1fr); gap: 28px; }
+.footer-logo-mark { display: grid; place-items: center; width: 34px; height: 34px; background: var(--gold); color: var(--text-dark); }
+.footer-logo-name, .footer-col-title, .footer-links a, .footer-tagline { color: var(--text-light); }
+.footer-col-title { color: var(--gold); }
+.footer-links a:hover { color: var(--gold); }
+.footer-bottom { max-width: 1280px; border-top: 2px solid rgba(255,255,255,.25); }
+.footer-copy, .footer-legal a { color: rgba(255,255,255,.7); }
+@media (max-width: 768px) { .footer { clip-path: polygon(0 5%, 100% 0, 100% 100%, 0 100%); padding-top: 64px; } }

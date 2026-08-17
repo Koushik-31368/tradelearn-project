@@ -1,0 +1,16 @@
+.market-ticker { position: relative; z-index: 10; display: flex; align-items: center; min-height: 36px; overflow: hidden; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); background: var(--bg-input); color: var(--text); font: 600 11px var(--font-mono); letter-spacing: .06em; text-transform: uppercase; }
+.market-ticker__label { display: flex; flex: 0 0 auto; align-items: center; gap: 8px; padding: 0 18px; background: var(--gold); color: var(--text-dark); min-height: 36px; font-weight: 700; }
+.market-ticker__dot { width: 7px; height: 7px; border-radius: 50%; background: var(--coral); box-shadow: 0 0 0 3px rgba(239,99,79,.2); }
+.market-ticker__viewport { flex: 1; overflow: hidden; }
+.market-ticker__track { display: flex; width: max-content; animation: tickerMove 34s linear infinite; }
+.market-ticker__quote { display: inline-flex; align-items: center; gap: 10px; min-width: 174px; padding: 0 20px; border-right: 1px solid var(--border); white-space: nowrap; }
+.market-ticker__quote b { color: var(--text-light); }
+.market-ticker__quote strong { color: var(--text); font-weight: 600; }
+.market-ticker__quote em { font-style: normal; font-size: 10px; }
+.market-ticker__change--up, .market-ticker__change--live { color: var(--green-bright); }
+.market-ticker__change--down { color: var(--coral); }
+@keyframes tickerMove { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+.market-ticker { animation: tickerSettle .9s var(--ease) both; }
+@keyframes tickerSettle { from { opacity: 0; transform: translateY(-18px); } to { opacity: 1; transform: translateY(0); } }
+@media (prefers-reduced-motion: reduce) { .market-ticker__track { animation: none; } }
+@media (max-width: 600px) { .market-ticker__label { padding: 0 12px; } .market-ticker__quote { min-width: 150px; padding: 0 14px; } }

@@ -1,0 +1,43 @@
+/* Shared Open Outcry treatment for every feature surface. */
+.auth-page, .lb-page, .pf-page, .mh-page, .learn-map-page, .strategies-page, .legal-page, .game-page-grid, .simulator-page, .practice-page, .lobby-page { padding-top: 76px; }
+.auth-page { background: var(--bg); }
+.auth-brand { background: var(--cobalt); border-right: 0; }
+.auth-brand::after { content: 'OPEN OUTCRY / 26'; position: absolute; left: 64px; bottom: 32px; color: var(--text-light); font: 700 11px var(--font-mono); letter-spacing: .14em; }
+.auth-brand-logo, .auth-brand-name, .auth-brand-tagline { color: var(--text-light); }
+.auth-brand-tagline .highlight, .auth-brand-feature-icon { color: var(--gold); }
+.auth-brand-mark { border-radius: var(--r-sm); background: var(--gold); color: var(--text-dark); box-shadow: 5px 5px 0 var(--text-dark); }
+.auth-form-panel, .auth-form-side { display: flex; flex: 1; min-width: 0; align-items: center; justify-content: center; padding: 64px 24px; background: var(--bg); }
+.auth-card, .auth-form-card { width: min(100%, 460px); padding: 36px; border: 1px solid var(--border); border-radius: var(--r-sm); box-shadow: var(--shadow-lg); }
+.auth-card h2 { color: var(--text-light); }
+.auth-card form { display: grid; gap: 14px; }
+.auth-field { width: 100%; }
+.auth-field input { width: 100%; height: 48px; padding: 0 14px; }
+.auth-btn { min-height: 48px; width: 100%; border: 2px solid transparent; cursor: pointer; font: 700 12px var(--font-mono); text-transform: uppercase; }
+@media (max-width: 899px) { .auth-page { min-height: calc(100vh - 112px); } .auth-form-panel { padding: 44px 16px 72px; } .auth-card { padding: 28px 20px; } }
+
+.auth-input, .auth-field input { border-radius: var(--r-sm); border: 2px solid var(--border); background: var(--bg-input); }
+.auth-input:focus, .auth-field input:focus { border-color: var(--gold); background: var(--bg-input); box-shadow: 4px 4px 0 rgba(240,180,41,.16); }
+.auth-submit, .auth-btn { border-radius: var(--r-sm); background: var(--gold); color: var(--text-dark); box-shadow: 4px 4px 0 var(--cobalt); }
+.auth-submit:hover, .auth-btn:hover { background: var(--green); }
+.lb-header, .pf-inner, .mh-inner, .learn-map-container, .strategies-page > *, .legal-page > * { position: relative; z-index: 1; }
+.lb-table-wrapper, .pf-section, .pf-identity, .mh-table-wrapper, .quiz-card, .learn-card, .strat-card, .trading-panel, .ms-panel, .analytics-score-card, .player-dashboard, .chart-container, .trade-panel { border-radius: var(--r-sm); border-color: var(--border); box-shadow: var(--shadow); background: var(--bg-panel); }
+.lb-tab--active, .pf-btn-primary { background: var(--gold); color: var(--text-dark) !important; }
+.lb-rating-value, .lb-eyebrow, .lb-practice-note, .pf-link, .learn-card__icon, .strat-card__icon { color: var(--gold); }
+.lb-row-me { background: rgba(36,84,214,.18) !important; border-left-color: var(--gold) !important; }
+.lb-you-tag { color: var(--green-bright); border-color: var(--green-border); background: var(--green-surface); border-radius: var(--r-sm); }
+.game-page-grid { min-height: calc(100vh - 116px); background: var(--bg); }
+.trade-btn, .trading-panel button { border-radius: var(--r-sm); }
+.trade-btn.buy, .trade-btn--buy { background: var(--green); color: var(--text-dark); }
+.trade-btn.sell, .trade-btn--sell { background: var(--coral); color: var(--text-light); }
+@media (max-width: 700px) { .auth-brand::after { left: 20px; bottom: 20px; } .auth-card, .auth-form-card { box-shadow: 5px 5px 0 rgba(0,0,0,.3); } .game-page-grid { padding: 12px; } }
+/* Route-wide structural language: varied boards, not uniform rounded cards. */
+.pf-page, .mh-page, .learn-map-page, .strategies-page, .simulator-page, .practice-page, .lobby-page, .legal-page { position: relative; background: var(--chalk); color: var(--text-dark); padding: 132px clamp(16px, 5vw, 72px) 96px; }
+.pf-page::before, .mh-page::before, .learn-map-page::before, .strategies-page::before, .simulator-page::before, .practice-page::before, .lobby-page::before, .legal-page::before { content: ''; position: absolute; inset: 0 0 auto; height: 210px; background: var(--cobalt); clip-path: polygon(0 0, 100% 0, 100% 62%, 52% 100%, 0 68%); }
+.pf-inner, .mh-inner, .learn-map-container, .strategies-page, .simulator-page > *, .practice-page > *, .lobby-page > *, .legal-page > * { max-width: 1180px; margin-inline: auto; }
+.pf-section, .pf-identity, .mh-table-wrapper, .learn-card, .quiz-card, .strat-card, .trading-panel, .ms-panel, .analytics-score-card { border: 3px solid var(--text-dark); border-radius: 0; background: var(--text-light); color: var(--text-dark); box-shadow: 8px 8px 0 var(--coral); }
+.pf-section h2, .mh-page h1, .learn-map-page h1, .strategies-page h1, .simulator-page h1, .practice-page h1, .lobby-page h1, .legal-page h1 { color: var(--text-light); }
+.pf-btn-primary, .auth-submit, .btn-primary { border-radius: 0; box-shadow: 5px 5px 0 var(--text-dark); }
+.btn:hover:not(:disabled), button:hover:not(:disabled), .learn-card:hover, .strat-card:hover { transform: translate(3px,3px); box-shadow: 3px 3px 0 var(--cobalt); }
+.trading-panel button, .trade-btn { border: 3px solid var(--text-dark); border-radius: 0; box-shadow: 5px 5px 0 var(--text-dark); }
+.error-state, .empty-state, .loading-state, .lb-loading { border: 3px solid var(--text-dark); border-radius: 0; background: var(--gold); color: var(--text-dark); box-shadow: 7px 7px 0 var(--coral); padding: 28px; }
+@media (max-width: 700px) { .pf-page, .mh-page, .learn-map-page, .strategies-page, .simulator-page, .practice-page, .lobby-page, .legal-page { padding: 108px 16px 72px; } .pf-page::before, .mh-page::before, .learn-map-page::before, .strategies-page::before, .simulator-page::before, .practice-page::before, .lobby-page::before, .legal-page::before { height: 150px; } }

@@ -297,3 +297,23 @@
   .trade-panel    { gap: 8px; padding: 12px; }
   .trade-btn      { padding: 0 14px; font-size: 0.85rem; }
 }
+/* Trading room rebuild: scoreboard first, controls as bold pit calls. */
+.game-page-grid { height: auto; min-height: calc(100vh - 120px); grid-template-columns: 250px minmax(0, 1fr) 250px; gap: 20px; padding: 34px clamp(14px, 4vw, 56px) 64px; background: var(--bg); }
+.game-header { padding: 18px 22px; border: 3px solid var(--text-light); background: var(--cobalt); box-shadow: 8px 8px 0 var(--gold); }
+.game-header h2 { color: var(--text-light); font-size: clamp(1.2rem, 2vw, 2rem); }
+.candle-badge, .candle-countdown { border: 2px solid var(--gold); border-radius: 0; background: var(--text-dark); color: var(--gold); }
+.candle-countdown { font-size: clamp(1rem, 2vw, 1.5rem); padding: 8px 14px; animation: countdownPulse 1s ease-in-out infinite; }
+@keyframes countdownPulse { 50% { color: var(--coral); transform: translateY(-2px); } }
+.candle-progress-wrapper { height: 8px; background: var(--text-dark); border: 2px solid var(--text-light); }
+.candle-progress-bar { background: var(--gold); }
+.player-dashboard { border: 3px solid var(--text-dark); border-radius: 0; background: var(--chalk); color: var(--text-dark); box-shadow: 8px 8px 0 var(--cobalt); padding: 20px; }
+.player-dashboard h3, .player-dashboard p, .player-dashboard p strong { color: var(--text-dark); }
+.player-dashboard p strong { font-family: var(--font-display); font-size: clamp(1.4rem, 3vw, 2.7rem); }
+.chart-container { border: 3px solid var(--text-dark); border-radius: 0; background: var(--text-dark); box-shadow: 10px 10px 0 var(--coral); }
+.price-value { font-family: var(--font-display); font-size: clamp(2.4rem, 6vw, 5.2rem); color: var(--gold); }
+.trade-panel { justify-content: stretch; border: 3px solid var(--text-dark); border-radius: 0; background: var(--gold); box-shadow: 9px 9px 0 var(--cobalt); padding: 20px; }
+.trade-btn { flex: 1 1 150px; min-height: 64px; border: 3px solid var(--text-dark); border-radius: 0; box-shadow: 5px 5px 0 var(--text-dark); font: 900 1rem var(--font-display); text-transform: uppercase; transition: transform .15s, box-shadow .15s; }
+.trade-btn:hover:not(:disabled) { transform: translate(3px,3px); box-shadow: 2px 2px 0 var(--text-dark); }
+.trade-btn.buy { background: var(--field-green); color: var(--text-dark); } .trade-btn.sell,.trade-btn.short { background: var(--coral); } .trade-btn.cover { background: var(--cobalt); color: var(--text-light); }
+@media (max-width: 900px) { .game-page-grid { grid-template-columns: 1fr; } .game-header { box-shadow: 6px 6px 0 var(--gold); } .trade-panel { display: grid; grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 520px) { .trade-btn { min-height: 56px; } .price-value { font-size: 3rem; } }

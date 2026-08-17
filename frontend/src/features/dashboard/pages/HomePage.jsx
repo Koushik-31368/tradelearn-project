@@ -122,58 +122,30 @@ const HomePage = () => {
   return (
     <div className="hp">
       {/* ── Section 1 — Hero ───────────────────────────── */}
-      <section className="hp-hero" style={{ backgroundImage: `url(${bgImage})` }}>
+      <section className="hp-hero hp-hero--split" style={{ backgroundImage: `url(${bgImage})` }}>
         <div className="hp-hero-overlay"></div>
-        <div className="hp-inner hp-hero-content fade-up-enter">
-          <div className="hp-hero-text">
-            <span className="hp-eyebrow">TRADELEARN — MARKET SKILL PLATFORM</span>
-            <AxisMark />
-            <h1 className="hp-hero-title">
-              Master Market Skill Through Competition
-            </h1>
-            <p className="hp-hero-sub">Learn. Apply. Compete. Improve.</p>
-            <div className="hp-hero-ctas">
-              <button
-                className="hp-btn-primary"
-                onClick={() => navigate('/learn')}
-              >
-                Start Learning
-              </button>
-              <button
-                className="hp-btn-secondary"
-                onClick={() => navigate('/leaderboard')}
-              >
-                View Leaderboard
-              </button>
-            </div>
+        <div className="hp-hero-panel hp-hero-panel--copy fade-up-enter">
+          <span className="hp-eyebrow">TRADELEARN / OPEN OUTCRY</span>
+          <span className="hp-hero-kicker">LIVE MARKET ROUNDS / SKILL OVER LUCK</span>
+          <h1 className="hp-hero-title">Learn the tape.<br /><em>Beat the market.</em></h1>
+          <p className="hp-hero-sub">Synchronized trading rounds turn market knowledge into a competitive skill. Learn, make the call, and see your decisions scored.</p>
+          <div className="hp-hero-ctas">
+            <button className="hp-btn-primary" onClick={() => navigate('/learn')}>Enter the pit</button>
+            <button className="hp-btn-secondary" onClick={() => navigate('/leaderboard')}>See the board</button>
           </div>
-
-          <div className="hp-hero-card-wrapper">
-            <div className="hp-terminal-card">
-              <div className="hp-terminal-header">
-                <span className="hp-terminal-title">SAMPLE PORTFOLIO</span>
-                <span className="hp-terminal-badge">[ PREVIEW ]</span>
-              </div>
-              <div className="hp-terminal-rows">
-                <div className="hp-terminal-row">
-                  <span className="hp-terminal-label">Total P&amp;L</span>
-                  <span className="hp-terminal-value pos">+$12,450.00</span>
-                </div>
-                <div className="hp-terminal-row">
-                  <span className="hp-terminal-label">Win Rate</span>
-                  <span className="hp-terminal-value">68.5%</span>
-                </div>
-                <div className="hp-terminal-row">
-                  <span className="hp-terminal-label">Today's XP</span>
-                  <span className="hp-terminal-value xp">+450 XP</span>
-                </div>
-                <div className="hp-terminal-row">
-                  <span className="hp-terminal-label">League</span>
-                  <span className="hp-terminal-value league">Gold League</span>
-                </div>
-              </div>
+          <div className="hp-hero-stamp">EST. 2024<br /><strong>TRADE / LEARN / RISE</strong></div>
+        </div>
+        <div className="hp-hero-panel hp-hero-panel--market fade-up-enter">
+          <div className="hp-market-widget">
+            <div className="hp-market-widget__top"><span>LIVE / ROUND 0042</span><b>CONNECTED</b></div>
+            <div className="hp-market-widget__symbol"><strong>NIFTY 50</strong><span>₹22,418.75</span><i>+1.84%</i></div>
+            <div className="hp-candle-chart" aria-label="Illustration of rising market candles">
+              {[34, 48, 38, 64, 52, 78, 62, 88, 74, 96, 84, 108].map((height, index) => <span key={index} style={{ '--bar-height': `${height}px`, '--bar-delay': `${index * 70}ms` }} />)}
             </div>
+            <div className="hp-market-widget__axis"><span>09:15</span><span>12:30</span><span>15:30</span></div>
+            <div className="hp-market-widget__footer"><span>ROUND CLOSES IN <b>00:18</b></span><span>RISK / REWARD 1:3.2</span></div>
           </div>
+          <div className="hp-market-tag">CALL YOUR TRADE</div>
         </div>
       </section>
 
