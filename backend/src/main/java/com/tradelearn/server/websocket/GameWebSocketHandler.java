@@ -405,6 +405,19 @@ public class GameWebSocketHandler {
                             "opponentId",       opponentId != null ? opponentId : -1L,
                             "opponentUsername", opponentUsername
                     ));
+
+                    MatchTradeService.PlayerPosition position =
+                            matchTradeService.getPlayerPosition(gameId, userId, game.getStartingBalance());
+                    broadcaster.sendLocal(
+                            "/topic/game/" + gameId + "/position/" + userId,
+                            new PlayerStateSnapshot(position));
+                    broadcaster.sendToGame(gameId, "state-sync", Map.of(
+                            "gameId", gameId,
+                            "status", game.getStatus().name(),
+                            "candleIndex", game.getCurrentCandleIndex(),
+                            "totalCandles", game.getTotalCandles(),
+                            "sequence", game.getCurrentCandleIndex()
+                    ));
                 }
             }
         }
