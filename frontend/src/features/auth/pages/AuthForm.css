@@ -185,14 +185,14 @@
 }
 
 /* Form fields */
-.auth-form { display: flex; flex-direction: column; gap: 0; }
+.auth-form { display: flex; flex-direction: column; gap: 16px; }
 
 .auth-field {
   display: flex;
   flex-direction: row;
   align-items: center;
   border: 1px solid var(--line);
-  border-bottom: none;
+  border-radius: 4px;
   transition: border-color 0.2s;
   background: var(--ink);
 }
@@ -202,8 +202,6 @@
   z-index: 1;
   position: relative;
 }
-
-.auth-field:last-of-type { border-bottom: 1px solid var(--line); }
 
 .field-icon {
   padding-left: 16px;

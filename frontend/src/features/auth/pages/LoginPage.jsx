@@ -87,7 +87,7 @@ const LoginPage = () => {
           <h2>Welcome Back</h2>
           <p className="auth-subtitle">Sign in to continue your trading journey</p>
 
-          <form onSubmit={handleSubmit}>
+          <form className="auth-form" onSubmit={handleSubmit}>
             <div className="auth-field">
               <span className="field-icon">✉</span>
               <input

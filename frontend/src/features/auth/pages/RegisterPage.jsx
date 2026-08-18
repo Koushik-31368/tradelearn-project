@@ -88,7 +88,7 @@ const RegisterPage = () => {
           <h2>Create Account</h2>
           <p className="auth-subtitle">Start your trading journey today</p>
 
-          <form onSubmit={handleSubmit}>
+          <form className="auth-form" onSubmit={handleSubmit}>
             <div className="auth-field">
               <span className="field-icon">✉</span>
               <input
