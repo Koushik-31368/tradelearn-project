@@ -8,6 +8,7 @@ import com.tradelearn.server.market.config.AlphaVantageProperties;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
@@ -61,6 +62,7 @@ public class AlphaVantageProvider implements MarketDataProvider {
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
 
+    @Autowired
     public AlphaVantageProvider(AlphaVantageProperties props,
                                 ObjectMapper objectMapper) {
         this.props        = props;
