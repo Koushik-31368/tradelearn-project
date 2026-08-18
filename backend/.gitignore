@@ -35,3 +35,7 @@ build/
 ### Runtime logs — never commit ###
 logs/
 *.log
+
+### Local dev secrets — NEVER commit ###
+src/main/resources/application-local.properties
+.env
