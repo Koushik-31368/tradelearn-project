@@ -155,7 +155,9 @@ public class EpochLockstepEngine<A> {
      */
     public void initSession(String sessionId) {
         sessionQueues.putIfAbsent(sessionId, new ConcurrentHashMap<>());
-        currentEpoch.put(sessionId, 0);
+        // Do not reset a live session when lifecycle callbacks are retried.
+        // Resetting here could move an active match backwards to epoch zero.
+        currentEpoch.putIfAbsent(sessionId, 0);
         log.debug("[EpochEngine] Session initialized: {}", sessionId);
     }
 
@@ -194,23 +196,26 @@ public class EpochLockstepEngine<A> {
             return EngineQueueResult.SESSION_NOT_FOUND;
         }
 
-        // Reject actions whose epoch is too far behind the current epoch
-        Integer current = currentEpoch.get(action.sessionId());
-        if (current != null && action.epoch() < current - staleEpochTolerance) {
-            log.debug("[EpochEngine] Stale action rejected: session={} action-epoch={} current={}",
-                    action.sessionId(), action.epoch(), current);
-            return EngineQueueResult.STALE_EPOCH;
-        }
+        synchronized (epochMap) {
+            // Queueing and settlement share this monitor so an action cannot be
+            // inserted into an epoch after that epoch has been atomically drained.
+            Integer current = currentEpoch.get(action.sessionId());
+            if (current != null && action.epoch() < current) {
+                log.debug("[EpochEngine] Stale action rejected: session={} action-epoch={} current={}",
+                        action.sessionId(), action.epoch(), current);
+                return EngineQueueResult.STALE_EPOCH;
+            }
 
-        // Safety valve: prevent unbounded memory growth
-        List<PendingAction<A>> epochQueue = epochMap.computeIfAbsent(
-                action.epoch(), k -> new CopyOnWriteArrayList<>());
-        if (epochQueue.size() >= maxQueueSize) {
-            log.warn("[EpochEngine] Queue full: session={} epoch={}", action.sessionId(), action.epoch());
-            return EngineQueueResult.QUEUE_FULL;
-        }
+            // Safety valve: prevent unbounded memory growth
+            List<PendingAction<A>> epochQueue = epochMap.computeIfAbsent(
+                    action.epoch(), k -> new CopyOnWriteArrayList<>());
+            if (epochQueue.size() >= maxQueueSize) {
+                log.warn("[EpochEngine] Queue full: session={} epoch={}", action.sessionId(), action.epoch());
+                return EngineQueueResult.QUEUE_FULL;
+            }
 
-        epochQueue.add(action);
+            epochQueue.add(action);
+        }
         log.trace("[EpochEngine] Queued: session={} participant={} epoch={}",
                 action.sessionId(), action.participantId(), action.epoch());
         return EngineQueueResult.ACCEPTED;
@@ -249,18 +254,30 @@ public class EpochLockstepEngine<A> {
             return new EpochSettlementResult(sessionId, epochToSettle, 0, 0, 0, epochToSettle + 1);
         }
 
-        // Atomically drain the epoch queue — returns null if no actions queued.
-        // Using remove() means concurrent queue() calls for this epoch cannot race:
-        // they'll create a fresh list that will be picked up in the next epoch.
-        List<PendingAction<A>> pending = epochMap.remove(epochToSettle);
+        List<PendingAction<A>> pending;
+        synchronized (epochMap) {
+            // Queueing and draining use the same monitor. This prevents a late
+            // action from being stranded in a newly-created list for an epoch
+            // that has already advanced.
+            pending = epochMap.remove(epochToSettle);
 
-        if (pending == null || pending.isEmpty()) {
-            log.debug("[EpochEngine] No actions to settle: session={} epoch={}", sessionId, epochToSettle);
-            currentEpoch.put(sessionId, epochToSettle + 1);
-            return new EpochSettlementResult(sessionId, epochToSettle, 0, 0, 0, epochToSettle + 1);
+            if (pending == null || pending.isEmpty()) {
+                log.debug("[EpochEngine] No actions to settle: session={} epoch={}", sessionId, epochToSettle);
+                currentEpoch.put(sessionId, epochToSettle + 1);
+                return new EpochSettlementResult(sessionId, epochToSettle, 0, 0, 0, epochToSettle + 1);
+            }
+
+            // Keep settlement under the session monitor so no new command can
+            // enter while the authoritative epoch transition is in progress.
+            return settleDrainedEpoch(sessionId, epochToSettle, pending, settler);
         }
 
-        // Sort by server-receipt nanos — deterministic, transparent ordering
+    }
+
+    private EpochSettlementResult settleDrainedEpoch(String sessionId,
+                                                       int epochToSettle,
+                                                       List<PendingAction<A>> pending,
+                                                       ActionSettler<A> settler) {
         List<PendingAction<A>> ordered = new ArrayList<>(pending);
         ordered.sort((a, b) -> Long.compare(a.receivedNanos(), b.receivedNanos()));
 
@@ -269,7 +286,6 @@ public class EpochLockstepEngine<A> {
 
         int settled = 0;
         int rejected = 0;
-
         for (PendingAction<A> action : ordered) {
             try {
                 settler.settle(action);
@@ -283,10 +299,8 @@ public class EpochLockstepEngine<A> {
 
         int nextEpoch = epochToSettle + 1;
         currentEpoch.put(sessionId, nextEpoch);
-
         log.debug("[EpochEngine] Settlement complete: session={} epoch={} settled={} rejected={}",
                 sessionId, epochToSettle, settled, rejected);
-
         return new EpochSettlementResult(sessionId, epochToSettle,
                 ordered.size(), settled, rejected, nextEpoch);
     }

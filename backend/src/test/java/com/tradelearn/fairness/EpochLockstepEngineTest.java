@@ -106,13 +106,13 @@ class EpochLockstepEngineTest {
     }
 
     @Test
-    @DisplayName("queue accepts actions 1 epoch behind current (within tolerance)")
-    void queue_withinStaleTolerance() {
+    @DisplayName("queue rejects actions from an epoch that has already settled")
+    void queue_previousEpochRejected() {
         engine.initSession("s1");
         settle("s1", 0); // epoch is now 1
-        // epoch 0 is exactly 1 behind → should be accepted
+        // Once settlement advances, accepting epoch 0 would strand the action.
         EngineQueueResult result = engine.queue(action("s1", "p1", 0));
-        assertEquals(EngineQueueResult.ACCEPTED, result);
+        assertEquals(EngineQueueResult.STALE_EPOCH, result);
     }
 
     @Test
