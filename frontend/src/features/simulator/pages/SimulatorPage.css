@@ -156,3 +156,21 @@
   .sim-main { grid-template-columns: 1fr; height: auto; }
   .sim-topbar { overflow-x: auto; }
 }
+
+/* Renovated market desk */
+.sim-page { min-height: calc(100vh - 120px); padding-top: 86px; background: var(--chalk); color: var(--text-dark); }
+.sim-topbar { height: 64px; top: 86px; padding: 0 clamp(16px, 4vw, 56px); background: var(--text-dark); border-bottom: 3px solid var(--gold); }
+.sim-tabs { gap: 0; }
+.sim-tab { height: 64px; border-radius: 0; border-left: 1px solid rgba(255,255,255,.12); padding: 0 18px; font: 700 11px var(--font-mono); letter-spacing: .08em; text-transform: uppercase; }
+.sim-tab.active { background: var(--gold); color: var(--text-dark); }
+.sim-main { height: auto; min-height: calc(100vh - 150px); grid-template-columns: 250px minmax(0,1fr) 290px; gap: 20px; padding: 24px clamp(14px,4vw,56px) 64px; overflow: visible; }
+.sim-col { overflow: visible; border: 0; }
+.sim-panel { border: 3px solid var(--text-dark); border-radius: 0; background: var(--text-light); color: var(--text-dark); box-shadow: 8px 8px 0 var(--coral); }
+.sim-panel-header { padding: 16px; background: var(--cobalt); border-bottom: 3px solid var(--text-dark); }
+.sim-panel-title { color: var(--gold); font-size: 10px; }
+.simulator-dashboard { min-height: 0; padding: 0; background: transparent; gap: 20px; }
+.sim-login-card { border: 3px solid var(--text-dark); border-radius: 0; background: var(--cobalt); box-shadow: 10px 10px 0 var(--gold); color: var(--text-light); }
+.sim-login-card h2 { color: var(--text-light); font-family: var(--font-display); text-transform: uppercase; }
+.sim-lock-icon { color: var(--gold); }
+@media (max-width: 1100px) { .sim-main { grid-template-columns: 220px minmax(0,1fr); } }
+@media (max-width: 700px) { .sim-main { grid-template-columns: 1fr; padding: 16px 14px 56px; } .sim-topbar { top: 72px; } .sim-col:last-child { display: block; } .sim-tabs { min-width: max-content; } }
