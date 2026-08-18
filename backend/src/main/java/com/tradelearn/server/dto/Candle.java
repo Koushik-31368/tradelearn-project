@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -47,8 +48,13 @@ public class Candle {
      * string is absent or malformed, so that sort-by-date operations still behave
      * deterministically rather than throwing.
      *
+     * <p>Annotated {@link JsonIgnore} so Jackson does not attempt to serialise this
+     * computed property when writing {@link Candle} objects to JSON (e.g. for Redis
+     * caching). The raw {@link #date} string is always serialised instead.
+     *
      * @return the parsed date, or {@link LocalDate#EPOCH} on parse failure
      */
+    @JsonIgnore
     public LocalDate getLocalDate() {
         if (date == null || date.isBlank()) {
             return LocalDate.EPOCH;
