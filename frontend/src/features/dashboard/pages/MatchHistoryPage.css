@@ -207,7 +207,32 @@
   .mh-stat { border-bottom: 1px solid var(--line); }
 }
 
-/* Renovated activity ledger */
+/* Professional activity ledger: clear chronology, signal colors, no decoration. */
+.mh-page { background: var(--bg-void); color: var(--text-primary); padding-top: 112px; }
+.mh-page::before { height: 180px; background: var(--bg-surface); clip-path: none; border-bottom: 1px solid var(--border-default); }
+.mh-header { align-items: center; padding: 26px; background: var(--bg-surface); border-color: var(--border-default); box-shadow: none; }
+.mh-title { color: var(--text-primary); font-size: clamp(2rem,5vw,4rem); }
+.mh-header::after { background: transparent; border: 1px solid var(--accent-secondary); color: var(--accent-secondary); font: 700 10px var(--font-mono); }
+.mh-subtitle { color: var(--text-secondary); }
+.mh-stats { gap: 1px; background: var(--border-default); border: 1px solid var(--border-default); }
+.mh-stat { border: 0; background: var(--bg-surface); padding: 20px; }
+.mh-stat-val { color: var(--text-primary); font-size: 1.6rem; }
+.mh-stat-val.green { color: var(--success); } .mh-stat-val.red { color: var(--danger); }
+.mh-stat-key { color: var(--text-secondary); }
+.mh-list { border: 1px solid var(--border-default); background: var(--bg-surface); }
+.mh-table-hdr { background: var(--bg-surface-raised); border-bottom-color: var(--border-default); }
+.mh-col-label { color: var(--text-secondary); }
+.mh-match-row { border-bottom-color: var(--border-default); }
+.mh-match-row:hover { background: rgba(255,255,255,.04); }
+.mh-match-opponent { color: var(--text-primary); font-family: var(--font-sans); }
+.mh-match-date { color: var(--text-secondary); }
+.mh-result { border-radius: 2px; }
+.mh-result.win { color: var(--success); border-color: rgba(57,255,136,.4); background: rgba(57,255,136,.08); }
+.mh-result.loss { color: var(--danger); border-color: rgba(255,59,92,.4); background: rgba(255,59,92,.08); }
+.mh-result.draw { color: var(--text-secondary); border-color: var(--border-default); background: transparent; }
+.mh-score { color: var(--text-primary); } .mh-pnl.pos, .mh-rating-change.pos { color: var(--success); } .mh-pnl.neg, .mh-rating-change.neg { color: var(--danger); }
+.mh-empty { color: var(--text-secondary); }
+
 .mh-page { position: relative; min-height: calc(100vh - 120px); align-items: stretch; padding: 132px clamp(14px,5vw,72px) 96px; background: var(--chalk); color: var(--text-dark); }
 .mh-page::before { content: ''; position: absolute; inset: 0 0 auto; height: 220px; background: var(--cobalt); clip-path: polygon(0 0,100% 0,100% 65%,62% 100%,0 72%); }
 .mh-header, .mh-section { position: relative; z-index: 1; max-width: 1120px; margin-inline: auto; width: 100%; }

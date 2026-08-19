@@ -183,7 +183,26 @@
   .lb-th, .lb-cell { padding: 10px 12px; }
   .lb-title { font-size: 2.5rem; }
 }
-/* Podium rebuild: ranks read as stitched patches, not tiny medal icons. */
+/* Professional terminal rebuild: ranking is the product, decoration stays quiet. */
+.lb-page { background: var(--bg-void); color: var(--text-primary); }
+.lb-header { align-items: center; background: var(--bg-surface); border-color: var(--border-default); box-shadow: none; }
+.lb-header::after { content: 'PERFORMANCE INDEX'; padding: 9px 12px; border: 1px solid var(--accent-secondary); color: var(--accent-secondary); font: 700 10px var(--font-mono); letter-spacing: .12em; }
+.lb-title { font-size: clamp(2rem, 5vw, 4rem); letter-spacing: -.04em; }
+.lb-tabs { background: var(--bg-surface); border: 1px solid var(--border-default); }
+.lb-tab { color: var(--text-secondary); font-size: 11px; }
+.lb-tab--active { background: var(--accent-primary); color: var(--text-primary) !important; }
+.lb-table-wrapper { border-color: var(--border-default); box-shadow: none; background: var(--bg-surface); }
+.lb-th { background: var(--bg-surface-raised); color: var(--text-secondary); font-size: 10px; letter-spacing: .1em; }
+.lb-cell { color: var(--text-primary); }
+.lb-row-me { background: rgba(0,229,255,.08) !important; border-left: 3px solid var(--accent-secondary) !important; }
+.lb-medal, .lb-rank-num { width: 34px; height: 34px; border: 1px solid var(--border-default); border-radius: 4px; background: var(--bg-surface-raised); color: var(--text-primary); box-shadow: none; font-size: 12px; }
+.lb-top-1 .lb-medal, .lb-top-1 .lb-rank-num { background: var(--warn-yellow); color: var(--bg-void); }
+.lb-top-2 .lb-medal, .lb-top-2 .lb-rank-num { background: var(--accent-secondary); color: var(--bg-void); }
+.lb-top-3 .lb-medal, .lb-top-3 .lb-rank-num { background: var(--accent-primary); color: var(--text-primary); }
+.lb-username { font-family: var(--font-sans); font-weight: 700; }
+.lb-rating-value { color: var(--accent-secondary); font-family: var(--font-mono); font-size: 14px; }
+.lb-row:hover { background: rgba(255,255,255,.04); }
+
 .lb-page { padding: 132px clamp(14px, 5vw, 72px) 100px; background: var(--chalk); color: var(--text-dark); }
 .lb-page::before { display: none; }
 .lb-inner { max-width: 1120px; }
