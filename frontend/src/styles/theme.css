@@ -1,33 +1,33 @@
 @import url('https://fonts.googleapis.com/css2?family=Archivo+Black&family=DM+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
 
 :root {
-  /* Spider-Verse inspired palette: ink, paper, electric cyan, hot magenta, signal red. */
-  --bg: #0b1026;
-  --bg-1: #111735;
-  --bg-2: #171e45;
-  --bg-panel: #151b3b;
-  --bg-panel-2: #202957;
-  --bg-panel-3: #2b3470;
-  --bg-input: #080c20;
-  --text: #f6f0e8;
-  --text-light: #fffaf2;
-  --text-muted: #b7bed8;
-  --text-dim: #7e88ae;
-  --text-faint: #596487;
-  --cobalt: #2924a8;
-  --cobalt-bright: #20d9ff;
-  --gold: #20d9ff;
-  --green: #ff2d78;
-  --green-bright: #ff72ad;
-  --danger: #ff5a36;
-  --coral: #ff5a36;
-  --info: #20d9ff;
-  --warning: #ff2d78;
-  --purple: #ff2d78;
-  --border: rgba(246,240,232,.16);
-  --border-2: rgba(246,240,232,.28);
-  --border-3: rgba(246,240,232,.44);
-  --border-green: rgba(255,45,120,.45);
+  /* Spider-Verse glitch palette */
+  --bg: #0B0B12;
+  --bg-1: #14141F;
+  --bg-2: #1C1C2B;
+  --bg-panel: #14141F;
+  --bg-panel-2: #1C1C2B;
+  --bg-panel-3: #2A2A3D;
+  --bg-input: #0B0B12;
+  --text: #F5F5FA;
+  --text-light: #F5F5FA;
+  --text-muted: #9A9AB0;
+  --text-dim: #5C5C74;
+  --text-faint: #5C5C74;
+  --cobalt: #7B2FF7;
+  --cobalt-bright: #00E5FF;
+  --gold: #FFD400;
+  --green: #39FF88;
+  --green-bright: #39FF88;
+  --danger: #FF3B5C;
+  --coral: #FF3B5C;
+  --info: #00E5FF;
+  --warning: #FFD400;
+  --purple: #7B2FF7;
+  --border: #2A2A3D;
+  --border-2: #2A2A3D;
+  --border-3: #2A2A3D;
+  --border-green: rgba(255,46,166,.45);
   --font-display: 'Archivo Black', Impact, sans-serif;
   --font-body: 'DM Sans', Arial, sans-serif;
   --font-mono: 'IBM Plex Mono', monospace;
@@ -52,9 +52,22 @@
   --panel: var(--bg-panel);
   --panel-2: var(--bg-panel-2);
   --muted: var(--text-muted);
-  --text-dark: #151719;
-  --chalk: #f5f0e8;
-  --field-green: #2e7d32;
+  --text-dark: #0B0B12;
+  --chalk: #F5F5FA;
+  --field-green: #39FF88;
+  --bg-void: #0B0B12;
+  --bg-surface: #14141F;
+  --bg-surface-raised: #1C1C2B;
+  --accent-primary: #FF2EA6;
+  --accent-primary-glow: #FF6FC4;
+  --accent-secondary: #00E5FF;
+  --accent-secondary-glow: #6FF3FF;
+  --warn-purple: #7B2FF7;
+  --warn-yellow: #FFD400;
+  --text-primary: #F5F5FA;
+  --text-secondary: #9A9AB0;
+  --border-default: #2A2A3D;
+  --border-glow: #FF2EA6;
   --border-emphasis: var(--border-2);
   --border-muted: var(--border);
   --radius: var(--r);
@@ -82,12 +95,12 @@ a { color: var(--gold); text-decoration: none; transition: color .2s var(--ease)
 .panel { background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--r); box-shadow: var(--shadow); }
 .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 0 20px; border: 2px solid transparent; border-radius: var(--r-sm); color: var(--text-dark); cursor: pointer; font-family: var(--font-mono); font-size: 12px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; transition: transform .2s var(--ease), background .2s, border-color .2s; }
 .btn:hover:not(:disabled) { transform: translate(-2px,-2px); } .btn:disabled { opacity: .45; cursor: not-allowed; }
-.btn-primary { background: var(--gold); box-shadow: 4px 4px 0 var(--text-dark); } .btn-primary:hover:not(:disabled) { background: var(--green); }
-.btn-outline { border-color: var(--border-2); background: transparent; color: var(--text); } .btn-outline:hover:not(:disabled) { border-color: var(--gold); color: var(--gold); }
+.btn-primary { background: var(--accent-primary); box-shadow: 4px 4px 0 var(--text-dark); } .btn-primary:hover:not(:disabled) { background: var(--accent-primary-glow); box-shadow: 0 0 18px color-mix(in srgb, var(--accent-primary-glow) 48%, transparent), 4px 4px 0 var(--text-dark); }
+.btn-outline { border-color: var(--border-2); background: transparent; color: var(--text); } .btn-outline:hover:not(:disabled) { border-color: var(--border-glow); color: var(--accent-secondary); box-shadow: 0 0 14px color-mix(in srgb, var(--accent-secondary-glow) 35%, transparent); }
 .btn-danger { background: var(--coral); } .btn-warning { background: var(--gold); }
-.input { width: 100%; height: 46px; padding: 0 14px; border: 2px solid var(--border); border-radius: var(--r-sm); background: var(--bg-input); color: var(--text-light); font: 500 14px var(--font-body); } .input::placeholder { color: var(--text-faint); } .input:focus { outline: none; border-color: var(--gold); box-shadow: 4px 4px 0 rgba(240,180,41,.18); }
+.input { width: 100%; height: 46px; padding: 0 14px; border: 2px solid var(--border); border-radius: var(--r-sm); background: var(--bg-input); color: var(--text-light); font: 500 14px var(--font-body); } .input::placeholder { color: var(--text-faint); } .input:focus { outline: none; border-color: var(--border-glow); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-primary-glow) 22%, transparent); }
 .table { width: 100%; border-collapse: collapse; } .table th,.table td { padding: 13px 16px; border-bottom: 1px solid var(--border); text-align: left; } .table th { color: var(--gold); font: 600 11px var(--font-mono); letter-spacing: .1em; text-transform: uppercase; }
-.alert { margin: 12px 0; padding: 12px 16px; border: 2px solid; border-radius: var(--r-sm); font-size: 13px; font-weight: 600; } .alert-success { border-color: var(--green); background: var(--green-surface); color: var(--green-bright); } .alert-danger { border-color: var(--coral); background: rgba(239,99,79,.1); color: var(--coral); } .alert-warning { border-color: var(--gold); background: rgba(240,180,41,.1); color: var(--gold); }
+.alert { margin: 12px 0; padding: 12px 16px; border: 2px solid; border-radius: var(--r-sm); font-size: 13px; font-weight: 600; } .alert-success { border-color: var(--success); background: var(--green-surface); color: var(--success); } .alert-danger { border-color: var(--danger); background: color-mix(in srgb, var(--danger) 10%, transparent); color: var(--danger); } .alert-warning { border-color: var(--warn-yellow); background: color-mix(in srgb, var(--warn-yellow) 10%, transparent); color: var(--warn-yellow); }
 .badge-pos { color: var(--green-bright); } .badge-neg { color: var(--coral); }
 .eyebrow { display: inline-block; margin-bottom: 16px; color: var(--gold); font: 700 11px var(--font-mono); letter-spacing: .14em; text-transform: uppercase; }
 .axis-mark { height: 2px; margin: 16px 0; background: var(--border-2); }
