@@ -41,3 +41,16 @@
 .trading-panel button, .trade-btn { border: 3px solid var(--text-dark); border-radius: 0; box-shadow: 5px 5px 0 var(--text-dark); }
 .error-state, .empty-state, .loading-state, .lb-loading { border: 3px solid var(--text-dark); border-radius: 0; background: var(--gold); color: var(--text-dark); box-shadow: 7px 7px 0 var(--coral); padding: 28px; }
 @media (max-width: 700px) { .pf-page, .mh-page, .learn-map-page, .strategies-page, .simulator-page, .practice-page, .lobby-page, .legal-page { padding: 108px 16px 72px; } .pf-page::before, .mh-page::before, .learn-map-page::before, .strategies-page::before, .simulator-page::before, .practice-page::before, .lobby-page::before, .legal-page::before { height: 150px; } }
+
+/* Spider-Verse treatment across every route: preserve layout and copy, unify the surfaces. */
+:root { --sv-ink: #0b1026; --sv-blue: #2924a8; --sv-cyan: #20d9ff; --sv-pink: #ff2d78; --sv-red: #ff5a36; --sv-paper: #f6f0e8; }
+body, #root { background: var(--sv-ink); }
+button, input, select, textarea { font-family: var(--font-sans); }
+button:not(.nav-link):not(.navbar-links a):not(.sim-tab):not(.lb-tab), .btn, .btn-primary, .btn-secondary { border-radius: 2px; }
+.btn-primary, .auth-submit, .login-button, .logout-button, .hp-btn-primary, .pf-btn-primary { background: var(--sv-pink) !important; border-color: var(--sv-pink) !important; color: var(--sv-paper) !important; }
+.btn-secondary, .hp-btn-secondary, .pf-btn:not(.pf-btn-primary) { background: var(--sv-cyan) !important; border-color: var(--sv-cyan) !important; color: var(--sv-ink) !important; }
+.status-success, .success, .positive, .text-success, .text-green { color: var(--sv-cyan) !important; }
+.status-error, .error, .negative, .text-error, .text-red { color: var(--sv-red) !important; }
+[class*="card"], [class*="panel"], [class*="modal"], [class*="table-wrapper"], [class*="section"] { border-color: rgba(246,240,232,.22); }
+body::after { content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 9999; opacity: .035; background-image: repeating-linear-gradient(0deg, transparent 0 3px, var(--sv-cyan) 4px, transparent 5px), repeating-linear-gradient(90deg, transparent 0 7px, var(--sv-pink) 8px, transparent 9px); mix-blend-mode: screen; }
+@media (prefers-reduced-motion: reduce) { body::after { display: none; } }

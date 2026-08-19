@@ -206,3 +206,23 @@
   .mh-stats { grid-template-columns: repeat(2, 1fr); }
   .mh-stat { border-bottom: 1px solid var(--line); }
 }
+
+/* Renovated activity ledger */
+.mh-page { position: relative; min-height: calc(100vh - 120px); align-items: stretch; padding: 132px clamp(14px,5vw,72px) 96px; background: var(--chalk); color: var(--text-dark); }
+.mh-page::before { content: ''; position: absolute; inset: 0 0 auto; height: 220px; background: var(--cobalt); clip-path: polygon(0 0,100% 0,100% 65%,62% 100%,0 72%); }
+.mh-header, .mh-section { position: relative; z-index: 1; max-width: 1120px; margin-inline: auto; width: 100%; }
+.mh-header { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; padding: 28px; background: var(--cobalt); border: 3px solid var(--text-dark); box-shadow: 10px 10px 0 var(--gold); text-align: left; }
+.mh-title { color: var(--text-light); font: 900 clamp(2.4rem,6vw,5.2rem)/.9 var(--font-display); text-transform: uppercase; }
+.mh-subtitle { color: rgba(255,255,255,.72); }
+.mh-header::after { content: 'ACTIVITY / ALL ROUNDS'; padding: 10px 12px; background: var(--gold); color: var(--text-dark); font: 900 10px var(--font-mono); white-space: nowrap; }
+.mh-section-title { color: var(--cobalt); font: 900 1.2rem var(--font-display); text-transform: uppercase; }
+.mh-table-wrapper { border: 3px solid var(--text-dark); border-radius: 0; background: var(--text-light); box-shadow: 10px 10px 0 var(--coral); }
+.mh-th { background: var(--text-dark); color: var(--gold); border-bottom: 0; }
+.mh-cell { color: var(--text-dark); border-bottom-color: rgba(21,23,25,.18) !important; }
+.mh-cell-symbol { color: var(--cobalt); font-family: var(--font-display); text-transform: uppercase; }
+.mh-cell-score { color: var(--cobalt); font-family: var(--font-display); }
+.mh-cell-date { color: rgba(21,23,25,.62); }
+.mh-row-clickable:hover { background: rgba(36,84,214,.09); }
+.mh-tag { border-radius: 0; border: 1px solid var(--text-dark); } .mh-tag-win { background: var(--field-green); color: var(--text-dark); } .mh-tag-loss { background: var(--coral); color: var(--text-light); } .mh-tag-draw { background: var(--gold); color: var(--text-dark); }
+.mh-positive { color: var(--field-green); } .mh-negative { color: var(--coral); }
+@media (max-width: 640px) { .mh-page { padding: 108px 12px 72px; } .mh-header { align-items: flex-start; flex-direction: column; padding: 22px 18px; } .mh-header::after { align-self: stretch; text-align: center; } }

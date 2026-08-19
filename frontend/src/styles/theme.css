@@ -1,32 +1,33 @@
 @import url('https://fonts.googleapis.com/css2?family=Archivo+Black&family=DM+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
 
 :root {
-  --bg: #151719;
-  --bg-1: #1d2022;
-  --bg-2: #262a2d;
-  --bg-panel: #23272a;
-  --bg-panel-2: #303538;
-  --bg-panel-3: #3b4144;
-  --bg-input: #181b1d;
-  --text: #e9e5d7;
-  --text-light: #fffdf4;
-  --text-muted: #a6aaa2;
-  --text-dim: #737a78;
-  --text-faint: #525957;
-  --cobalt: #2454d6;
-  --cobalt-bright: #4c79ff;
-  --gold: #f0b429;
-  --green: #81d742;
-  --green-bright: #a7ef61;
-  --danger: #ef634f;
-  --coral: #ef634f;
-  --info: #75c5d9;
-  --warning: #f0b429;
-  --purple: #9d8cff;
-  --border: rgba(233,229,215,.16);
-  --border-2: rgba(233,229,215,.28);
-  --border-3: rgba(233,229,215,.44);
-  --border-green: rgba(129,215,66,.45);
+  /* Spider-Verse inspired palette: ink, paper, electric cyan, hot magenta, signal red. */
+  --bg: #0b1026;
+  --bg-1: #111735;
+  --bg-2: #171e45;
+  --bg-panel: #151b3b;
+  --bg-panel-2: #202957;
+  --bg-panel-3: #2b3470;
+  --bg-input: #080c20;
+  --text: #f6f0e8;
+  --text-light: #fffaf2;
+  --text-muted: #b7bed8;
+  --text-dim: #7e88ae;
+  --text-faint: #596487;
+  --cobalt: #2924a8;
+  --cobalt-bright: #20d9ff;
+  --gold: #20d9ff;
+  --green: #ff2d78;
+  --green-bright: #ff72ad;
+  --danger: #ff5a36;
+  --coral: #ff5a36;
+  --info: #20d9ff;
+  --warning: #ff2d78;
+  --purple: #ff2d78;
+  --border: rgba(246,240,232,.16);
+  --border-2: rgba(246,240,232,.28);
+  --border-3: rgba(246,240,232,.44);
+  --border-green: rgba(255,45,120,.45);
   --font-display: 'Archivo Black', Impact, sans-serif;
   --font-body: 'DM Sans', Arial, sans-serif;
   --font-mono: 'IBM Plex Mono', monospace;
@@ -37,15 +38,15 @@
   --shadow: 5px 5px 0 rgba(0,0,0,.28);
   --shadow-lg: 9px 9px 0 rgba(0,0,0,.3);
   --ease: cubic-bezier(.2,.8,.2,1);
-  --green-dim: #5fae2b;
-  --green-dark: #3c7817;
-  --green-glow: rgba(129,215,66,.15);
-  --green-surface: rgba(129,215,66,.09);
-  --green-border: rgba(129,215,66,.35);
+  --green-dim: #c91f62;
+  --green-dark: #8f1649;
+  --green-glow: rgba(255,45,120,.15);
+  --green-surface: rgba(255,45,120,.09);
+  --green-border: rgba(255,45,120,.35);
   --primary: var(--cobalt);
-  --primary-700: #18399c;
-  --primary-surface: rgba(36,84,214,.12);
-  --primary-border: rgba(76,121,255,.45);
+  --primary-700: #17136f;
+  --primary-surface: rgba(32,217,255,.12);
+  --primary-border: rgba(32,217,255,.45);
   --primary-green: var(--green);
   --dark-bg: var(--bg-panel);
   --panel: var(--bg-panel);
@@ -68,7 +69,7 @@
 html, body, #root { min-height: 100%; overflow-x: hidden; }
 html { scroll-behavior: smooth; background: var(--bg); }
 body { margin: 0; background: var(--bg); color: var(--text); font: 400 15px/1.6 var(--font-body); -webkit-font-smoothing: antialiased; }
-body::before { content: ''; position: fixed; inset: 0; pointer-events: none; opacity: .24; background-image: linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px); background-size: 28px 28px; mask-image: linear-gradient(to bottom, black, transparent 75%); }
+body::before { content: ''; position: fixed; inset: 0; pointer-events: none; opacity: .2; background-image: radial-gradient(rgba(32,217,255,.18) 1px, transparent 1px), linear-gradient(135deg, rgba(255,45,120,.06), transparent 42%); background-size: 18px 18px, 100% 100%; mask-image: linear-gradient(to bottom, black, transparent 78%); }
 ::selection { background: var(--gold); color: var(--text-dark); }
 :focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
 h1,h2,h3,h4,h5,h6 { margin: 0 0 16px; color: var(--text-light); font-family: var(--font-display); font-weight: 400; letter-spacing: -.04em; line-height: 1.02; text-transform: uppercase; }
