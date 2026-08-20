@@ -54,3 +54,13 @@ button:not(.nav-link):not(.navbar-links a):not(.sim-tab):not(.lb-tab), .btn, .bt
 [class*="card"], [class*="panel"], [class*="modal"], [class*="table-wrapper"], [class*="section"] { border-color: rgba(246,240,232,.22); }
 body::after { content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 9999; opacity: .035; background-image: repeating-linear-gradient(0deg, transparent 0 3px, var(--sv-cyan) 4px, transparent 5px), repeating-linear-gradient(90deg, transparent 0 7px, var(--sv-pink) 8px, transparent 9px); mix-blend-mode: screen; }
 @media (prefers-reduced-motion: reduce) { body::after { display: none; } }
+
+/* Density correction: keep the desktop composition readable at normal browser zoom. */
+html { font-size: 14px; }
+body { font-size: 14px; }
+.container { width: min(1320px, 100%); padding-inline: 22px; }
+h1 { font-size: clamp(2.35rem, 5.8vw, 5.6rem); }
+h2 { font-size: clamp(1.55rem, 3.2vw, 2.8rem); }
+.navbar { min-height: 72px; }
+.market-ticker { min-height: 30px; }
+@media (max-width: 700px) { html { font-size: 14px; } .container { padding-inline: 16px; } h1 { font-size: clamp(2.15rem, 11vw, 4rem); } }
