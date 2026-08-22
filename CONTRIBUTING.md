@@ -159,3 +159,20 @@ npm test -- --watchAll=false
 ```
 
 New components should have at least a smoke test (renders without crashing).
+
+---
+
+## Troubleshooting
+
+### Backend won't start
+- Ensure Redis is running (`redis-cli ping` should return `PONG`).
+- Verify `application-local.properties` contains valid `SPRING_DATASOURCE_URL` and `JWT_SECRET` values.
+- Check that Java 21 is active: `java -version`.
+
+### Frontend shows blank page after login
+- Open DevTools → Network and check for 401 responses — your JWT may have expired.
+- Confirm `REACT_APP_API_URL` in your `.env` points to the correct backend port.
+
+### WebSocket connection fails
+- The backend must be running before the frontend connects.
+- Ensure `CORS_ALLOWED_ORIGINS` includes `http://localhost:3000`.
