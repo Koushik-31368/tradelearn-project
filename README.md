@@ -27,7 +27,10 @@
 | **Frontend** | [tradelearn-project.vercel.app](https://tradelearn-project.vercel.app) |
 | **API Health** | [tradelearn-project-g.onrender.com/actuator/health](https://tradelearn-project-g.onrender.com/actuator/health) |
 
-> **Note:** The backend is hosted on Render's free tier. The first request after inactivity may take approximately 30 seconds to cold-start.
+> **Note:** The backend is hosted on Render's free tier. The first request after inactivity may take **up to 50 seconds** to cold-start. Subsequent requests are fast.
+
+> [!TIP]
+> If you see a timeout on login, wait 10 seconds and try again — the backend is warming up.
 
 > [!NOTE]
 > **Educational use only.** TradeLearn is a gamified learning simulator — not a licensed broker, financial advisor, or investment platform. Market data is sourced from public APIs (yfinance, Finnhub) for non-commercial, academic use only.
