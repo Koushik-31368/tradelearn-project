@@ -55,3 +55,5 @@ Pre-seeded demo accounts for portfolio demonstrations. All passwords are `Demo12
 - Match history shows realistic profit/loss percentages (+14.8% to -8.0%)
 - ELO deltas reflect actual match outcomes (±11 to ±22 points)
 - Seed file is idempotent — safe to run multiple times
+- **Do not use `Demo1234` as a password in any real production account**
+- Live demo is hosted at [tradelearn-project.vercel.app](https://tradelearn-project.vercel.app)
