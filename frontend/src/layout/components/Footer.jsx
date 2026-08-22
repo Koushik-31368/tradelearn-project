@@ -6,7 +6,7 @@ import './Footer.css';
 const Footer = () => (
   <footer className="site-footer">
     <div className="site-footer__inner">
-      <p className="site-footer__copy">&copy; 2026 TradeLearn. All rights reserved.</p>
+      <p className="site-footer__copy">&copy; 2024–2026 TradeLearn. All rights reserved.</p>
       <nav className="site-footer__links">
         <Link to="/terms">Terms of Service</Link>
         <Link to="/privacy">Privacy Policy</Link>
