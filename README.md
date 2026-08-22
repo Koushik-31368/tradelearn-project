@@ -287,6 +287,7 @@ npm run dev
 - [ ] Advanced analytics — win-rate trends, strategy performance heatmap
 - [ ] Mobile-responsive simulator
 - [ ] OpenAPI/Swagger — auto-generated REST docs
+- [ ] AI-powered strategy suggestions — personalised hints based on trade history
 
 ---
 
