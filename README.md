@@ -153,7 +153,7 @@ Chess-style rating adjusted after every match. Tier badges (Bronze, Silver, Gold
 | Neon (PostgreSQL) | Serverless database — 4,970+ candle rows, Flyway migrations |
 | Render | Backend production hosting (auto-deploy from `main`) |
 | Vercel | Frontend CDN deployment (auto-deploy from `main`) |
-| GitHub Actions | CI — `mvn verify` on every push (113 tests) |
+| GitHub Actions | CI — `mvn verify` on every push (120+ tests) |
 
 ---
 
