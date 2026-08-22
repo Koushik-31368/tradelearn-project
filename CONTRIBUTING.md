@@ -12,6 +12,7 @@ Thank you for your interest in contributing! This document explains how to set u
 - [Pull Request Process](#pull-request-process)
 - [Coding Standards](#coding-standards)
 - [Testing](#testing)
+- [Troubleshooting](#troubleshooting)
 
 ---
 
