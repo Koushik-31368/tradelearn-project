@@ -7,7 +7,7 @@ const RiskDisclosurePage = () => (
     <div className="legal-inner">
       <span className="eyebrow">Legal</span>
       <h1 className="legal-title">Risk Disclosure</h1>
-      <p className="legal-updated">Last Updated: February 28, 2026</p>
+      <p className="legal-updated">Last Updated: August 22, 2026</p>
 
       <div className="legal-callout">
         <p>
@@ -80,6 +80,20 @@ const RiskDisclosurePage = () => (
           By using this platform, you acknowledge that you understand the risks
           associated with trading and accept full responsibility for any trading
           decisions you make outside of the TradeLearn environment.
+        </p>
+      </section>
+      <section className="legal-section">
+        <h2 className="legal-section-title">6. Psychological Risk</h2>
+        <p>
+          Trading — even in a simulated environment — can trigger emotional
+          responses such as overconfidence, loss aversion, and impulsive
+          decision-making. These psychological factors can significantly impair
+          judgment in real-market scenarios.
+        </p>
+        <p>
+          TradeLearn encourages users to reflect on their emotional responses
+          during simulation and to develop disciplined, rules-based strategies
+          before approaching live markets.
         </p>
       </section>
     </div>
