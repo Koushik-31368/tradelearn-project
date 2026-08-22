@@ -7,7 +7,7 @@ const PrivacyPage = () => (
     <div className="legal-inner">
       <span className="eyebrow">Legal</span>
       <h1 className="legal-title">Privacy Policy</h1>
-      <p className="legal-updated">Last Updated: February 28, 2026</p>
+      <p className="legal-updated">Last Updated: August 22, 2026</p>
 
       <div className="legal-callout">
         <p>
@@ -21,9 +21,11 @@ const PrivacyPage = () => (
         <p>When you use TradeLearn, we may collect the following information:</p>
         <ul>
           <li>Email address and username provided during registration</li>
+          <li>Optional profile information such as display name and avatar</li>
           <li>Trading activity and performance data within the simulator</li>
           <li>Match history, scores, and ranking information</li>
           <li>Device and browser information for platform optimization</li>
+          <li>Usage patterns and feature interaction data to improve the platform</li>
         </ul>
         <p>
           We do not collect real financial data, bank details, or payment
@@ -93,7 +95,22 @@ const PrivacyPage = () => (
       </section>
 
       <section className="legal-section">
-        <h2 className="legal-section-title">7. Contact Information</h2>
+        <h2 className="legal-section-title">7. Data Retention</h2>
+        <p>
+          We retain your personal data for as long as your account remains active
+          or as necessary to provide our services. If you request account deletion,
+          we will remove your personal information within 30 days, except where
+          retention is required by law or legitimate business interests.
+        </p>
+        <p>
+          Anonymised and aggregated data (such as aggregate performance statistics)
+          may be retained indefinitely for research and platform improvement
+          purposes.
+        </p>
+      </section>
+
+      <section className="legal-section">
+        <h2 className="legal-section-title">8. Contact Information</h2>
         <p>
           For privacy-related inquiries or requests, contact us at
           privacy@tradelearn.app. We aim to respond to all requests within 30

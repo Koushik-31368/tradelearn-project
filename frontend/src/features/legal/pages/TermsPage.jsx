@@ -7,7 +7,7 @@ const TermsPage = () => (
     <div className="legal-inner">
       <span className="eyebrow">Legal</span>
       <h1 className="legal-title">Terms of Service</h1>
-      <p className="legal-updated">Last Updated: February 28, 2026</p>
+      <p className="legal-updated">Last Updated: August 22, 2026</p>
 
       <div className="legal-callout">
         <p>
@@ -66,6 +66,7 @@ const TermsPage = () => (
           <li>Use the platform in compliance with all applicable laws</li>
           <li>Not attempt to manipulate rankings or exploit platform mechanics</li>
           <li>Not use the platform for any unlawful or unauthorized purpose</li>
+          <li>Not use automated bots, scripts, or tools to interact with the platform without prior written consent</li>
         </ul>
       </section>
 
@@ -112,7 +113,22 @@ const TermsPage = () => (
       </section>
 
       <section className="legal-section">
-        <h2 className="legal-section-title">9. Governing Law</h2>
+        <h2 className="legal-section-title">9. AI-Generated Content</h2>
+        <p>
+          Certain educational content, strategy explanations, and market commentary
+          on TradeLearn may be generated or assisted by artificial intelligence
+          tools. Such content is provided for informational and educational purposes
+          only and does not constitute professional financial advice.
+        </p>
+        <p>
+          AI-generated content may contain errors or inaccuracies. TradeLearn does
+          not warrant the completeness or accuracy of AI-assisted material and
+          encourages users to verify information independently.
+        </p>
+      </section>
+
+      <section className="legal-section">
+        <h2 className="legal-section-title">10. Governing Law</h2>
         <p>
           These Terms of Service are governed by and construed in accordance with
           applicable laws. Any disputes arising from these terms or your use of the
