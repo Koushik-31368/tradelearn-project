@@ -158,7 +158,7 @@
 }
 
 .candlestick-chart__tf-btn--active {
-  background: var(--border);
+  background: var(--cobalt);
   color: var(--text-light);
 }
 
@@ -188,13 +188,14 @@
 /* Canvas */
 .candlestick-chart__canvas {
   flex: 1;
-  padding: 0 4px;
-  min-height: 280px;
+  padding: 0;
+  overflow: hidden;
+  position: relative;
 }
 
 .candlestick-chart__svg {
   width: 100%;
-  height: 100%;
+  height: 320px;
   display: block;
 }
 

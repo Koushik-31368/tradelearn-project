@@ -189,61 +189,73 @@ const CandlestickChart = ({ candles = [], smaData = [], symbol, isLoading = fals
       <div className="candlestick-chart__canvas">
         <svg
           viewBox={`0 0 ${W} ${H}`}
-          preserveAspectRatio="none"
+          preserveAspectRatio="xMidYMid meet"
           className="candlestick-chart__svg"
           onMouseMove={handleMouseMove}
           onMouseLeave={() => setHoverIdx(null)}
         >
-          {/* Grid */}
+          {/* Grid lines — very subtle, dark */}
           {chartData?.gridLines.map((g, i) => (
             <g key={i}>
-              <line x1={PAD.left} y1={g.y} x2={W - PAD.right} y2={g.y} stroke="rgba(255,255,255,0.05)" strokeWidth="0.8" />
-              <text x={W - PAD.right + 5} y={g.y + 4} fill="var(--text-faint)" fontSize="8" fontFamily="monospace">
+              <line
+                x1={PAD.left} y1={g.y}
+                x2={W - PAD.right} y2={g.y}
+                stroke="#22263a"
+                strokeWidth="1"
+                strokeDasharray={i === 0 ? '0' : '4,6'}
+              />
+              <text
+                x={W - PAD.right + 6} y={g.y + 4}
+                fill="#5C5C74"
+                fontSize="9"
+                fontFamily="IBM Plex Mono, monospace"
+                fontWeight="500"
+              >
                 {g.price.toFixed(0)}
               </text>
             </g>
           ))}
 
-          {/* Volume bars */}
+          {/* Volume bars — subtle */}
           {chartData?.items.map((c, i) => (
             <rect
               key={`vol-${i}`}
               x={c.x} y={c.volY}
               width={c.candleW} height={c.volH}
-              fill={c.isGreen ? 'rgba(57,255,136,0.10)' : 'rgba(255,59,92,0.10)'}
+              fill={c.isGreen ? 'rgba(57,255,136,0.13)' : 'rgba(255,59,92,0.13)'}
               rx="1"
             />
           ))}
 
           {/* Candles */}
           {chartData?.items.map((c, i) => (
-            <g key={i} className="candlestick-chart__candle-group">
+            <g key={i}>
+              {/* Hover crosshair */}
+              {i === hoverIdx && (
+                <line
+                  x1={c.x + c.candleW / 2} y1={PAD.top}
+                  x2={c.x + c.candleW / 2} y2={H - VOL_H - 2}
+                  stroke="rgba(255,212,0,0.25)"
+                  strokeWidth="1"
+                  strokeDasharray="3,5"
+                />
+              )}
               {/* Wick */}
               <line
                 x1={c.x + c.candleW / 2} y1={c.wickTop}
                 x2={c.x + c.candleW / 2} y2={c.wickBot}
-                stroke={c.isGreen ? 'var(--green-bright)' : 'var(--danger)'}
-                strokeWidth="1"
+                stroke={c.isGreen ? '#39FF88' : '#FF3B5C'}
+                strokeWidth="1.2"
               />
               {/* Body */}
               <rect
                 x={c.x} y={c.bodyTop}
                 width={c.candleW}
-                height={Math.max(c.bodyBot - c.bodyTop, 1)}
-                fill={c.isGreen ? 'var(--green-bright)' : 'var(--danger)'}
-                rx="1"
-                opacity={i === hoverIdx ? 1 : 0.82}
+                height={Math.max(c.bodyBot - c.bodyTop, 1.5)}
+                fill={c.isGreen ? '#39FF88' : '#FF3B5C'}
+                rx="1.5"
+                opacity={i === hoverIdx ? 1 : 0.88}
               />
-              {/* Hover highlight line */}
-              {i === hoverIdx && (
-                <line
-                  x1={c.x + c.candleW / 2} y1={PAD.top}
-                  x2={c.x + c.candleW / 2} y2={H - VOL_H}
-                  stroke="rgba(255,255,255,0.15)"
-                  strokeWidth="1"
-                  strokeDasharray="3,3"
-                />
-              )}
             </g>
           ))}
 
