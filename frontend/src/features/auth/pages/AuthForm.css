@@ -288,3 +288,36 @@
 }
 .auth-divider::before, .auth-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
 .auth-divider-text { font-size: 10px; color: var(--gray-3); font-family: var(--font-mono); letter-spacing: 0.1em; }
+
+/* ── Loading spinner ─────────────────────────────── */
+.auth-spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255,255,255,.25);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: authSpin 0.7s linear infinite;
+  vertical-align: middle;
+}
+@keyframes authSpin { to { transform: rotate(360deg); } }
+
+.auth-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+/* ── Shake animation on login error ─────────────── */
+@keyframes authShake {
+  0%, 100% { transform: translateX(0); }
+  15%       { transform: translateX(-6px); }
+  30%       { transform: translateX(6px); }
+  45%       { transform: translateX(-5px); }
+  60%       { transform: translateX(5px); }
+  75%       { transform: translateX(-3px); }
+  90%       { transform: translateX(3px); }
+}
+
+.auth-card--shake {
+  animation: authShake 0.5s ease;
+}

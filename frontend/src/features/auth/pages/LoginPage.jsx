@@ -10,6 +10,7 @@ const LoginPage = () => {
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
   const [isError, setIsError] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { login } = useAuth();
 
@@ -17,6 +18,7 @@ const LoginPage = () => {
     e.preventDefault();
     setMessage('');
     setIsError(false);
+    setIsLoading(true);
 
     try {
       const response = await apiClient.post(
@@ -35,6 +37,8 @@ const LoginPage = () => {
       setMessage(
         typeof errData === 'string' ? errData : errData?.error || errData?.message || 'Login failed'
       );
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -83,7 +87,7 @@ const LoginPage = () => {
 
       {/* ── form panel ── */}
       <div className="auth-form-panel">
-        <div className="auth-card">
+        <div className={`auth-card${isError ? ' auth-card--shake' : ''}`}>
           <h2>Welcome Back</h2>
           <p className="auth-subtitle">Sign in to continue your trading journey</p>
 
@@ -114,7 +118,9 @@ const LoginPage = () => {
               <Link to="/forgot-password">Forgot password?</Link>
             </div>
 
-            <button type="submit" className="auth-btn">Sign In</button>
+            <button type="submit" className="auth-btn" disabled={isLoading}>
+              {isLoading ? <span className="auth-spinner" aria-label="Signing in…" /> : 'Sign In'}
+            </button>
           </form>
 
           {message && (
