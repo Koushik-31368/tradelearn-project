@@ -1,5 +1,5 @@
 // src/components/simulator/TransactionHistory.jsx
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import './TransactionHistory.css';
 
 const TransactionHistory = ({ trades = [] }) => {
@@ -40,11 +40,43 @@ const TransactionHistory = ({ trades = [] }) => {
     return <span className="th-sort-icon active">{sortDir === 'asc' ? '↑' : '↓'}</span>;
   };
 
+  const exportCSV = useCallback(() => {
+    const headers = ['Date', 'Symbol', 'Type', 'Quantity', 'Price (INR)', 'Total (INR)'];
+    const rows = sorted.map((t) => [
+      new Date(t.date).toLocaleDateString('en-IN'),
+      t.symbol,
+      t.type,
+      t.quantity,
+      t.price.toFixed(2),
+      t.total.toFixed(2),
+    ]);
+    const csvContent = [headers, ...rows].map((r) => r.join(',')).join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `tradelearn_trades_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [sorted]);
+
   return (
     <div className="transaction-history">
       <div className="transaction-history__header">
         <h3 className="transaction-history__title">Transaction History</h3>
-        <span className="transaction-history__count">{trades.length} trades</span>
+        <div className="transaction-history__header-right">
+          <span className="transaction-history__count">{trades.length} trades</span>
+          {trades.length > 0 && (
+            <button
+              className="th-export-btn"
+              onClick={exportCSV}
+              title="Download trade history as CSV"
+              aria-label="Export trades as CSV"
+            >
+              ⬇ Export CSV
+            </button>
+          )}
+        </div>
       </div>
 
       {trades.length === 0 ? (

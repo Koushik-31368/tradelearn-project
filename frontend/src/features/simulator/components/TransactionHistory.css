@@ -15,6 +15,12 @@
   border-bottom: 1px solid var(--border);
 }
 
+.transaction-history__header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .transaction-history__title {
   font-size: 0.9rem;
   font-weight: 700;
@@ -29,6 +35,24 @@
   padding: 2px 10px;
   border-radius: var(--radius);
 }
+
+.th-export-btn {
+  padding: 4px 12px;
+  font: 600 10px var(--font-mono);
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  background: transparent;
+  border: 1px solid var(--border-2);
+  border-radius: var(--radius-sm);
+  color: var(--gold);
+  cursor: pointer;
+  transition: background var(--transition-fast), border-color var(--transition-fast);
+}
+
+.th-export-btn:hover {
+  background: color-mix(in srgb, var(--gold) 10%, transparent);
+  border-color: var(--gold);
+}}
 
 .transaction-history__scroll {
   overflow-x: auto;
