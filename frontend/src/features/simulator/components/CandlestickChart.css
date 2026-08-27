@@ -1,5 +1,83 @@
 /* src/components/simulator/CandlestickChart.css */
 
+/* ── Loading skeleton ──────────────────────────────────────────────────── */
+.cc-skeleton {
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.cc-skeleton__header {
+  display: flex;
+  gap: 12px;
+}
+
+.cc-skeleton__pill {
+  height: 18px;
+  width: 80px;
+  background: var(--bg-panel-3);
+  border-radius: 4px;
+  animation: ccShimmer 1.4s ease-in-out infinite;
+}
+.cc-skeleton__pill--wide { width: 140px; }
+
+.cc-skeleton__bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 5px;
+  height: 220px;
+}
+
+.cc-skeleton__bar {
+  flex: 1;
+  background: var(--bg-panel-3);
+  border-radius: 3px 3px 0 0;
+  animation: ccShimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes ccShimmer {
+  0%,100% { opacity: 0.4; }
+  50%      { opacity: 0.9; }
+}
+
+/* ── Empty state ─────────────────────────────────────────────────────────── */
+.candlestick-chart__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 260px;
+  color: var(--text-muted);
+  font: 600 13px var(--font-mono);
+  letter-spacing: .04em;
+}
+
+.cc-empty-icon { font-size: 2.4rem; }
+
+/* ── Crosshair tooltip ───────────────────────────────────────────────────── */
+.candlestick-chart__tooltip {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 6px 14px;
+  background: var(--bg-panel-3);
+  border-bottom: 1px solid var(--border);
+  font: 600 11px var(--font-mono);
+  color: var(--text-muted);
+  flex-wrap: wrap;
+}
+.candlestick-chart__tooltip b { color: var(--text-light); }
+.cc-tt-date { color: var(--text-dim); margin-right: 4px; }
+.cc-tt-high { color: var(--green-bright); }
+.cc-tt-low  { color: var(--danger); }
+
+/* ── SMA label in OHLCV bar ─────────────────────────────────────────────── */
+.cc-sma-label { color: var(--gold); }
+
+
+
 .candlestick-chart {
   background: var(--bg-panel-2);
   border: 1px solid var(--border-emphasis);

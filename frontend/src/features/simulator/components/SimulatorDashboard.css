@@ -1,143 +1,276 @@
-/* SimulatorDashboard.css — "trading terminal at night" design language
- * All colours via design tokens from theme.css.
- */
-
-/* ====================================
-   SIMULATOR DASHBOARD — Master Layout
-   ==================================== */
+/* src/features/simulator/components/SimulatorDashboard.css */
 
 .sim-dashboard {
-  min-height: calc(100vh - 70px);
-  padding: 20px 24px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px 20px 32px;
+  min-height: 100vh;
   background: var(--bg);
-  color: var(--text);
-  /* font-family intentionally omitted — inherits Inter from body in theme.css */
-  animation: simDashFadeIn 0.4s ease-out;
 }
 
-@keyframes simDashFadeIn {
-  from { opacity: 0; transform: translateY(6px); }
-  to   { opacity: 1; transform: translateY(0); }
+/* ── Top bar ── */
+.sim-dashboard__topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 12px 16px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
 }
 
-/* ---- Strategy Mode Banner ---- */
-.sim-dashboard__strategy-banner {
+.sim-dashboard__topbar-left {
   display: flex;
   align-items: center;
   gap: 12px;
-  background: rgba(16, 185, 129, 0.06);
-  border: 1px solid rgba(16, 185, 129, 0.2);
-  border-radius: var(--radius-sm);
-  padding: 12px 18px;
-  margin-bottom: 20px;
-  animation: simDashFadeIn 0.5s ease-out;
 }
 
-.sim-dashboard__strategy-icon {
-  font-size: 1.3rem;
-}
-
-.sim-dashboard__strategy-label {
-  font-size: 0.9rem;
-  color: var(--primary);
-}
-
-.sim-dashboard__strategy-label strong {
+.sim-dashboard__title {
+  font: 700 14px var(--font-mono);
   color: var(--text-light);
-  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.sim-dashboard__strategy-hint {
-  margin-left: auto;
-  font-size: 0.78rem;
+.sim-dashboard__source-badge {
+  font: 600 10px var(--font-mono);
+  color: var(--gold);
+  background: color-mix(in srgb, var(--gold) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--gold) 30%, transparent);
+  border-radius: 3px;
+  padding: 2px 7px;
+  letter-spacing: .04em;
+}
+
+.sim-dashboard__strategy-pill {
+  font: 600 11px var(--font-mono);
+  color: var(--accent-secondary);
+  background: color-mix(in srgb, var(--accent-secondary) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent-secondary) 25%, transparent);
+  border-radius: 3px;
+  padding: 3px 10px;
+}
+
+.sim-dashboard__topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.sim-dashboard__source-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.sim-dashboard__source-label {
+  font: 600 10px var(--font-mono);
   color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  margin-right: 2px;
 }
 
-/* ---- 3-Column Main Layout ---- */
+.sim-dashboard__src-btn {
+  padding: 4px 10px;
+  font: 600 10px var(--font-mono);
+  background: var(--bg-panel-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
+}
+.sim-dashboard__src-btn--active {
+  background: var(--cobalt);
+  border-color: var(--cobalt);
+  color: var(--text-light);
+}
+
+.sim-dashboard__scenario-select {
+  padding: 4px 8px;
+  font: 600 11px var(--font-mono);
+  background: var(--bg-panel-2);
+  border: 1px solid var(--border-2);
+  border-radius: var(--radius-sm);
+  color: var(--text-light);
+  max-width: 280px;
+  cursor: pointer;
+}
+
+.sim-dashboard__reset-btn {
+  padding: 4px 12px;
+  font: 600 10px var(--font-mono);
+  background: transparent;
+  border: 1px solid var(--border-2);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  cursor: pointer;
+  letter-spacing: .04em;
+  transition: color var(--transition-fast), border-color var(--transition-fast);
+}
+.sim-dashboard__reset-btn:hover { color: var(--danger); border-color: var(--danger); }
+
+/* ── Confirm bar ── */
+.sim-dashboard__confirm-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  background: color-mix(in srgb, var(--danger) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--danger) 35%, transparent);
+  border-radius: var(--radius);
+  font: 600 12px var(--font-mono);
+  color: var(--text-light);
+}
+.sim-dashboard__confirm-yes {
+  padding: 4px 14px;
+  background: var(--danger);
+  border: none;
+  border-radius: var(--radius-sm);
+  color: #fff;
+  font: 700 11px var(--font-mono);
+  cursor: pointer;
+}
+.sim-dashboard__confirm-no {
+  padding: 4px 14px;
+  background: transparent;
+  border: 1px solid var(--border-2);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font: 700 11px var(--font-mono);
+  cursor: pointer;
+}
+
+/* ── Main layout ── */
 .sim-dashboard__main {
   display: grid;
-  grid-template-columns: 260px 1fr 300px;
-  gap: 16px;
-  margin-bottom: 20px;
-  min-height: 480px;
+  grid-template-columns: 220px 1fr 280px;
+  gap: 12px;
+  min-height: 540px;
 }
 
-.sim-dashboard__left {
-  min-width: 0;
-  max-height: 520px;
+.sim-dashboard__left,
+.sim-dashboard__right {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
 }
 
 .sim-dashboard__center {
-  min-width: 0;
-}
-
-.sim-dashboard__right {
-  min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 16px;
-}
-
-/* ---- Bottom Section ---- */
-.sim-dashboard__bottom {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-}
-
-.sim-dashboard__bottom-left,
-.sim-dashboard__bottom-right {
+  gap: 8px;
   min-width: 0;
 }
 
-/* ---- Responsive ---- */
-
-/* Tablet: collapse to 2 cols */
-@media (max-width: 1200px) {
-  .sim-dashboard__main {
-    grid-template-columns: 240px 1fr;
-    grid-template-rows: auto auto;
-  }
-  .sim-dashboard__right {
-    grid-column: 1 / -1;
-  }
+/* ── Replay bar ── */
+.sim-dashboard__replay-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  flex-wrap: wrap;
 }
 
-/* Mobile: single column */
-@media (max-width: 768px) {
-  .sim-dashboard {
-    padding: 12px 12px 32px;
-  }
-  .sim-dashboard__main {
-    grid-template-columns: 1fr;
-  }
-  .sim-dashboard__left {
-    max-height: 360px;
-  }
-  .sim-dashboard__bottom {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* ---- Scrollbar styling ---- */
-.sim-dashboard *::-webkit-scrollbar {
-  width: 4px;
-  height: 4px;
-}
-.sim-dashboard *::-webkit-scrollbar-track {
-  background: transparent;
-}
-.sim-dashboard *::-webkit-scrollbar-thumb {
-  background: var(--border);
+.sim-dashboard__play-btn {
+  padding: 5px 16px;
+  font: 700 11px var(--font-mono);
+  background: var(--cobalt);
+  border: none;
   border-radius: var(--radius-sm);
+  color: var(--text-light);
+  cursor: pointer;
+  letter-spacing: .04em;
+  transition: background var(--transition-fast);
+  min-width: 80px;
+}
+.sim-dashboard__play-btn--playing { background: var(--accent-primary); }
+.sim-dashboard__play-btn:disabled { opacity: .45; cursor: not-allowed; }
+
+.sim-dashboard__speed-group {
+  display: flex;
+  gap: 3px;
 }
 
-/* Prevent number input spin button */
-.sim-dashboard input[type='number']::-webkit-inner-spin-button,
-.sim-dashboard input[type='number']::-webkit-outer-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
+.sim-dashboard__speed-btn {
+  padding: 3px 8px;
+  font: 600 10px var(--font-mono);
+  background: var(--bg-panel-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast);
 }
-.sim-dashboard input[type='number'] {
-  -moz-appearance: textfield;
+.sim-dashboard__speed-btn--active {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: var(--bg);
+}
+
+.sim-dashboard__seek {
+  flex: 1;
+  min-width: 80px;
+  accent-color: var(--cobalt);
+  cursor: pointer;
+}
+
+.sim-dashboard__candle-count {
+  font: 600 10px var(--font-mono);
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* ── Bottom tabs ── */
+.sim-dashboard__bottom {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sim-dashboard__tab-row {
+  display: flex;
+  gap: 6px;
+}
+
+.sim-dashboard__tab-btn {
+  padding: 7px 18px;
+  font: 600 11px var(--font-mono);
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color var(--transition-fast), border-color var(--transition-fast), background var(--transition-fast);
+}
+.sim-dashboard__tab-btn--active {
+  background: var(--bg-panel-2);
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+}
+
+/* ── Responsive ── */
+@media (max-width: 1100px) {
+  .sim-dashboard__main {
+    grid-template-columns: 190px 1fr 250px;
+  }
+}
+
+@media (max-width: 860px) {
+  .sim-dashboard__main {
+    grid-template-columns: 1fr;
+  }
+  .sim-dashboard__left { max-height: 220px; }
 }

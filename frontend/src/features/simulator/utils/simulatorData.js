@@ -1,4 +1,4 @@
-// src/utils/simulatorData.js
+// src/features/simulator/utils/simulatorData.js
 // Daily-seeded demo data generator for the simulator
 
 const STOCKS = [
@@ -19,7 +19,7 @@ const STOCKS = [
   { symbol: 'TATASTEEL',  name: 'Tata Steel',           sector: 'Metals',    basePrice: 134.75  },
 ];
 
-// Deterministic seeded random number generator (mulberry32)
+// ── Deterministic seeded RNG (mulberry32) ──────────────────────────────────
 function mulberry32(seed) {
   return function () {
     let t = (seed += 0x6d2b79f5);
@@ -29,32 +29,26 @@ function mulberry32(seed) {
   };
 }
 
-// Produce a numeric seed from today's date string
-function dateSeed(dateStr) {
+function dateSeed(str) {
   let hash = 0;
-  for (let i = 0; i < dateStr.length; i++) {
-    hash = (hash << 5) - hash + dateStr.charCodeAt(i);
+  for (let i = 0; i < str.length; i++) {
+    hash = (hash << 5) - hash + str.charCodeAt(i);
     hash |= 0;
   }
   return Math.abs(hash);
 }
 
-// Get today's date key
 function todayKey() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
-const LS_KEY = 'tradelearn_sim_prices';
-const LS_DAY_KEY = 'tradelearn_sim_day';
+const LS_KEY           = 'tradelearn_sim_prices';
+const LS_DAY_KEY       = 'tradelearn_sim_day';
 const LS_PORTFOLIO_KEY = 'tradelearn_sim_portfolio';
-const LS_HISTORY_KEY = 'tradelearn_sim_history';
+const LS_HISTORY_KEY   = 'tradelearn_sim_history';
 
-/**
- * Generate today's stock prices using a daily seed.
- * Prices fluctuate ±2.5% from the base price, seeded by the date.
- * Cached in localStorage for the day.
- */
+// ── Daily stock prices ─────────────────────────────────────────────────────
 export function getDailyStocks() {
   const today = todayKey();
   const cached = localStorage.getItem(LS_DAY_KEY);
@@ -66,13 +60,11 @@ export function getDailyStocks() {
     } catch (_) { /* regenerate */ }
   }
 
-  const seed = dateSeed(today);
-  const rng = mulberry32(seed);
-
+  const rng = mulberry32(dateSeed(today));
   const stocks = STOCKS.map((s) => {
-    const changePct = (rng() - 0.5) * 0.05; // ±2.5%
+    const changePct = (rng() - 0.5) * 0.05;
     const price = +(s.basePrice * (1 + changePct)).toFixed(2);
-    const change = +((changePct) * 100).toFixed(2);
+    const change = +(changePct * 100).toFixed(2);
     return { ...s, price, change };
   });
 
@@ -81,48 +73,89 @@ export function getDailyStocks() {
   return stocks;
 }
 
-/**
- * Generate 30-day OHLC candle history for a given stock.
- * Uses a deterministic seed per stock + day offset.
- */
-export function generateCandleHistory(symbol, days = 30) {
+// ── Candle history generator (90-day OHLCV, deterministic) ─────────────────
+export function generateCandleHistory(symbol, days = 90) {
   const stock = STOCKS.find((s) => s.symbol === symbol);
   if (!stock) return [];
 
-  const today = todayKey();
-  const baseSeed = dateSeed(today + symbol);
-  const rng = mulberry32(baseSeed);
-
+  const today  = todayKey();
+  const rng    = mulberry32(dateSeed(today + symbol));
   const candles = [];
-  let prevClose = stock.basePrice * (0.92 + rng() * 0.16); // start within ±8%
+  let prevClose = stock.basePrice * (0.90 + rng() * 0.20);
 
   for (let i = days; i >= 0; i--) {
     const d = new Date();
     d.setDate(d.getDate() - i);
+    // Skip weekends
+    if (d.getDay() === 0 || d.getDay() === 6) continue;
     const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
-    const dayChange = (rng() - 0.48) * 0.04; // slight upward bias
-    const open = prevClose;
+    const dayChange = (rng() - 0.47) * 0.04; // slight upward bias
+    const open  = prevClose;
     const close = +(open * (1 + dayChange)).toFixed(2);
-    const high = +(Math.max(open, close) * (1 + rng() * 0.015)).toFixed(2);
-    const low = +(Math.min(open, close) * (1 - rng() * 0.015)).toFixed(2);
-    const volume = Math.floor(500000 + rng() * 4500000);
+    const high  = +(Math.max(open, close) * (1 + rng() * 0.018)).toFixed(2);
+    const low   = +(Math.min(open, close) * (1 - rng() * 0.018)).toFixed(2);
+    const volume = Math.floor(800_000 + rng() * 9_200_000);
 
     candles.push({ date: dateStr, open: +open.toFixed(2), high, low, close, volume });
     prevClose = close;
   }
-
   return candles;
 }
 
-/**
- * Generate equity curve data (portfolio value over 30 days).
- */
+// ── Scenario candle generator for educational patterns ─────────────────────
+export const SCENARIOS = [
+  { key: 'trending',      label: '📈 Bull Run',         desc: 'Strong uptrend with minor pullbacks' },
+  { key: 'crash',         label: '📉 Market Crash',      desc: 'Sharp sell-off followed by dead-cat bounce' },
+  { key: 'breakout',      label: '🚀 Breakout',          desc: 'Consolidation then explosive breakout' },
+  { key: 'consolidation', label: '↔️  Sideways Range',   desc: 'Stock trapped in a tight range' },
+  { key: 'recovery',      label: '🔄 V-Recovery',        desc: 'Sharp drop followed by full recovery' },
+];
+
+export function generateScenarioCandleHistory(symbol, scenario = 'trending', days = 90) {
+  const stock = STOCKS.find((s) => s.symbol === symbol);
+  const basePrice = stock ? stock.basePrice : 1000;
+  const rng = mulberry32(dateSeed(symbol + scenario));
+  const candles = [];
+  let price = basePrice * (0.88 + rng() * 0.24);
+
+  for (let i = days; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    if (d.getDay() === 0 || d.getDay() === 6) continue;
+    const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
+    const progress = 1 - i / days; // 0 → 1 over time
+    let drift = 0;
+    let noise = (rng() - 0.5) * 0.025;
+
+    switch (scenario) {
+      case 'trending':      drift = 0.008;  break;
+      case 'crash':         drift = progress < 0.5 ? -0.018 : 0.004; break;
+      case 'breakout':      drift = progress < 0.6 ? 0.001 : 0.018;  break;
+      case 'consolidation': drift = Math.sin(progress * Math.PI * 6) * 0.003; noise *= 0.4; break;
+      case 'recovery':      drift = progress < 0.4 ? -0.015 : 0.020; break;
+      default:              drift = 0.002;
+    }
+
+    const open  = price;
+    const close = +(open * (1 + drift + noise)).toFixed(2);
+    const high  = +(Math.max(open, close) * (1 + rng() * 0.014)).toFixed(2);
+    const low   = +(Math.min(open, close) * (1 - rng() * 0.014)).toFixed(2);
+    const volume = Math.floor(600_000 + rng() * 8_000_000);
+
+    candles.push({ date: dateStr, open: +open.toFixed(2), high, low, close, volume });
+    price = close;
+  }
+  return candles;
+}
+
+// ── Equity curve ───────────────────────────────────────────────────────────
 export function generateEquityCurve() {
   const today = todayKey();
   const rng = mulberry32(dateSeed(today + 'equity'));
   const points = [];
-  let value = 1000000;
+  let value = 1_000_000;
 
   for (let i = 30; i >= 0; i--) {
     const d = new Date();
@@ -134,121 +167,92 @@ export function generateEquityCurve() {
   return points;
 }
 
-/**
- * Simple SMA calculator.
- */
+// ── SMA calculator ─────────────────────────────────────────────────────────
 export function computeSMA(data, period) {
   const result = [];
   for (let i = 0; i < data.length; i++) {
-    if (i < period - 1) {
-      result.push(null);
-    } else {
-      let sum = 0;
-      for (let j = i - period + 1; j <= i; j++) {
-        sum += data[j].close;
-      }
-      result.push(+(sum / period).toFixed(2));
-    }
+    if (i < period - 1) { result.push(null); continue; }
+    let sum = 0;
+    for (let j = i - period + 1; j <= i; j++) sum += data[j].close;
+    result.push(+(sum / period).toFixed(2));
   }
   return result;
 }
 
-
-/* ---- Local Portfolio Management ---- */
-
+// ── Portfolio management ───────────────────────────────────────────────────
 function defaultPortfolio() {
-  return {
-    cash: 1000000,
-    holdings: {},       // { symbol: { qty, avgPrice } }
-    totalInvested: 0,
-  };
+  return { cash: 1_000_000, holdings: {}, totalInvested: 0 };
 }
 
 export function getPortfolio() {
   try {
     const raw = localStorage.getItem(LS_PORTFOLIO_KEY);
     return raw ? JSON.parse(raw) : defaultPortfolio();
-  } catch {
-    return defaultPortfolio();
-  }
+  } catch { return defaultPortfolio(); }
 }
 
-export function savePortfolio(portfolio) {
-  localStorage.setItem(LS_PORTFOLIO_KEY, JSON.stringify(portfolio));
+export function savePortfolio(p) { localStorage.setItem(LS_PORTFOLIO_KEY, JSON.stringify(p)); }
+
+export function resetPortfolio() {
+  localStorage.removeItem(LS_PORTFOLIO_KEY);
+  localStorage.removeItem(LS_HISTORY_KEY);
+  return defaultPortfolio();
 }
 
 export function getTradeHistory() {
   try {
     const raw = localStorage.getItem(LS_HISTORY_KEY);
     return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
+  } catch { return []; }
 }
 
-export function saveTradeHistory(history) {
-  localStorage.setItem(LS_HISTORY_KEY, JSON.stringify(history));
-}
+export function saveTradeHistory(h) { localStorage.setItem(LS_HISTORY_KEY, JSON.stringify(h)); }
 
-/**
- * Execute a trade (buy/sell/short/cover) and update local portfolio + history.
- * Returns { success, message, portfolio }
- */
+// ── Trade execution ────────────────────────────────────────────────────────
 export function executeDemoTrade({ symbol, price, quantity, type, journalId }) {
   const portfolio = getPortfolio();
-  const history = getTradeHistory();
-  const total = price * quantity;
-  const now = new Date().toISOString();
-
-  let pnl = null;
-  let closedJournalId = null;
+  const history   = getTradeHistory();
+  const total     = price * quantity;
+  const now       = new Date().toISOString();
+  let pnl = null, closedJournalId = null;
 
   switch (type) {
     case 'BUY': {
       if (total > portfolio.cash) return { success: false, message: 'Insufficient funds' };
       portfolio.cash -= total;
       const existing = portfolio.holdings[symbol] || { qty: 0, avgPrice: 0, journalId };
-      const newQty = existing.qty + quantity;
+      const newQty   = existing.qty + quantity;
       existing.avgPrice = +((existing.avgPrice * existing.qty + total) / newQty).toFixed(2);
-      existing.qty = newQty;
-      // If adding to position, keep the original journalId (simplified)
+      existing.qty  = newQty;
       portfolio.holdings[symbol] = existing;
       break;
     }
     case 'SELL': {
-      const holding = portfolio.holdings[symbol];
-      if (!holding || holding.qty < quantity) return { success: false, message: 'Insufficient holdings' };
+      const h = portfolio.holdings[symbol];
+      if (!h || h.qty < quantity) return { success: false, message: 'Insufficient holdings' };
       portfolio.cash += total;
-      
-      // Calculate PnL for the sold portion
-      pnl = +((price - holding.avgPrice) * quantity).toFixed(2);
-      closedJournalId = holding.journalId;
-
-      holding.qty -= quantity;
-      if (holding.qty === 0) delete portfolio.holdings[symbol];
+      pnl = +((price - h.avgPrice) * quantity).toFixed(2);
+      closedJournalId = h.journalId;
+      h.qty -= quantity;
+      if (h.qty === 0) delete portfolio.holdings[symbol];
       break;
     }
     case 'SHORT': {
-      // Simplified: credit cash, create negative holding
       portfolio.cash += total;
       const existing = portfolio.holdings[symbol] || { qty: 0, avgPrice: 0, journalId };
-      const newQty = existing.qty - quantity;
+      existing.qty -= quantity;
       existing.avgPrice = price;
-      existing.qty = newQty;
       portfolio.holdings[symbol] = existing;
       break;
     }
     case 'COVER': {
-      const holding = portfolio.holdings[symbol];
-      if (!holding || holding.qty >= 0) return { success: false, message: 'No short position to cover' };
+      const h = portfolio.holdings[symbol];
+      if (!h || h.qty >= 0) return { success: false, message: 'No short position to cover' };
       portfolio.cash -= total;
-
-      // Calculate PnL for the covered portion
-      pnl = +((holding.avgPrice - price) * quantity).toFixed(2);
-      closedJournalId = holding.journalId;
-
-      holding.qty += quantity;
-      if (holding.qty === 0) delete portfolio.holdings[symbol];
+      pnl = +((h.avgPrice - price) * quantity).toFixed(2);
+      closedJournalId = h.journalId;
+      h.qty += quantity;
+      if (h.qty === 0) delete portfolio.holdings[symbol];
       break;
     }
     default:
@@ -259,19 +263,15 @@ export function executeDemoTrade({ symbol, price, quantity, type, journalId }) {
   savePortfolio(portfolio);
   saveTradeHistory(history);
 
-  // Sync PnL to backend asynchronously if a position was closed
+  // Async PnL sync — fire-and-forget, never blocks the UI
   if (pnl !== null && closedJournalId) {
-    let status = 'BREAKEVEN';
-    if (pnl > 0) status = 'WIN';
-    if (pnl < 0) status = 'LOSS';
-
+    const status = pnl > 0 ? 'WIN' : pnl < 0 ? 'LOSS' : 'BREAKEVEN';
     fetch(`/api/journals/close/${closedJournalId}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ pnl, outcomeStatus: status })
-    }).catch(err => console.error("Failed to sync PnL", err));
+      body: JSON.stringify({ pnl, outcomeStatus: status }),
+    }).catch(() => { /* graceful degradation — PnL sync is best-effort */ });
   }
 
   return { success: true, message: `${type} ${quantity} ${symbol} @ ₹${price.toFixed(2)}`, portfolio };
 }
-
