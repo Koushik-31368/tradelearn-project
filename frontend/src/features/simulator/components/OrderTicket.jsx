@@ -60,54 +60,52 @@ const OrderTicket = ({ stock, portfolio, onTrade }) => {
 
     setAnimating(true);
     
+    // 1. Try to submit journal to backend (best-effort, never blocks the trade)
+    let journalId = null;
     try {
-      // 1. Submit pre-trade journal to backend
       const journalEntry = {
-        userId: 1, 
+        userId: 1,
         symbol: stock.symbol,
         thesisCategory,
         thesis,
         entryPrice: price,
         stopLoss: slValue,
         targetPrice: tpValue,
-        riskAmount: totalRisk
+        riskAmount: totalRisk,
       };
-      
       const res = await fetch('/api/journals/entry', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(journalEntry)
+        body: JSON.stringify(journalEntry),
       });
-      
-      if (!res.ok) {
-        throw new Error("Failed to submit journal");
+      if (res.ok) {
+        const saved = await res.json();
+        journalId = saved.id;
       }
-      
-      const savedJournal = await res.json();
-      
-      // 2. Execute local trade (pass journalId to sync on close)
-      const result = onTrade({
-        symbol: stock.symbol,
-        price,
-        quantity,
-        type: activeType,
-        journalId: savedJournal.id
-      });
-
-      if (result.success) {
-        showToast(result.message, 'success');
-        setQuantity(1);
-        setThesis('');
-        setStopLoss('');
-        setTargetPrice('');
-      } else {
-        showToast(result.message, 'error');
-      }
-    } catch (err) {
-      showToast(err.message, 'error');
-    } finally {
-      setAnimating(false);
+    } catch (_) {
+      // Backend unavailable — continue anyway, trade still executes
     }
+
+    // 2. Execute local trade
+    const result = onTrade({
+      symbol: stock.symbol,
+      price,
+      quantity,
+      type: activeType,
+      journalId,
+    });
+
+    if (result.success) {
+      showToast(result.message, 'success');
+      setQuantity(1);
+      setThesis('');
+      setStopLoss('');
+      setTargetPrice('');
+    } else {
+      showToast(result.message, 'error');
+    }
+
+    setAnimating(false);
   };
 
   if (!stock) {
@@ -209,20 +207,20 @@ const OrderTicket = ({ stock, portfolio, onTrade }) => {
         </div>
       </div>
 
-      {/* Risk Engine Warning/Display */}
-      <div className="trading-panel__summary" style={{ backgroundColor: riskPct > 5 ? '#ffebee' : '#f5f5f5', color: riskPct > 5 ? '#c62828' : 'inherit' }}>
+      {/* Risk Engine Panel */}
+      <div className={`trading-panel__summary${riskPct > 5 ? ' trading-panel__summary--danger' : ''}`}>
         <div className="trading-panel__summary-row">
           <span>Account Risk</span>
-          <span style={{ fontWeight: riskPct > 5 ? 'bold' : 'normal' }}>
-            {riskPct.toFixed(2)}% (Max 5%)
+          <span className={riskPct > 5 ? 'tp-risk-high' : 'tp-risk-ok'}>
+            {riskPct.toFixed(2)}% <span className="tp-risk-max">(max 5%)</span>
           </span>
         </div>
         <div className="trading-panel__summary-row">
           <span>Risk / Reward</span>
-          <span>1 : {riskRewardRatio}</span>
+          <span className="tp-rr">1 : {riskRewardRatio}</span>
         </div>
         <div className="trading-panel__summary-row trading-panel__summary-row--total">
-          <span>Total Trade Cost</span>
+          <span>Total Cost</span>
           <span>₹{totalCost.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
         </div>
       </div>

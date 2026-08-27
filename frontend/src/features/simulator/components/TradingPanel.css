@@ -459,3 +459,40 @@
   border: 2px solid var(--gold);
   cursor: pointer;
 }
+
+/* ── Risk / Summary panel (dark theme) ────────────────── */
+.trading-panel__summary {
+  margin: 12px 18px;
+  padding: 10px 14px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.trading-panel__summary--danger {
+  background: color-mix(in srgb, var(--danger) 8%, transparent);
+  border-color: color-mix(in srgb, var(--danger) 35%, transparent);
+}
+
+.trading-panel__summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font: 600 11px var(--font-mono);
+  color: var(--text-muted);
+}
+
+.trading-panel__summary-row--total {
+  padding-top: 6px;
+  border-top: 1px solid var(--border);
+  color: var(--text-light);
+  font-size: 12px;
+}
+
+.tp-risk-ok   { color: var(--green-bright); }
+.tp-risk-high { color: var(--danger); font-weight: 700; }
+.tp-risk-max  { color: var(--text-muted); font-weight: 400; font-size: 10px; }
+.tp-rr        { color: var(--gold); }
