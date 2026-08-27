@@ -1,0 +1,280 @@
+/* MissionSelectionPage.css */
+
+.msn-page {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 40px 20px 80px;
+}
+
+/* ── Hero ── */
+.msn-hero {
+  text-align: center;
+  margin-bottom: 48px;
+}
+
+.msn-hero__title {
+  font: 800 2rem var(--font-heading);
+  color: var(--text-light);
+  margin: 0 0 8px;
+}
+
+.msn-hero__sub {
+  font: 400 0.9rem var(--font-body);
+  color: var(--text-muted);
+  max-width: 520px;
+  margin: 0 auto 24px;
+  line-height: 1.6;
+}
+
+/* Progress */
+.msn-progress {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.msn-progress__bar {
+  flex: 1;
+  height: 6px;
+  background: var(--border-emphasis);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.msn-progress__fill {
+  height: 100%;
+  background: linear-gradient(90deg, #7B2FF7, #39FF88);
+  border-radius: 3px;
+  transition: width 0.5s ease;
+}
+
+.msn-progress__text {
+  font: 600 0.75rem var(--font-mono);
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* ── Roadmap ── */
+.msn-roadmap {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.msn-roadmap__step {
+  position: relative;
+}
+
+/* Connector */
+.msn-connector {
+  width: 2px;
+  height: 32px;
+  background: var(--border-emphasis);
+  margin: 0 auto;
+}
+
+.msn-connector--active {
+  background: linear-gradient(180deg, #7B2FF7, #39FF88);
+}
+
+/* ── Card ── */
+.msn-card {
+  background: var(--bg-panel-2);
+  border: 1px solid var(--border-emphasis);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  position: relative;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.msn-card:hover {
+  border-color: var(--text-faint);
+  transform: translateY(-2px);
+}
+
+.msn-card--locked {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.msn-card--passed {
+  border-color: rgba(57, 255, 136, 0.2);
+}
+
+.msn-card--passed:hover {
+  border-color: rgba(57, 255, 136, 0.4);
+}
+
+/* Number badge */
+.msn-card__num {
+  position: absolute;
+  top: -14px;
+  left: 24px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-panel-2);
+  border: 2px solid var(--border-emphasis);
+  border-radius: 50%;
+  font: 800 12px var(--font-mono);
+  color: var(--text-muted);
+}
+
+.msn-card__num--done {
+  background: #39FF88;
+  border-color: #39FF88;
+  color: #0d0d14;
+}
+
+/* Body */
+.msn-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.msn-card__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.msn-card__meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.msn-card__diff {
+  font: 700 9px var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 2px 8px;
+  border-radius: 3px;
+}
+
+.msn-card__diff--hard {
+  background: rgba(255, 59, 92, 0.12);
+  color: #FF3B5C;
+}
+
+.msn-card__diff--medium {
+  background: rgba(255, 212, 0, 0.12);
+  color: #FFD400;
+}
+
+.msn-card__diff--easy {
+  background: rgba(57, 255, 136, 0.12);
+  color: #39FF88;
+}
+
+.msn-card__lesson {
+  font: 500 10px var(--font-mono);
+  color: var(--text-muted);
+}
+
+.msn-card__icon {
+  font-size: 1.4rem;
+}
+
+.msn-card__title {
+  font: 700 1.15rem var(--font-heading);
+  color: var(--text-light);
+  margin: 0;
+}
+
+.msn-card__subtitle {
+  font: 600 0.8rem var(--font-mono);
+  color: var(--accent-secondary);
+  margin: -4px 0 0;
+}
+
+.msn-card__desc {
+  font: 400 0.82rem var(--font-body);
+  color: var(--text-muted);
+  line-height: 1.55;
+  margin: 0;
+}
+
+/* Tags */
+.msn-card__constraints {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.msn-card__tag {
+  font: 500 10px var(--font-mono);
+  color: var(--text-muted);
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 2px 8px;
+}
+
+.msn-card__tag--warn {
+  border-color: rgba(255, 212, 0, 0.25);
+  color: #FFD400;
+}
+
+/* Result */
+.msn-card__result {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: var(--bg-panel);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+}
+
+.msn-card__grade {
+  font: 800 14px var(--font-mono);
+}
+
+.msn-card__result-title {
+  font: 600 11px var(--font-mono);
+  color: var(--text-muted);
+}
+
+/* Button */
+.msn-card__btn {
+  padding: 10px 20px;
+  font: 700 0.8rem var(--font-mono);
+  letter-spacing: 0.04em;
+  background: #7B2FF7;
+  border: none;
+  border-radius: var(--radius);
+  color: #fff;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: center;
+}
+
+.msn-card__btn:hover {
+  background: #9147FF;
+  transform: translateY(-1px);
+}
+
+.msn-card__btn:disabled {
+  background: var(--border-emphasis);
+  color: var(--text-faint);
+  cursor: not-allowed;
+  transform: none;
+}
+
+.msn-card__btn--replay {
+  background: transparent;
+  border: 1px solid var(--border-emphasis);
+  color: var(--text-muted);
+}
+
+.msn-card__btn--replay:hover {
+  border-color: #7B2FF7;
+  color: #7B2FF7;
+  background: transparent;
+}

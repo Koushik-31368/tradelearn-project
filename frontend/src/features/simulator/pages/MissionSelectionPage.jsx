@@ -1,62 +1,120 @@
-import React from 'react';
+// src/features/simulator/pages/MissionSelectionPage.jsx
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MISSIONS } from '../utils/missions';
-import '../../learn/pages/LearnPage.css'; // Reusing some base styling
+import './MissionSelectionPage.css';
+
+const GRADE_COLORS = { A: '#39FF88', B: '#FFD400', C: '#FF9500', D: '#FF3B5C', F: '#FF3B5C' };
 
 const MissionSelectionPage = () => {
   const navigate = useNavigate();
+  const [completedMissions, setCompletedMissions] = useState({});
 
-  const launchMission = (missionId) => {
-    navigate(`/mission-dashboard/${missionId}`);
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem('tl_missions') || '{}');
+      setCompletedMissions(saved);
+    } catch { /* empty */ }
+  }, []);
+
+  const isUnlocked = (idx) => {
+    if (idx === 0) return true;
+    const prev = MISSIONS[idx - 1];
+    return completedMissions[prev.id]?.status === 'PASS';
   };
 
   return (
-    <div className="learn-map-page" style={{ padding: '40px' }}>
-      <div className="learn-header">
-        <h1 className="learn-title">Flight School: Missions</h1>
-        <p style={{ color: '#8b949e', fontSize: '16px', maxWidth: '600px', margin: '0 auto' }}>
-          Complete these historical scenarios to validate your risk management and psychological discipline before trading live capital.
+    <div className="msn-page">
+      {/* Header */}
+      <div className="msn-hero">
+        <h1 className="msn-hero__title">Flight School</h1>
+        <p className="msn-hero__sub">
+          Complete historical trading missions to prove your discipline before risking real capital.
+          Each mission teaches one critical lesson.
         </p>
+        {/* Progress */}
+        <div className="msn-progress">
+          <div className="msn-progress__bar">
+            <div
+              className="msn-progress__fill"
+              style={{ width: `${(Object.values(completedMissions).filter(v => v.status === 'PASS').length / MISSIONS.length) * 100}%` }}
+            />
+          </div>
+          <span className="msn-progress__text">
+            {Object.values(completedMissions).filter(v => v.status === 'PASS').length} / {MISSIONS.length} completed
+          </span>
+        </div>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', maxWidth: '800px', margin: '40px auto' }}>
-        {MISSIONS.map((mission, index) => (
-          <div key={mission.id} style={{
-            backgroundColor: '#0d1117',
-            border: '1px solid #30363d',
-            borderRadius: '8px',
-            padding: '20px',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center'
-          }}>
-            <div>
-              <h3 style={{ color: '#c9d1d9', margin: '0 0 10px 0' }}>{mission.title}</h3>
-              <p style={{ color: '#8b949e', fontSize: '14px', margin: '0 0 10px 0' }}>{mission.objective}</p>
-              <div style={{ display: 'flex', gap: '15px', fontSize: '12px', color: '#58a6ff' }}>
-                <span>Max Trades: {mission.constraints.maxTrades}</span>
-                {mission.constraints.maxDrawdownPercent && (
-                  <span>Max Drawdown: {mission.constraints.maxDrawdownPercent}%</span>
-                )}
+      {/* Mission Roadmap */}
+      <div className="msn-roadmap">
+        {MISSIONS.map((mission, idx) => {
+          const unlocked = isUnlocked(idx);
+          const completed = completedMissions[mission.id];
+          const passed = completed?.status === 'PASS';
+
+          return (
+            <div key={mission.id} className="msn-roadmap__step">
+              {/* Connector line */}
+              {idx > 0 && (
+                <div className={`msn-connector${passed || unlocked ? ' msn-connector--active' : ''}`} />
+              )}
+
+              <div className={`msn-card${!unlocked ? ' msn-card--locked' : ''}${passed ? ' msn-card--passed' : ''}`}>
+                {/* Number badge */}
+                <div className={`msn-card__num${passed ? ' msn-card__num--done' : ''}`}>
+                  {passed ? '✓' : idx + 1}
+                </div>
+
+                {/* Content */}
+                <div className="msn-card__body">
+                  <div className="msn-card__top">
+                    <div className="msn-card__meta">
+                      <span className={`msn-card__diff msn-card__diff--${mission.difficulty.toLowerCase()}`}>
+                        {mission.difficulty}
+                      </span>
+                      <span className="msn-card__lesson">{mission.lesson}</span>
+                    </div>
+                    <span className="msn-card__icon">{mission.icon}</span>
+                  </div>
+
+                  <h3 className="msn-card__title">{mission.title}</h3>
+                  <p className="msn-card__subtitle">{mission.subtitle}</p>
+                  <p className="msn-card__desc">{mission.description}</p>
+
+                  {/* Constraints */}
+                  <div className="msn-card__constraints">
+                    <span className="msn-card__tag">📊 {mission.dataset.length} candles</span>
+                    <span className="msn-card__tag">🔄 Max {mission.constraints.maxTrades} trades</span>
+                    {mission.constraints.maxDrawdownPercent && (
+                      <span className="msn-card__tag msn-card__tag--warn">⚠️ Max {mission.constraints.maxDrawdownPercent}% DD</span>
+                    )}
+                    <span className="msn-card__tag">💰 ₹{(mission.startingBalance / 100000).toFixed(0)}L capital</span>
+                  </div>
+
+                  {/* Grade badge if completed */}
+                  {completed && (
+                    <div className="msn-card__result">
+                      <span className="msn-card__grade" style={{ color: GRADE_COLORS[completed.grade] || '#fff' }}>
+                        Grade: {completed.grade}
+                      </span>
+                      <span className="msn-card__result-title">{completed.title}</span>
+                    </div>
+                  )}
+
+                  {/* Action */}
+                  <button
+                    className={`msn-card__btn${passed ? ' msn-card__btn--replay' : ''}`}
+                    disabled={!unlocked}
+                    onClick={() => navigate(`/mission-dashboard/${mission.id}`)}
+                  >
+                    {!unlocked ? '🔒 Locked' : passed ? '↺ Replay' : '▶ Launch Mission'}
+                  </button>
+                </div>
               </div>
             </div>
-            
-            <button
-              onClick={() => launchMission(mission.id)}
-              style={{
-                backgroundColor: '#238636',
-                color: '#fff',
-                border: 'none',
-                borderRadius: '6px',
-                padding: '10px 20px',
-                fontWeight: 'bold',
-                cursor: 'pointer'
-              }}
-            >
-              Launch Mission
-            </button>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

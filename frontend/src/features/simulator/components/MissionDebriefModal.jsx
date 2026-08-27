@@ -1,57 +1,54 @@
+// src/features/simulator/components/MissionDebriefModal.jsx
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import './MissionDebriefModal.css';
+
+const GRADE_COLORS = { A: '#39FF88', B: '#FFD400', C: '#FF9500', D: '#FF3B5C', F: '#FF3B5C' };
 
 const MissionDebriefModal = ({ assessment, onClose }) => {
-  const navigate = useNavigate();
-
   if (!assessment) return null;
 
   const isPass = assessment.status === 'PASS';
 
-  const overlayStyle = {
-    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-    backgroundColor: 'rgba(0,0,0,0.85)',
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    zIndex: 9999, backdropFilter: 'blur(8px)'
-  };
-
-  const modalStyle = {
-    backgroundColor: '#0d1117', border: `2px solid ${isPass ? '#238636' : '#da3633'}`,
-    borderRadius: '12px', padding: '30px', width: '90%', maxWidth: '500px',
-    boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
-    textAlign: 'center'
-  };
-
-  const handleNext = () => {
-    onClose();
-    navigate('/missions');
-  };
-
   return (
-    <div style={overlayStyle}>
-      <div style={modalStyle}>
-        <h2 style={{ color: isPass ? '#3fb950' : '#ff7b72', fontSize: '32px', margin: '0 0 10px 0' }}>
-          MISSION {assessment.status}
-        </h2>
-        
-        <div style={{ textAlign: 'left', marginTop: '20px', backgroundColor: '#21262d', padding: '15px', borderRadius: '8px' }}>
-          <h4 style={{ margin: '0 0 5px 0', color: '#c9d1d9' }}>What Went Well</h4>
-          <p style={{ fontSize: '14px', color: '#8b949e', margin: '0 0 15px 0' }}>{assessment.wentWell}</p>
-
-          <h4 style={{ margin: '0 0 5px 0', color: '#c9d1d9' }}>What Went Wrong</h4>
-          <p style={{ fontSize: '14px', color: '#8b949e', margin: 0 }}>{assessment.wentWrong}</p>
+    <div className="msn-modal-overlay">
+      <div className={`msn-modal${isPass ? ' msn-modal--pass' : ' msn-modal--fail'}`}>
+        {/* Status */}
+        <div className="msn-modal__status">
+          <span className="msn-modal__emoji">{isPass ? '🏆' : '💀'}</span>
+          <h2 className="msn-modal__verdict" style={{ color: isPass ? '#39FF88' : '#FF3B5C' }}>
+            MISSION {assessment.status}
+          </h2>
+          {assessment.grade && (
+            <span className="msn-modal__grade" style={{ color: GRADE_COLORS[assessment.grade] }}>
+              Grade {assessment.grade}
+            </span>
+          )}
+          {assessment.title && (
+            <span className="msn-modal__title-text">{assessment.title}</span>
+          )}
         </div>
 
-        <button
-          onClick={handleNext}
-          style={{
-            marginTop: '25px', width: '100%', padding: '12px',
-            backgroundColor: '#238636', color: '#fff',
-            border: 'none', borderRadius: '6px',
-            cursor: 'pointer', fontWeight: 'bold', fontSize: '16px'
-          }}
-        >
-          {assessment.nextMission === 'completed' ? 'Return to Dashboard' : 'Continue Training'}
+        {/* Debrief */}
+        <div className="msn-modal__debrief">
+          <div className="msn-modal__section">
+            <h4 className="msn-modal__section-title msn-modal__section-title--good">✓ What Went Well</h4>
+            <p className="msn-modal__section-text">{assessment.wentWell}</p>
+          </div>
+          <div className="msn-modal__section">
+            <h4 className="msn-modal__section-title msn-modal__section-title--bad">✗ What Went Wrong</h4>
+            <p className="msn-modal__section-text">{assessment.wentWrong}</p>
+          </div>
+          {assessment.lesson && (
+            <div className="msn-modal__section msn-modal__section--lesson">
+              <h4 className="msn-modal__section-title msn-modal__section-title--lesson">💡 Key Lesson</h4>
+              <p className="msn-modal__section-text msn-modal__section-text--lesson">{assessment.lesson}</p>
+            </div>
+          )}
+        </div>
+
+        {/* Action */}
+        <button className="msn-modal__btn" onClick={onClose}>
+          {assessment.nextMission === 'completed' ? '🎉 All Missions Complete — Return' : isPass ? 'Next Mission →' : 'Try Again →'}
         </button>
       </div>
     </div>
