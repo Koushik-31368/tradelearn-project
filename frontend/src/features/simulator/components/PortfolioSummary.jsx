@@ -57,6 +57,28 @@ const PortfolioSummary = ({ portfolio, stocks, equityCurve }) => {
     return equityCurve.map((p) => p.value);
   }, [equityCurve]);
 
+  // Max Drawdown from equity curve
+  const maxDrawdown = useMemo(() => {
+    if (!equityCurve || equityCurve.length < 2) return 0;
+    let peak = -Infinity;
+    let maxDD = 0;
+    for (const point of equityCurve) {
+      if (point.value > peak) peak = point.value;
+      const dd = peak > 0 ? ((peak - point.value) / peak) * 100 : 0;
+      if (dd > maxDD) maxDD = dd;
+    }
+    return maxDD;
+  }, [equityCurve]);
+
+  // Win Rate from trade history (props may not always include trades)
+  const winRate = useMemo(() => {
+    const trades = equityCurve?._trades || [];
+    const closed = trades.filter((t) => t.pnl !== undefined && t.pnl !== null);
+    if (closed.length === 0) return null;
+    const wins = closed.filter((t) => t.pnl > 0).length;
+    return Math.round((wins / closed.length) * 100);
+  }, [equityCurve]);
+
   const isProfit = stats.todayPnL >= 0;
 
   return (
@@ -124,6 +146,37 @@ const PortfolioSummary = ({ portfolio, stocks, equityCurve }) => {
           {Object.keys(portfolio.holdings).length} position{Object.keys(portfolio.holdings).length !== 1 ? 's' : ''}
         </div>
       </div>
+
+      {/* Max Drawdown */}
+      <div className="summary-card summary-card--drawdown">
+        <div className="summary-card__header">
+          <span className="summary-card__label">Max Drawdown</span>
+          <svg className="summary-card__icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#ff4d4f" strokeWidth="2">
+            <path d="M22 17l-9.5-9.5-5 5L1 6" />
+            <polyline points="16 17 22 17 22 11" />
+          </svg>
+        </div>
+        <div className="summary-card__value text-loss">
+          -{maxDrawdown.toFixed(2)}%
+        </div>
+        <div className="summary-card__sub text-muted">Peak-to-trough</div>
+      </div>
+
+      {/* Win Rate */}
+      {winRate !== null && (
+        <div className="summary-card">
+          <div className="summary-card__header">
+            <span className="summary-card__label">Win Rate</span>
+            <svg className="summary-card__icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#39ff88" strokeWidth="2">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          </div>
+          <div className={`summary-card__value ${winRate >= 50 ? 'text-profit' : 'text-loss'}`}>
+            {winRate}%
+          </div>
+          <div className="summary-card__sub text-muted">Closed trades</div>
+        </div>
+      )}
     </div>
   );
 };
