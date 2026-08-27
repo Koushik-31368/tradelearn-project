@@ -3,8 +3,8 @@
 .sim-dashboard {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 10px 14px 28px;
+  gap: 14px;
+  padding: 16px 20px 36px;
   min-height: 100vh;
   background: var(--bg);
 }
@@ -15,11 +15,11 @@
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 8px;
-  padding: 8px 14px;
+  gap: 10px;
+  padding: 10px 16px;
   background: var(--bg-panel);
   border: 1px solid var(--border);
-  border-radius: var(--r);
+  border-radius: var(--r-lg);
 }
 
 .sim-dashboard__topbar-left {
@@ -153,16 +153,16 @@
 /* ── Main 3-column layout ── */
 .sim-dashboard__main {
   display: grid;
-  grid-template-columns: 210px 1fr 260px;
-  gap: 8px;
-  min-height: 520px;
+  grid-template-columns: 220px 1fr 270px;
+  gap: 12px;
+  min-height: 540px;
 }
 
 .sim-dashboard__left,
 .sim-dashboard__right {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
   min-height: 0;
 }
 
@@ -177,11 +177,11 @@
 .sim-dashboard__replay-bar {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
+  gap: 8px;
+  padding: 8px 14px;
   background: var(--bg-panel-2);
   border: 1px solid var(--border);
-  border-radius: var(--r) var(--r) 0 0;
+  border-radius: var(--r-lg) var(--r-lg) 0 0;
   border-bottom: none;
 }
 
@@ -253,8 +253,8 @@
 }
 
 .sim-dashboard__tab-btn {
-  padding: 6px 16px;
-  font: 600 10px var(--font-mono);
+  padding: 8px 18px;
+  font: 600 11px var(--font-mono);
   background: transparent;
   border: 1px solid var(--border);
   border-radius: 2px;

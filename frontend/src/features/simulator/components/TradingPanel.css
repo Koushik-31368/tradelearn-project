@@ -3,7 +3,7 @@
 .trading-panel {
   background: var(--bg-panel);
   border: 1px solid var(--border);
-  border-radius: var(--r);
+  border-radius: var(--r-lg);
   padding: 0;
   display: flex;
   flex-direction: column;
@@ -11,10 +11,10 @@
   overflow: visible;
 }
 
-.trading-panel__header { padding: 10px 12px 0; }
+.trading-panel__header { padding: 12px 14px 0; }
 
 .trading-panel__title {
-  font: 700 10px var(--font-mono);
+  font: 700 11px var(--font-mono);
   color: var(--text-muted);
   margin: 0;
   text-transform: uppercase;
@@ -34,7 +34,7 @@
 
 /* ── Stock info ── */
 .trading-panel__stock-info {
-  padding: 10px 12px;
+  padding: 12px 14px;
   border-bottom: 1px solid var(--border);
 }
 .trading-panel__stock-name {
@@ -57,7 +57,7 @@
   gap: 8px;
 }
 .trading-panel__current-price {
-  font: 700 18px var(--font-mono);
+  font: 700 20px var(--font-mono);
   color: var(--text-light);
   font-variant-numeric: tabular-nums;
 }
@@ -88,13 +88,13 @@
 .trading-panel__tabs {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 3px;
-  padding: 10px 12px 0;
+  gap: 4px;
+  padding: 12px 14px 0;
 }
 
 .trading-panel__tab {
-  padding: 6px 3px;
-  font: 700 9px var(--font-mono);
+  padding: 7px 4px;
+  font: 700 10px var(--font-mono);
   letter-spacing: .05em;
   border: 1px solid var(--border);
   border-radius: 2px;
@@ -128,11 +128,11 @@
 }
 
 /* ── Fields ── */
-.trading-panel__field { padding: 10px 12px; }
+.trading-panel__field { padding: 12px 14px; }
 
 .trading-panel__label {
   display: block;
-  font: 600 9px var(--font-mono);
+  font: 600 10px var(--font-mono);
   color: var(--text-dim);
   text-transform: uppercase;
   letter-spacing: .08em;
@@ -141,12 +141,12 @@
 
 .trading-panel__qty-input {
   width: 100%;
-  padding: 7px 10px;
+  padding: 8px 12px;
   background: var(--bg-panel-2);
   border: 1px solid var(--border);
-  border-radius: 2px;
+  border-radius: var(--r);
   color: var(--text-light);
-  font: 500 12px var(--font-mono);
+  font: 500 13px var(--font-mono);
   font-variant-numeric: tabular-nums;
   outline: none;
   transition: border-color 0.12s ease;
@@ -164,9 +164,9 @@
 
 /* ── Execute button ── */
 .trading-panel__execute {
-  margin: 8px 12px;
-  padding: 10px;
-  font: 700 11px var(--font-mono);
+  margin: 10px 14px;
+  padding: 11px;
+  font: 700 12px var(--font-mono);
   letter-spacing: .06em;
   text-transform: uppercase;
   border: none;
