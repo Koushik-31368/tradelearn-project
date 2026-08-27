@@ -35,9 +35,39 @@
   border-radius: var(--radius);
 }
 
+.watchlist__controls {
+  padding: 0 18px 0;
+}
+
 .watchlist__search {
-  padding: 12px 18px;
+  padding: 12px 0 6px;
   position: relative;
+}
+
+.watchlist__sort-row {
+  display: flex;
+  gap: 4px;
+  padding-bottom: 10px;
+}
+
+.watchlist__sort-btn {
+  flex: 1;
+  padding: 3px 0;
+  font: 600 10px var(--font-mono);
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.watchlist__sort-btn--active {
+  background: var(--cobalt);
+  border-color: var(--cobalt);
+  color: var(--text-light);
 }
 
 .watchlist__search-icon {
@@ -155,6 +185,25 @@
 
 .change--up { color: var(--primary); }
 .change--down { color: var(--danger); }
+
+/* Mini momentum bar */
+.watchlist__bar-track {
+  width: 100%;
+  height: 2px;
+  background: var(--border);
+  border-radius: 1px;
+  overflow: hidden;
+  margin-top: 3px;
+}
+
+.watchlist__bar-fill {
+  height: 100%;
+  border-radius: 1px;
+  transition: width var(--transition-mid);
+}
+
+.bar--up   { background: var(--green-bright); }
+.bar--down { background: var(--danger); }
 
 .watchlist__empty {
   text-align: center;
