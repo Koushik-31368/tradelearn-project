@@ -1,14 +1,15 @@
 /* TradingPanel.css — Premium order ticket */
 
 .trading-panel {
-  background: var(--bg-panel);
-  border: 1px solid var(--border);
-  border-radius: var(--r-lg);
+  background: transparent;
+  border: none;
+  border-radius: 0;
   padding: 0;
   display: flex;
   flex-direction: column;
   position: relative;
   overflow: visible;
+  width: 100%;
 }
 
 .trading-panel__header { padding: 12px 14px 0; }
