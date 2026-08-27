@@ -38,6 +38,9 @@
   --shadow: 5px 5px 0 rgba(0,0,0,.28);
   --shadow-lg: 9px 9px 0 rgba(0,0,0,.3);
   --ease: cubic-bezier(.2,.8,.2,1);
+  --transition-fast: 150ms var(--ease);
+  --transition-mid:  250ms var(--ease);
+  --transition-slow: 450ms var(--ease);
   --green-dim: #c91f62;
   --green-dark: #8f1649;
   --green-glow: rgba(255,45,120,.15);
@@ -112,6 +115,20 @@ a { color: var(--gold); text-decoration: none; transition: color .2s var(--ease)
 .page-loader { display: flex; min-height: 60vh; align-items: center; justify-content: center; gap: 12px; color: var(--text-muted); font: 600 12px var(--font-mono); letter-spacing: .08em; text-transform: uppercase; }
 .page-loader__mark { display: grid; place-items: center; width: 42px; height: 42px; background: var(--cobalt); color: var(--text-light); border: 2px solid var(--gold); box-shadow: 4px 4px 0 var(--gold); animation: loaderPulse 1.2s ease-in-out infinite alternate; }
 @keyframes loaderPulse { to { transform: translateY(-4px); box-shadow: 4px 8px 0 var(--gold); } }
+
+/* ── Scroll progress bar ──────────────────────────── */
+#scroll-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 9999;
+  height: 3px;
+  width: 0%;
+  background: linear-gradient(90deg, var(--cobalt), var(--accent-primary), var(--gold));
+  box-shadow: 0 0 8px color-mix(in srgb, var(--accent-primary) 60%, transparent);
+  pointer-events: none;
+  transition: width var(--transition-fast);
+}
 
 /* ── Utility ──────────────────────────────────────── */
 .visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }

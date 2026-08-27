@@ -1,4 +1,4 @@
-import { Suspense, lazy } from 'react';
+import { Suspense, lazy, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { AuthProvider } from './features/auth/AuthContext';
 import Navbar from './layout/components/Navbar';
@@ -44,8 +44,21 @@ function AppContent() {
   const location = useLocation();
   const hideTickerOnAuth = AUTH_PATHS.includes(location.pathname);
 
+  useEffect(() => {
+    const bar = document.getElementById('scroll-progress');
+    if (!bar) return;
+    const onScroll = () => {
+      const scrolled = window.scrollY;
+      const total = document.documentElement.scrollHeight - window.innerHeight;
+      bar.style.width = total > 0 ? `${(scrolled / total) * 100}%` : '0%';
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, [location.pathname]);
+
   return (
     <div className="App">
+      <div id="scroll-progress" aria-hidden="true" />
       <Navbar />
       <MarketTicker />
       <Suspense fallback={<PageLoader />}>
