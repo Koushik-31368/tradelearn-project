@@ -146,12 +146,13 @@ const OrderTicket = ({ stock, portfolio, onTrade }) => {
         </div>
       </div>
 
-      <div className="trading-panel__tabs">
+      <div className="trading-panel__tabs" role="group" aria-label="Order type">
         {['BUY', 'SELL', 'SHORT', 'COVER'].map((type) => (
           <button
             key={type}
             className={`trading-panel__tab ${activeType === type ? `trading-panel__tab--${type.toLowerCase()}` : ''}`}
             onClick={() => setActiveType(type)}
+            aria-pressed={activeType === type}
           >
             {type}
           </button>
@@ -159,7 +160,19 @@ const OrderTicket = ({ stock, portfolio, onTrade }) => {
       </div>
 
       <div className="trading-panel__field">
-        <label className="trading-panel__label">Quantity</label>
+        <label className="trading-panel__label">
+          Quantity
+          <span className="trading-panel__qty-badge">{quantity} shares</span>
+        </label>
+        <input
+          type="range"
+          min="1"
+          max="500"
+          value={quantity}
+          onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+          className="trading-panel__qty-slider"
+          aria-label="Quantity slider"
+        />
         <input
           type="number"
           min="1"
@@ -167,6 +180,7 @@ const OrderTicket = ({ stock, portfolio, onTrade }) => {
           onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
           className="trading-panel__qty-input"
           style={{ width: '100%', marginBottom: '10px' }}
+          aria-label="Quantity"
         />
       </div>
 
