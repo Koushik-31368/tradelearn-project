@@ -30,11 +30,16 @@ const DashboardPanel = ({ user }) => {
   }, [user]);
 
   const calculateLeague = (rating) => {
-    if (rating >= 2000) return "Diamond League";
-    if (rating >= 1500) return "Gold League";
-    if (rating >= 1200) return "Silver League";
-    return "Bronze League";
+    if (rating >= 2000) return { name: 'Diamond League', next: null, min: 2000, max: 3000 };
+    if (rating >= 1500) return { name: 'Gold League',    next: 'Diamond', min: 1500, max: 2000 };
+    if (rating >= 1200) return { name: 'Silver League',  next: 'Gold',    min: 1200, max: 1500 };
+    return                      { name: 'Bronze League',  next: 'Silver',  min: 1000, max: 1200 };
   };
+
+  const league = calculateLeague(user?.rating || 1000);
+  const leaguePct = league.max > league.min
+    ? Math.min(100, Math.round(((user?.rating || 1000) - league.min) / (league.max - league.min) * 100))
+    : 100;
 
   return (
     <div className="dashboard-panel">
@@ -57,8 +62,22 @@ const DashboardPanel = ({ user }) => {
         <div className="dp-stat-card">
           <span className="dp-stat-icon">🏆</span>
           <div className="dp-stat-info">
-            <span className="dp-stat-value">{calculateLeague(user?.rating || 1000)}</span>
+            <span className="dp-stat-value">{league.name}</span>
             <span className="dp-stat-label">{user?.rating || 1000} Rating</span>
+            <div className="dp-xp-bar-track" title={`${leaguePct}% to ${league.next ? league.next + ' League' : 'max'}`}>
+              <div
+                className="dp-xp-bar-fill"
+                style={{ width: `${leaguePct}%` }}
+                role="progressbar"
+                aria-valuenow={leaguePct}
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-label="League progress"
+              />
+            </div>
+            {league.next && (
+              <span className="dp-xp-next">{leaguePct}% → {league.next} League</span>
+            )}
           </div>
         </div>
       </div>
