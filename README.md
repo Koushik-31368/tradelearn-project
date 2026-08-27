@@ -39,6 +39,17 @@
 
 ## Features
 
+| Module | Description |
+|---|---|
+| 🎮 **Multiplayer Matches** | Real-time head-to-head trading battles over WebSocket with ELO rating |
+| 📊 **Solo Simulator** | Live candlestick chart, SMA overlays, portfolio P&L, equity curve, market sentiment |
+| 📚 **Learning Academy** | Structured curriculum — candlestick patterns, indicators, risk management, psychology |
+| 🧠 **Strategy Engine** | 8 documented strategies with entry/exit rules and simulator deep-links |
+| 🔁 **Backtest Engine** | SMA crossover backtester with equity curve, max drawdown, and trade breakdown |
+| 🏆 **ELO Leaderboard** | Chess-style rating with Bronze → Silver → Gold → Diamond tier progression |
+| 🎯 **Daily Quests** | Gamified daily and weekly challenges with XP rewards |
+| 📋 **Trade Journal** | Pre-trade thesis entry with thesis category, stop-loss, and risk validation |
+
 ### Real-Time Multiplayer Matches
 
 Head-to-head trading battles over WebSocket. Both players receive identical market candles simultaneously — no latency advantage is possible. Match results feed into an ELO rating system.
