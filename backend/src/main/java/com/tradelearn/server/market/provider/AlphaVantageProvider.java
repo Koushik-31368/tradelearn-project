@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * {@link MarketDataProvider} backed by the Alpha Vantage REST API
@@ -110,7 +111,7 @@ public class AlphaVantageProvider implements MarketDataProvider {
 
         String rawJson;
         try {
-            rawJson = restTemplate.getForObject(url, String.class);
+            rawJson = Objects.requireNonNullElse(restTemplate.getForObject(url, String.class), "");
         } catch (RestClientException e) {
             log.warn("[AlphaVantage] Network error fetching {}: {}", symbol, e.getMessage());
             return Collections.emptyList();

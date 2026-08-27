@@ -106,7 +106,9 @@ public class EpochLockstepEngine<A> {
 
     // ── Configuration (set at construction) ────────────────────────────────
 
+    @SuppressWarnings("unused") // reserved for future stale-epoch rejection logic
     private final int staleEpochTolerance;
+
     private final int maxQueueSize;
 
     // ── State ───────────────────────────────────────────────────────────────

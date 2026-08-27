@@ -1,6 +1,5 @@
 package com.tradelearn.server.market.replay;
 
-import com.tradelearn.server.market.model.StockCandleDaily;
 import com.tradelearn.server.market.model.StockSymbol;
 import com.tradelearn.server.market.repository.StockCandleDailyRepository;
 import com.tradelearn.server.market.repository.StockSymbolRepository;
@@ -58,6 +57,7 @@ public class TickReplayEngine {
     /** Maximum allowed tick interval. */
     private static final long MAX_TICK_MS = 60_000L;
     /** Default: 5 s per candle, matching the multiplayer tick rate. */
+    @SuppressWarnings("unused") // documented default; callers may reference this in future
     private static final long DEFAULT_TICK_MS = 5_000L;
 
     /** In-memory registry of active simulator sessions. */
@@ -133,6 +133,7 @@ public class TickReplayEngine {
         lastTickPrices.put(sessionId, first.getClose());
 
         // Schedule subsequent ticks
+        @SuppressWarnings("null") // Duration.ofMillis is non-null; @NonNull required by TaskScheduler signature
         ScheduledFuture<?> future = taskScheduler.scheduleAtFixedRate(
                 () -> tick(sessionId, candles, idx, clampedInterval),
                 Duration.ofMillis(clampedInterval)

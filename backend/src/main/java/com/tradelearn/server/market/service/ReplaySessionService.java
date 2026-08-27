@@ -38,6 +38,7 @@ public class ReplaySessionService {
      * Minimum number of trading days required to start a DB-backed replay session.
      * If fewer candles are available, the service falls back to JSON.
      */
+    @SuppressWarnings("unused") // documents the threshold; used implicitly via fallback logic
     private static final int MIN_CANDLES_REQUIRED = 30;
 
     private final StockSymbolRepository symbolRepo;

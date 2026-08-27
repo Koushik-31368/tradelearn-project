@@ -43,6 +43,7 @@ import static org.mockito.Mockito.*;
  * </ul>
  */
 @ExtendWith(MockitoExtension.class)
+@SuppressWarnings("null") // Mockito matchers (anyString, eq, any) return null at compile-time; safe at runtime
 class AlphaVantageCacheServiceTest {
 
     @Mock

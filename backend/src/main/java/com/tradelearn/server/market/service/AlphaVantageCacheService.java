@@ -80,6 +80,7 @@ public class AlphaVantageCacheService {
      * @param end    Inclusive end date
      * @return Filtered, ascending-sorted candle list (may be empty).
      */
+    @SuppressWarnings("null") // json and TTL_DAILY are non-null; IDE flags @NonNull param mismatch from StringRedisTemplate
     public List<Candle> getCandles(String symbol, LocalDate start, LocalDate end) {
         String redisKey = KEY_PREFIX + symbol.toUpperCase();
 
