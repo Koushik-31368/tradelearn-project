@@ -27,6 +27,7 @@ const TermsPage         = lazy(() => import('./features/legal/pages/TermsPage'))
 const PrivacyPage       = lazy(() => import('./features/legal/pages/PrivacyPage'));
 const RiskDisclosurePage= lazy(() => import('./features/legal/pages/RiskDisclosurePage'));
 const LearnPage         = lazy(() => import('./features/learn/pages/LearnPage'));
+const NotFoundPage      = lazy(() => import('./features/errors/pages/NotFoundPage'));
 
 // ── Minimal loading spinner shown while a lazy page chunk downloads ──
 function PageLoader() {
@@ -58,10 +59,18 @@ function AppContent() {
 
   return (
     <div className="App">
+      {/* ── Skip-to-content link (a11y) ── */}
+      <a href="#main-content" className="visually-hidden" style={{ position: 'absolute', top: 8, left: 8, zIndex: 10000, padding: '8px 16px', background: 'var(--gold)', color: 'var(--text-dark)', fontFamily: 'var(--font-mono)', fontSize: 13, fontWeight: 700, borderRadius: 2, textDecoration: 'none' }}
+        onFocus={e => e.target.classList.remove('visually-hidden')}
+        onBlur={e => e.target.classList.add('visually-hidden')}
+      >
+        Skip to main content
+      </a>
       <div id="scroll-progress" aria-hidden="true" />
       <Navbar />
       <MarketTicker />
       <Suspense fallback={<PageLoader />}>
+        <main id="main-content">
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<LoginPage />} />
@@ -82,7 +91,9 @@ function AppContent() {
           <Route path="/terms" element={<TermsPage />} />
           <Route path="/privacy" element={<PrivacyPage />} />
           <Route path="/risk-disclosure" element={<RiskDisclosurePage />} />
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
+        </main>
       </Suspense>
       {!hideTickerOnAuth && <Footer />}
       <DailyCheckinModal />
