@@ -1,11 +1,38 @@
 // src/pages/HomePage.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../auth/AuthContext';
 import { backendUrl } from '../../../api/client';
 import DashboardPanel from '../components/DashboardPanel';
 import bgImage from '../../../assets/background.jpg';
 import './HomePage.css';
+
+/* ── useCountUp hook ───────────────────────────────── */
+function useCountUp(target, duration = 1200) {
+  const [value, setValue] = useState(0);
+  const raf = useRef(null);
+  const startTs = useRef(null);
+  const startVal = useRef(0);
+
+  useEffect(() => {
+    if (target === 0) { setValue(0); return; }
+    startVal.current = 0;
+    startTs.current = null;
+    const tick = (ts) => {
+      if (!startTs.current) startTs.current = ts;
+      const elapsed = ts - startTs.current;
+      const progress = Math.min(elapsed / duration, 1);
+      // ease-out cubic
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setValue(Math.round(startVal.current + (target - startVal.current) * eased));
+      if (progress < 1) raf.current = requestAnimationFrame(tick);
+    };
+    raf.current = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf.current);
+  }, [target, duration]);
+
+  return value;
+}
 
 /* Small signature mark reused across sections — a hairline rule with tick
    marks, echoing the price-axis ticks visible in the hero background photo. */
@@ -89,6 +116,12 @@ const HomePage = () => {
   }, []);
 
   const { user, isHydrating } = useAuth();
+
+  /* Animated counters — only start once metrics arrive */
+  const animatedMatches  = useCountUp(metrics.totalMatches);
+  const animatedTraders  = useCountUp(metrics.activeTraders);
+  const animatedTrades   = useCountUp(metrics.totalTrades);
+  const animatedAccuracy = useCountUp(metrics.avgAccuracy);
 
   // Wait for the silent /api/auth/refresh call to resolve before deciding
   // which view to show. Without this, a stale `user` object read from
@@ -192,19 +225,19 @@ const HomePage = () => {
           <h2 className="hp-section-title hp-section-title--center">Live Platform Metrics</h2>
           <div className="hp-stats">
             <div className="hp-stat">
-              <p className="hp-stat-value">{metrics.totalMatches.toLocaleString()}</p>
+              <p className="hp-stat-value">{animatedMatches.toLocaleString()}</p>
               <p className="hp-stat-label">Total Matches Played</p>
             </div>
             <div className="hp-stat">
-              <p className="hp-stat-value">{metrics.activeTraders.toLocaleString()}</p>
+              <p className="hp-stat-value">{animatedTraders.toLocaleString()}</p>
               <p className="hp-stat-label">Active Traders</p>
             </div>
             <div className="hp-stat">
-              <p className="hp-stat-value">{metrics.totalTrades.toLocaleString()}</p>
+              <p className="hp-stat-value">{animatedTrades.toLocaleString()}</p>
               <p className="hp-stat-label">Total Trades Executed</p>
             </div>
             <div className="hp-stat">
-              <p className="hp-stat-value">{metrics.avgAccuracy}%</p>
+              <p className="hp-stat-value">{animatedAccuracy}%</p>
               <p className="hp-stat-label">Avg Accuracy</p>
             </div>
           </div>
