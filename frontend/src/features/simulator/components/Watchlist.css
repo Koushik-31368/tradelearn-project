@@ -1,9 +1,9 @@
 /* Watchlist.css — Compact trading terminal watchlist */
 
 .watchlist {
-  background: transparent;
-  border: none;
-  border-radius: 0;
+  background: var(--bg-panel-2);
+  border: 1px solid var(--border-emphasis);
+  border-radius: var(--radius-lg);
   display: flex;
   flex-direction: column;
   height: 100%;

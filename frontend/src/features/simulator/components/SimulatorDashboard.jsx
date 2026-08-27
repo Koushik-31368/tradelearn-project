@@ -5,6 +5,7 @@ import React, {
 import { useSearchParams } from 'react-router-dom';
 import Watchlist           from './Watchlist';
 import CandlestickChart    from './CandlestickChart';
+import PortfolioSummary    from './PortfolioSummary';
 import OrderTicket         from './OrderTicket';
 import TransactionHistory  from './TransactionHistory';
 import ReflectionModal     from './ReflectionModal';
@@ -12,6 +13,7 @@ import {
   getDailyStocks,
   generateCandleHistory,
   generateScenarioCandleHistory,
+  generateEquityCurve,
   computeSMA,
   getPortfolio,
   getTradeHistory,
@@ -22,16 +24,11 @@ import {
 
 import './SimulatorDashboard.css';
 
-/* ── Constants ── */
 const STRATEGY_NAMES = {
-  'rsi-reversion':     'RSI Mean Reversion',
-  'sma-cross':         'SMA Crossover',
-  'breakout':          'Breakout Trading',
-  'momentum-trading':  'Momentum Trading',
-  'support-resistance':'Support & Resistance',
-  'scalping':          'Scalping',
-  'buy-hold':          'Buy & Hold',
-  'macd-strategy':     'MACD Strategy',
+  'rsi-reversion': 'RSI Mean Reversion', 'sma-cross': 'SMA Crossover',
+  'breakout': 'Breakout Trading', 'momentum-trading': 'Momentum Trading',
+  'support-resistance': 'Support & Resistance', 'scalping': 'Scalping',
+  'buy-hold': 'Buy & Hold', 'macd-strategy': 'MACD Strategy',
 };
 
 const REPLAY_SPEEDS = [
@@ -40,7 +37,6 @@ const REPLAY_SPEEDS = [
   { label: '5×', ms: 300  },
 ];
 
-/* ── Component ── */
 const SimulatorDashboard = () => {
   const [searchParams]   = useSearchParams();
   const strategySlug     = searchParams.get('strategy');
@@ -50,6 +46,7 @@ const SimulatorDashboard = () => {
   const [selectedSymbol, setSelectedSymbol] = useState('RELIANCE');
   const [portfolio,    setPortfolio] = useState(() => getPortfolio());
   const [trades,       setTrades]    = useState(() => getTradeHistory());
+  const [equityCurve]  = useState(() => generateEquityCurve());
 
   const [allCandles,   setAllCandles]   = useState([]);
   const [visibleCount, setVisibleCount] = useState(30);
@@ -130,19 +127,6 @@ const SimulatorDashboard = () => {
   const livePrice      = visibleCandles.length > 0 ? visibleCandles[visibleCandles.length - 1].close : selectedStock.price;
   const liveStock      = useMemo(() => ({ ...selectedStock, price: livePrice }), [selectedStock, livePrice]);
 
-  // Portfolio stats
-  const portfolioStats = useMemo(() => {
-    const holdingsValue = Object.entries(portfolio.holdings).reduce((sum, [sym, h]) => {
-      const s = stocks.find((x) => x.symbol === sym);
-      return s ? sum + h.qty * s.price : sum;
-    }, 0);
-    const totalValue = portfolio.cash + holdingsValue;
-    const pnl = totalValue - 1_000_000;
-    const pnlPct = ((pnl / 1_000_000) * 100).toFixed(2);
-    const positions = Object.keys(portfolio.holdings).length;
-    return { totalValue, pnl, pnlPct, positions, cash: portfolio.cash };
-  }, [portfolio, stocks]);
-
   /* ── Handlers ── */
   const handleSelect = useCallback((symbol) => {
     setSelectedSymbol(symbol);
@@ -175,103 +159,64 @@ const SimulatorDashboard = () => {
     }
   }, [visibleCount, allCandles.length]);
 
-  const isProfit = portfolioStats.pnl >= 0;
-
-  /* ── Render ── */
   return (
-    <div className="sim-dash">
+    <div className="sim-dashboard">
       <ReflectionModal userId={1} onReflectionsComplete={() => setTick((t) => t + 1)} />
 
-      {/* ═══ Portfolio Strip ═══ */}
-      <div className="sim-strip">
-        <div className="sim-strip__left">
-          <div className="sim-strip__item">
-            <span className="sim-strip__label">Portfolio</span>
-            <span className="sim-strip__val">₹{portfolioStats.totalValue.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</span>
-          </div>
-          <div className="sim-strip__divider" />
-          <div className="sim-strip__item">
-            <span className="sim-strip__label">P&L</span>
-            <span className={`sim-strip__val ${isProfit ? 'sim-strip__val--up' : 'sim-strip__val--down'}`}>
-              {isProfit ? '+' : ''}{portfolioStats.pnlPct}%
-            </span>
-          </div>
-          <div className="sim-strip__divider" />
-          <div className="sim-strip__item">
-            <span className="sim-strip__label">Cash</span>
-            <span className="sim-strip__val">₹{portfolioStats.cash.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</span>
-          </div>
-          <div className="sim-strip__divider" />
-          <div className="sim-strip__item">
-            <span className="sim-strip__label">Positions</span>
-            <span className="sim-strip__val">{portfolioStats.positions}</span>
-          </div>
-
-          {strategyName && (
-            <>
-              <div className="sim-strip__divider" />
-              <div className="sim-strip__item">
-                <span className="sim-strip__label">Strategy</span>
-                <span className="sim-strip__val sim-strip__val--accent">🎯 {strategyName}</span>
-              </div>
-            </>
-          )}
+      {/* ── Controls Bar ── */}
+      <div className="sim-dashboard__topbar">
+        <div className="sim-dashboard__topbar-left">
+          <h2 className="sim-dashboard__title">
+            📈 Simulator
+            {strategyName && <span className="sim-dashboard__strategy">🎯 {strategyName}</span>}
+          </h2>
         </div>
-
-        <div className="sim-strip__right">
-          <div className="sim-strip__source">
+        <div className="sim-dashboard__topbar-right">
+          <div className="sim-dashboard__sources">
             {['live', 'local', 'scenario'].map((src) => (
               <button
                 key={src}
-                className={`sim-strip__src${dataSource === src ? ' sim-strip__src--on' : ''}`}
+                className={`sim-dashboard__src-btn${dataSource === src ? ' sim-dashboard__src-btn--active' : ''}`}
                 onClick={() => setDataSource(src)}
               >
-                {src === 'live' ? '🌐' : src === 'local' ? '💾' : '🎬'}
+                {src === 'live' ? '🌐 Live' : src === 'local' ? '💾 Local' : '🎬 Scenario'}
               </button>
             ))}
           </div>
-
           {dataSource === 'scenario' && (
-            <select
-              className="sim-strip__scenario"
-              value={scenario}
-              onChange={(e) => setScenario(e.target.value)}
-            >
-              {SCENARIOS.map((s) => (
-                <option key={s.key} value={s.key}>{s.label}</option>
-              ))}
+            <select className="sim-dashboard__scenario-select" value={scenario} onChange={(e) => setScenario(e.target.value)}>
+              {SCENARIOS.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
             </select>
           )}
-
-          <button className="sim-strip__reset" onClick={() => setShowReset(true)} title="Reset portfolio">↺</button>
+          <button className="sim-dashboard__reset-btn" onClick={() => setShowReset(true)}>↺ Reset</button>
         </div>
       </div>
 
-      {/* Reset confirm */}
       {showReset && (
-        <div className="sim-confirm">
-          <span>Reset portfolio to ₹10L?</span>
-          <button className="sim-confirm__yes" onClick={handleReset}>Yes</button>
-          <button className="sim-confirm__no" onClick={() => setShowReset(false)}>Cancel</button>
+        <div className="sim-dashboard__confirm-bar">
+          <span>Reset portfolio to ₹10,00,000?</span>
+          <button className="sim-dashboard__confirm-yes" onClick={handleReset}>Yes, Reset</button>
+          <button className="sim-dashboard__confirm-no" onClick={() => setShowReset(false)}>Cancel</button>
         </div>
       )}
 
-      {/* ═══ Main Layout ═══ */}
-      <div className="sim-body">
+      {/* ── Portfolio Cards ── */}
+      <PortfolioSummary portfolio={portfolio} stocks={stocks} equityCurve={equityCurve} />
 
-        {/* LEFT — Watchlist */}
-        <aside className="sim-body__watch">
+      {/* ── Main 3-Column ── */}
+      <div className="sim-dashboard__main">
+        {/* Watchlist */}
+        <div className="sim-dashboard__left">
           <Watchlist stocks={stocks} selectedSymbol={selectedSymbol} onSelect={handleSelect} />
-        </aside>
+        </div>
 
-        {/* CENTER — Chart */}
-        <main className="sim-body__chart">
+        {/* Chart with inline replay */}
+        <div className="sim-dashboard__center">
           <CandlestickChart
             candles={visibleCandles}
             smaData={smaData}
             symbol={selectedSymbol}
             isLoading={isLoading}
-            /* Replay props — rendered inside chart header */
             isPlaying={isPlaying}
             onReplay={handleReplay}
             speedIdx={speedIdx}
@@ -281,15 +226,15 @@ const SimulatorDashboard = () => {
             totalCandles={allCandles.length}
             onSeek={(n) => { setIsPlaying(false); setVisibleCount(Math.max(10, Math.min(n, allCandles.length))); }}
           />
-        </main>
+        </div>
 
-        {/* RIGHT — Order Ticket */}
-        <aside className="sim-body__order">
+        {/* Order Ticket */}
+        <div className="sim-dashboard__right">
           <OrderTicket stock={liveStock} portfolio={portfolio} onTrade={handleTrade} />
-        </aside>
+        </div>
       </div>
 
-      {/* ═══ Bottom — Trade History ═══ */}
+      {/* ── Bottom: Trade History ── */}
       <TransactionHistory trades={trades} />
     </div>
   );

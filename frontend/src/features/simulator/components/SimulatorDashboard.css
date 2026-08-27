@@ -1,199 +1,138 @@
-/* SimulatorDashboard.css — Clean trading terminal layout */
+/* SimulatorDashboard.css — Card-based layout with clean gaps */
 
-.sim-dash {
+.sim-dashboard {
   display: flex;
   flex-direction: column;
-  gap: 1px;
-  padding: 0;
-  min-height: calc(100vh - 60px);
-  background: #0d0d14;
+  gap: 14px;
+  padding: 16px 20px 40px;
+  min-height: 100vh;
+  background: var(--bg);
 }
 
-/* ═══════════════════════════════════════════════
-   Portfolio Strip — single horizontal bar
-   ═══════════════════════════════════════════════ */
-.sim-strip {
+/* ── Top Bar ── */
+.sim-dashboard__topbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 16px;
-  height: 42px;
-  background: #111119;
-  border-bottom: 1px solid #1e1e2e;
-  flex-shrink: 0;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 10px 16px;
+  background: var(--bg-panel-2);
+  border: 1px solid var(--border-emphasis);
+  border-radius: var(--radius-lg);
 }
 
-.sim-strip__left {
-  display: flex;
-  align-items: center;
-  gap: 0;
-  height: 100%;
-}
+.sim-dashboard__topbar-left { display: flex; align-items: center; gap: 10px; }
+.sim-dashboard__topbar-right { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 
-.sim-strip__item {
+.sim-dashboard__title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-light);
+  margin: 0;
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 0 16px;
-  height: 100%;
 }
 
-.sim-strip__divider {
-  width: 1px;
-  height: 20px;
-  background: #1e1e2e;
+.sim-dashboard__strategy {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--accent-secondary);
+  background: color-mix(in srgb, var(--accent-secondary) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent-secondary) 25%, transparent);
+  border-radius: var(--radius);
+  padding: 2px 10px;
 }
 
-.sim-strip__label {
-  font: 500 10px 'IBM Plex Mono', monospace;
-  color: #5c5c74;
-  text-transform: uppercase;
-  letter-spacing: .08em;
-}
+.sim-dashboard__sources { display: flex; gap: 4px; }
 
-.sim-strip__val {
-  font: 700 13px 'IBM Plex Mono', monospace;
-  color: #e8e8f0;
-  font-variant-numeric: tabular-nums;
-}
-.sim-strip__val--up     { color: #39FF88; }
-.sim-strip__val--down   { color: #FF3B5C; }
-.sim-strip__val--accent { color: #00E5FF; font-size: 11px; }
-
-.sim-strip__right {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.sim-strip__source {
-  display: flex;
-  gap: 2px;
-}
-
-.sim-strip__src {
-  width: 28px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
+.sim-dashboard__src-btn {
+  padding: 5px 12px;
+  font-size: 0.72rem;
+  font-weight: 600;
   background: transparent;
-  border: 1px solid #1e1e2e;
-  border-radius: 3px;
+  border: 1px solid var(--border-emphasis);
+  border-radius: var(--radius);
+  color: var(--text-muted);
   cursor: pointer;
-  transition: all 0.12s ease;
-  padding: 0;
+  transition: all var(--transition-fast);
 }
-.sim-strip__src:hover { border-color: #3a3a52; }
-.sim-strip__src--on {
-  background: #7B2FF7;
-  border-color: #7B2FF7;
-}
-
-.sim-strip__scenario {
-  padding: 2px 6px;
-  font: 500 10px 'IBM Plex Mono', monospace;
-  background: #111119;
-  border: 1px solid #1e1e2e;
-  border-radius: 3px;
-  color: #e8e8f0;
-  cursor: pointer;
-}
-
-.sim-strip__reset {
-  width: 28px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
-  background: transparent;
-  border: 1px solid #1e1e2e;
-  border-radius: 3px;
-  color: #5c5c74;
-  cursor: pointer;
-  padding: 0;
-  transition: all 0.12s ease;
-}
-.sim-strip__reset:hover { color: #FF3B5C; border-color: #FF3B5C; }
-
-/* ═══ Confirm bar ═══ */
-.sim-confirm {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 16px;
-  background: rgba(255,59,92,0.08);
-  border-bottom: 1px solid rgba(255,59,92,0.2);
-  font: 600 11px 'IBM Plex Mono', monospace;
-  color: #e8e8f0;
-}
-.sim-confirm__yes {
-  padding: 3px 14px;
-  background: #FF3B5C;
-  border: none;
-  border-radius: 3px;
+.sim-dashboard__src-btn:hover { border-color: var(--text-faint); color: var(--text-light); }
+.sim-dashboard__src-btn--active {
+  background: var(--cobalt);
+  border-color: var(--cobalt);
   color: #fff;
-  font: 700 10px 'IBM Plex Mono', monospace;
+}
+
+.sim-dashboard__scenario-select {
+  padding: 4px 8px;
+  font-size: 0.75rem;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-emphasis);
+  border-radius: var(--radius);
+  color: var(--text-light);
+  max-width: 260px;
   cursor: pointer;
 }
-.sim-confirm__no {
-  padding: 3px 14px;
+
+.sim-dashboard__reset-btn {
+  padding: 5px 14px;
+  font-size: 0.72rem;
+  font-weight: 600;
   background: transparent;
-  border: 1px solid #1e1e2e;
-  border-radius: 3px;
-  color: #5c5c74;
-  font: 700 10px 'IBM Plex Mono', monospace;
+  border: 1px solid var(--border-emphasis);
+  border-radius: var(--radius);
+  color: var(--text-muted);
   cursor: pointer;
+  transition: all var(--transition-fast);
+}
+.sim-dashboard__reset-btn:hover { color: var(--danger); border-color: var(--danger); }
+
+/* Confirm bar */
+.sim-dashboard__confirm-bar {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 16px;
+  background: color-mix(in srgb, var(--danger) 8%, var(--bg-panel));
+  border: 1px solid color-mix(in srgb, var(--danger) 30%, transparent);
+  border-radius: var(--radius-lg);
+  font-size: 0.82rem; font-weight: 600; color: var(--text-light);
+}
+.sim-dashboard__confirm-yes {
+  padding: 4px 16px; background: var(--danger); border: none; border-radius: var(--radius);
+  color: #fff; font-weight: 700; font-size: 0.75rem; cursor: pointer;
+}
+.sim-dashboard__confirm-no {
+  padding: 4px 16px; background: transparent; border: 1px solid var(--border-emphasis);
+  border-radius: var(--radius); color: var(--text-muted); font-weight: 700; font-size: 0.75rem; cursor: pointer;
 }
 
-/* ═══════════════════════════════════════════════
-   Main Body — 3-column layout
-   ═══════════════════════════════════════════════ */
-.sim-body {
+/* ── 3-column layout ── */
+.sim-dashboard__main {
   display: grid;
-  grid-template-columns: 200px 1fr 260px;
-  grid-template-rows: 1fr;
-  gap: 1px;
-  flex: 1;
-  min-height: 0;
-  background: #0d0d14;
+  grid-template-columns: 220px 1fr 270px;
+  gap: 14px;
+  min-height: 520px;
 }
 
-.sim-body__watch {
-  background: #111119;
-  border-right: 1px solid #1e1e2e;
-  overflow: hidden;
+.sim-dashboard__left,
+.sim-dashboard__right {
   display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
-.sim-body__chart {
-  background: #111119;
+.sim-dashboard__center {
   display: flex;
   flex-direction: column;
   min-width: 0;
-  overflow: hidden;
 }
 
-.sim-body__order {
-  background: #111119;
-  border-left: 1px solid #1e1e2e;
-  overflow-y: auto;
-  display: flex;
+/* ── Responsive ── */
+@media (max-width: 1100px) {
+  .sim-dashboard__main { grid-template-columns: 190px 1fr 250px; }
 }
-
-/* ═══ Responsive ═══ */
-@media (max-width: 1000px) {
-  .sim-body { grid-template-columns: 170px 1fr 230px; }
-}
-
-@media (max-width: 800px) {
-  .sim-body {
-    grid-template-columns: 1fr;
-    grid-template-rows: 200px 1fr auto;
-  }
-  .sim-body__watch { border-right: none; border-bottom: 1px solid #1e1e2e; }
-  .sim-body__order { border-left: none; border-top: 1px solid #1e1e2e; }
-  .sim-strip { flex-wrap: wrap; height: auto; padding: 8px 12px; gap: 6px; }
+@media (max-width: 860px) {
+  .sim-dashboard__main { grid-template-columns: 1fr; }
+  .sim-dashboard__left { max-height: 220px; }
 }

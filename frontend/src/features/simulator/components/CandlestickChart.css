@@ -19,7 +19,10 @@
   flex-direction: column;
   flex: 1;
   min-height: 0;
-  background: #111119;
+  background: var(--bg-panel-2);
+  border: 1px solid var(--border-emphasis);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
 }
 
 /* ── Header ── */
