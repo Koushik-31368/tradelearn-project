@@ -1,9 +1,9 @@
-/* src/components/simulator/TransactionHistory.css */
+/* TransactionHistory.css — Compact trade log table */
 
 .transaction-history {
-  background: var(--bg-panel-2);
-  border: 1px solid var(--border-emphasis);
-  border-radius: var(--radius-lg);
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
   overflow: hidden;
 }
 
@@ -11,156 +11,125 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 20px;
+  padding: 10px 14px;
   border-bottom: 1px solid var(--border);
 }
 
 .transaction-history__header-right {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
 .transaction-history__title {
-  font-size: 0.9rem;
-  font-weight: 700;
-  color: var(--text-light);
+  font: 700 10px var(--font-mono);
+  color: var(--text-muted);
   margin: 0;
+  text-transform: uppercase;
+  letter-spacing: .08em;
 }
 
 .transaction-history__count {
-  font-size: 0.72rem;
-  color: var(--text-muted);
-  background: var(--border);
-  padding: 2px 10px;
-  border-radius: var(--radius);
+  font: 600 9px var(--font-mono);
+  color: var(--text-dim);
+  background: var(--bg-panel-2);
+  padding: 1px 8px;
+  border-radius: 2px;
 }
 
 .th-export-btn {
-  padding: 4px 12px;
-  font: 600 10px var(--font-mono);
-  letter-spacing: .06em;
+  padding: 3px 10px;
+  font: 600 9px var(--font-mono);
+  letter-spacing: .04em;
   text-transform: uppercase;
   background: transparent;
-  border: 1px solid var(--border-2);
-  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  border-radius: 2px;
   color: var(--gold);
   cursor: pointer;
-  transition: background var(--transition-fast), border-color var(--transition-fast);
+  transition: all var(--transition-fast);
 }
-
 .th-export-btn:hover {
-  background: color-mix(in srgb, var(--gold) 10%, transparent);
+  background: color-mix(in srgb, var(--gold) 8%, transparent);
   border-color: var(--gold);
 }
 
-
-.transaction-history__scroll {
-  overflow-x: auto;
-}
+.transaction-history__scroll { overflow-x: auto; }
 
 .transaction-history__table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 520px;
+  min-width: 480px;
 }
 
-.transaction-history__table thead {
-  background: var(--bg-panel);
-}
+.transaction-history__table thead { background: var(--bg-panel-2); }
 
 .transaction-history__table th {
-  padding: 10px 16px;
+  padding: 7px 14px;
   text-align: left;
-  font-size: 0.7rem;
-  font-weight: 700;
-  color: var(--text-muted);
+  font: 700 9px var(--font-mono);
+  color: var(--text-dim);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: .06em;
   cursor: pointer;
   user-select: none;
   white-space: nowrap;
-  transition: color 0.15s ease;
+  transition: color 0.12s ease;
 }
-
-.transaction-history__table th:hover {
-  color: var(--text);
-}
+.transaction-history__table th:hover { color: var(--text-muted); }
 
 .th-sort-icon {
-  font-size: 0.65rem;
-  margin-left: 4px;
-  color: var(--text-faint);
+  font-size: 8px;
+  margin-left: 3px;
+  color: var(--text-dim);
 }
-
-.th-sort-icon.active {
-  color: var(--primary);
-}
+.th-sort-icon.active { color: var(--cobalt); }
 
 .transaction-history__row {
-  transition: background 0.1s ease;
+  transition: background 0.08s ease;
 }
-
-.transaction-history__row:hover {
-  background: rgba(255, 255, 255, 0.02);
-}
+.transaction-history__row:hover { background: rgba(255,255,255,0.015); }
 
 .transaction-history__table td {
-  padding: 10px 16px;
-  font-size: 0.8rem;
-  color: var(--text);
-  border-bottom: 1px solid var(--bg-panel-2);
+  padding: 7px 14px;
+  font: 500 11px var(--font-mono);
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border);
   font-variant-numeric: tabular-nums;
 }
 
-.td-date {
-  color: var(--text-muted);
-  font-size: 0.75rem;
-}
+.td-date { color: var(--text-dim); font-size: 10px; }
+.td-symbol { font-weight: 700; color: var(--text-light); }
+.td-num { font: 500 11px var(--font-mono); }
 
-.td-symbol {
-  font-weight: 700;
-  color: var(--text-light);
-}
-
-.td-num {
-  font-family: 'SF Mono', 'Fira Code', monospace;
-  font-size: 0.78rem;
-}
-
-/* Trade Type Badges */
+/* Trade badges */
 .trade-badge {
   display: inline-block;
-  padding: 2px 8px;
-  border-radius: var(--radius-sm);
-  font-size: 0.65rem;
-  font-weight: 800;
-  letter-spacing: 0.5px;
+  padding: 1px 6px;
+  border-radius: 2px;
+  font: 800 8px var(--font-mono);
+  letter-spacing: .05em;
 }
-
 .trade-badge--buy {
-  background: rgba(0, 255, 136, 0.1);
-  color: var(--primary);
+  background: color-mix(in srgb, var(--green-bright) 12%, transparent);
+  color: var(--green-bright);
 }
-
 .trade-badge--sell {
-  background: rgba(255, 77, 79, 0.1);
+  background: color-mix(in srgb, var(--danger) 12%, transparent);
   color: var(--danger);
 }
-
 .trade-badge--short {
-  background: rgba(255, 153, 0, 0.1);
-  color: #ff9900;
+  background: color-mix(in srgb, var(--gold) 12%, transparent);
+  color: var(--gold);
 }
-
 .trade-badge--cover {
-  background: rgba(0, 170, 255, 0.1);
-  color: #00aaff;
+  background: color-mix(in srgb, var(--accent-secondary) 12%, transparent);
+  color: var(--accent-secondary);
 }
 
 .transaction-history__empty {
-  padding: 36px;
+  padding: 28px;
   text-align: center;
-  color: var(--text-faint);
-  font-size: 0.85rem;
+  color: var(--text-dim);
+  font: 500 11px var(--font-mono);
 }

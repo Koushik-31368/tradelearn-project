@@ -1,31 +1,30 @@
-/* src/components/simulator/MarketSentiment.css */
+/* MarketSentiment.css — Compact indicators panel */
 
 .ms-panel {
-  background: var(--bg-panel-2);
-  border: 1px solid var(--border-emphasis);
-  border-radius: var(--radius);
-  padding: 16px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 10px 12px;
 }
 
 .ms-title {
-  font-size: 13px;
-  font-weight: 600;
+  font: 700 10px var(--font-mono);
   text-transform: uppercase;
-  letter-spacing: 0.8px;
+  letter-spacing: .08em;
   color: var(--text-muted);
-  margin: 0 0 14px;
+  margin: 0 0 10px;
 }
 
 .ms-rows {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
 }
 
 .ms-row {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
 }
 
 .ms-row-top {
@@ -35,29 +34,29 @@
 }
 
 .ms-label {
-  font-size: 12px;
+  font: 600 9px var(--font-mono);
   text-transform: uppercase;
-  letter-spacing: 0.8px;
-  color: var(--text-muted);
+  letter-spacing: .06em;
+  color: var(--text-dim);
 }
 
 .ms-value {
-  font-size: 14px;
-  font-weight: 600;
+  font: 600 12px var(--font-mono);
+  font-variant-numeric: tabular-nums;
 }
 
 /* Gauge bar */
 .ms-gauge-track {
   width: 100%;
-  height: 3px;
-  background: var(--border-2);
-  border-radius: 2px;
+  height: 2px;
+  background: var(--border);
+  border-radius: 1px;
   overflow: hidden;
 }
 
 .ms-gauge-fill {
   height: 100%;
-  border-radius: 2px;
+  border-radius: 1px;
   transition: width 0.4s ease;
-  opacity: 0.8;
+  opacity: 0.75;
 }
