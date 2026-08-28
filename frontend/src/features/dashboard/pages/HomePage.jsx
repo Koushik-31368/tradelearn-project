@@ -136,20 +136,7 @@ const HomePage = () => {
   }
 
   if (user) {
-    return (
-      <div className="hp">
-        <section className="hp-hero hp-hero--logged-in" style={{ backgroundImage: `url(${bgImage})` }}>
-          <div className="hp-hero-overlay"></div>
-          <div className="hp-inner hp-hero-content" style={{ textAlign: 'center', justifyContent: 'center' }}>
-            <div className="hp-hero-text">
-              <h1 className="hp-hero-title">Welcome back, {user.username}</h1>
-              <p className="hp-hero-sub">Ready to conquer the market today?</p>
-            </div>
-          </div>
-        </section>
-        <DashboardPanel user={user} />
-      </div>
-    );
+    return <DashboardPanel user={user} />;
   }
 
   return (
