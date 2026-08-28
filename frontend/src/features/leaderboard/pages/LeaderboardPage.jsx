@@ -1,4 +1,4 @@
-// src/pages/LeaderboardPage.jsx
+// src/features/leaderboard/pages/LeaderboardPage.jsx
 import React, { useState, useEffect } from 'react';
 import apiClient from '../../../api/client';
 import { useAuth } from '../../auth/AuthContext';
@@ -11,6 +11,61 @@ const TAB_PRACTICE = 'practice';
 
 const ALL_TIERS = ['Grandmaster', 'Master', 'Diamond', 'Platinum', 'Gold', 'Silver', 'Bronze'];
 
+const TIER_RATING = {
+  Grandmaster: 2600, Master: 2100, Diamond: 1600,
+  Platinum: 1200, Gold: 900, Silver: 600, Bronze: 100,
+};
+
+/* ── Rank badge with medal for top 3 ── */
+const RankBadge = ({ rank }) => {
+    if (rank === 1) return <span className="lb-medal">🥇</span>;
+    if (rank === 2) return <span className="lb-medal">🥈</span>;
+    if (rank === 3) return <span className="lb-medal">🥉</span>;
+    return <span className="lb-rank-num">{rank}</span>;
+};
+
+/* ── Shared table body ── */
+const LeaderTable = ({ entries, colSpan, user, rankOffset = 0, extraCol }) => (
+    <tbody>
+        {entries.map((e, i) => {
+            const rank  = (e.rank ?? i + 1 + rankOffset);
+            const isMe  = user && (
+                String(e.userId) === String(user.id) || e.username === user.username
+            );
+            const topCls = rank <= 3 ? ` lb-top-${rank}` : '';
+            const meCls  = isMe ? ' lb-row-me' : '';
+            return (
+                <tr key={e.userId ?? e.id ?? i} className={`lb-row${topCls}${meCls}`}>
+                    <td className="lb-cell lb-cell-rank"><RankBadge rank={rank} /></td>
+                    <td className="lb-cell lb-cell-user">
+                        <span className="lb-username">{e.username}</span>
+                        {isMe && <span className="lb-you-tag">YOU</span>}
+                    </td>
+                    <td className="lb-cell lb-cell-rating">
+                        <span className="lb-rating-value">{e.rating}</span>
+                    </td>
+                    {extraCol && (
+                        <td className="lb-cell lb-cell-tier">
+                            <TierBadge rating={e.rating} />
+                        </td>
+                    )}
+                    <td className="lb-cell lb-cell-matches">
+                        {e.totalMatches ?? e.gamesPlayed ?? '—'}
+                    </td>
+                </tr>
+            );
+        })}
+        {entries.length === 0 && (
+            <tr>
+                <td colSpan={colSpan} className="lb-empty">
+                    No players yet. Be the first!
+                </td>
+            </tr>
+        )}
+    </tbody>
+);
+
+/* ══════════════════════════════════════════════════════════════ */
 const LeaderboardPage = () => {
     const { user } = useAuth();
     const [activeTab,       setActiveTab]       = useState(TAB_MULTI);
@@ -21,7 +76,7 @@ const LeaderboardPage = () => {
     const [loading,         setLoading]         = useState(true);
     const [error,           setError]           = useState(null);
 
-    // ── Load multiplayer leaderboard ──────────────────────────────────────
+    // ── Load multiplayer leaderboard ──────────────────────────
     useEffect(() => {
         (async () => {
             setLoading(true);
@@ -37,20 +92,18 @@ const LeaderboardPage = () => {
         })();
     }, []);
 
-    // ── Load practice leaderboard ─────────────────────────────────────────
+    // ── Load practice leaderboard ─────────────────────────────
     useEffect(() => {
         if (activeTab !== TAB_PRACTICE) return;
         (async () => {
             try {
                 const res = await apiClient.get('/api/leaderboard');
                 setPracticeEntries(res.data);
-            } catch {
-                // Non-critical; practice leaderboard might be empty
-            }
+            } catch { /* non-critical */ }
         })();
     }, [activeTab]);
 
-    // ── Load leagues leaderboard ──────────────────────────────────────────
+    // ── Load leagues leaderboard ──────────────────────────────
     useEffect(() => {
         if (activeTab !== TAB_LEAGUES) return;
         (async () => {
@@ -58,8 +111,7 @@ const LeaderboardPage = () => {
             try {
                 const res = await apiClient.get(`/api/users/leaderboard/tier/${encodeURIComponent(selectedTier)}`);
                 setLeagueEntries(res.data);
-            } catch (err) {
-                // Don't throw — just show empty table
+            } catch {
                 setLeagueEntries([]);
             } finally {
                 setLoading(false);
@@ -72,7 +124,7 @@ const LeaderboardPage = () => {
             <div className="lb-page">
                 <div className="lb-loading">
                     <div className="lb-spinner" />
-                    <p>Loading leaderboard…</p>
+                    <p>Loading rankings…</p>
                 </div>
             </div>
         );
@@ -81,218 +133,141 @@ const LeaderboardPage = () => {
     if (error) {
         return (
             <div className="lb-page">
-                <p className="lb-error">{error}</p>
+                <p className="lb-error">⚠️ {error}</p>
             </div>
         );
     }
 
     return (
         <div className="lb-page">
-            {/* ── Header ── */}
+            {/* ── Hero ── */}
             <div className="lb-header">
-                <h1 className="lb-title">
-                    <span className="lb-icon">🏆</span> Leaderboard
-                </h1>
-                <p className="lb-subtitle">Global skill rankings across all game modes</p>
-            </div>
-
-            {/* ── Mode tabs ── */}
-            <div className="lb-tabs">
-                <button
-                    className={`lb-tab${activeTab === TAB_MULTI ? ' lb-tab--active' : ''}`}
-                    onClick={() => setActiveTab(TAB_MULTI)}
-                >
-                    🌍 Global
-                </button>
-                <button
-                    className={`lb-tab${activeTab === TAB_LEAGUES ? ' lb-tab--active' : ''}`}
-                    onClick={() => setActiveTab(TAB_LEAGUES)}
-                >
-                    🛡️ Leagues
-                </button>
-                <button
-                    className={`lb-tab${activeTab === TAB_PRACTICE ? ' lb-tab--active' : ''}`}
-                    onClick={() => setActiveTab(TAB_PRACTICE)}
-                >
-                    📈 Practice
-                </button>
-            </div>
-
-            {/* ── Multiplayer leaderboard table ── */}
-            {activeTab === TAB_MULTI && (
-                <div className="lb-table-wrapper">
-                    <table className="lb-table">
-                        <thead>
-                            <tr>
-                                <th className="lb-th lb-th-rank">#</th>
-                                <th className="lb-th lb-th-user">Trader</th>
-                                <th className="lb-th lb-th-rating">Rating</th>
-                                <th className="lb-th lb-th-tier">Tier</th>
-                                <th className="lb-th lb-th-matches">Matches</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {entries.map((e) => {
-                                const isMe = user && String(e.userId) === String(user.id);
-                                return (
-                                    <tr
-                                        key={e.userId}
-                                        className={`lb-row ${isMe ? 'lb-row-me' : ''} ${e.rank <= 3 ? `lb-top-${e.rank}` : ''}`}
-                                    >
-                                        <td className="lb-cell lb-cell-rank">
-                                            <RankBadge rank={e.rank} />
-                                        </td>
-                                        <td className="lb-cell lb-cell-user">
-                                            <span className="lb-username">{e.username}</span>
-                                            {isMe && <span className="lb-you-tag">YOU</span>}
-                                        </td>
-                                        <td className="lb-cell lb-cell-rating">
-                                            <span className="lb-rating-value">{e.rating}</span>
-                                        </td>
-                                        <td className="lb-cell lb-cell-tier">
-                                            <TierBadge rating={e.rating} />
-                                        </td>
-                                        <td className="lb-cell lb-cell-matches">
-                                            {e.totalMatches}
-                                        </td>
-                                    </tr>
-                                );
-                            })}
-                            {entries.length === 0 && (
-                                <tr>
-                                    <td colSpan={5} className="lb-empty">No players yet. Be the first!</td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
+                <div className="lb-eyebrow">
+                    <div className="lb-eyebrow-dot" />
+                    Global Rankings
                 </div>
-            )}
+                <h1 className="lb-title">Leaderboard</h1>
+                <p className="lb-subtitle">
+                    Compete against traders worldwide. Climb the ranks. Earn your tier.
+                </p>
+            </div>
 
-            {/* ── Leagues leaderboard table ── */}
-            {activeTab === TAB_LEAGUES && (
-                <div className="lb-table-wrapper">
-                    <div className="lb-tier-selector">
-                        {ALL_TIERS.map(tier => (
-                            <button
-                                key={tier}
-                                className={`lb-tier-btn ${selectedTier === tier ? 'lb-tier-btn--active' : ''}`}
-                                onClick={() => setSelectedTier(tier)}
-                            >
-                                <TierBadge rating={
-                                    tier === 'Grandmaster' ? 2600 :
-                                    tier === 'Master' ? 2100 :
-                                    tier === 'Diamond' ? 1600 :
-                                    tier === 'Platinum' ? 1200 :
-                                    tier === 'Gold' ? 900 :
-                                    tier === 'Silver' ? 600 : 100
-                                } />
-                            </button>
-                        ))}
+            {/* ── Body ── */}
+            <div className="lb-body">
+                {/* Mode tabs */}
+                <div className="lb-tabs">
+                    <button
+                        id="lb-tab-global"
+                        className={`lb-tab${activeTab === TAB_MULTI ? ' lb-tab--active' : ''}`}
+                        onClick={() => setActiveTab(TAB_MULTI)}
+                    >
+                        🌍 Global
+                    </button>
+                    <button
+                        id="lb-tab-leagues"
+                        className={`lb-tab${activeTab === TAB_LEAGUES ? ' lb-tab--active' : ''}`}
+                        onClick={() => setActiveTab(TAB_LEAGUES)}
+                    >
+                        🛡️ Leagues
+                    </button>
+                    <button
+                        id="lb-tab-practice"
+                        className={`lb-tab${activeTab === TAB_PRACTICE ? ' lb-tab--active' : ''}`}
+                        onClick={() => setActiveTab(TAB_PRACTICE)}
+                    >
+                        📈 Practice
+                    </button>
+                </div>
+
+                {/* ── Global multiplayer ── */}
+                {activeTab === TAB_MULTI && (
+                    <div className="lb-table-wrapper">
+                        <table className="lb-table">
+                            <thead>
+                                <tr>
+                                    <th className="lb-th lb-th-rank">#</th>
+                                    <th className="lb-th lb-th-user">Trader</th>
+                                    <th className="lb-th lb-th-rating">Rating</th>
+                                    <th className="lb-th lb-th-tier">Tier</th>
+                                    <th className="lb-th lb-th-matches">Matches</th>
+                                </tr>
+                            </thead>
+                            <LeaderTable
+                                entries={entries}
+                                colSpan={5}
+                                user={user}
+                                extraCol={true}
+                            />
+                        </table>
                     </div>
-                    <table className="lb-table">
-                        <thead>
-                            <tr>
-                                <th className="lb-th lb-th-rank">#</th>
-                                <th className="lb-th lb-th-user">Trader</th>
-                                <th className="lb-th lb-th-rating">Rating</th>
-                                <th className="lb-th lb-th-matches">Matches</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {leagueEntries.map((e, i) => {
-                                const isMe = user && String(e.userId) === String(user.id);
-                                return (
-                                    <tr
-                                        key={e.userId}
-                                        className={`lb-row ${isMe ? 'lb-row-me' : ''} ${i < 3 ? `lb-top-${i + 1}` : ''}`}
-                                    >
-                                        <td className="lb-cell lb-cell-rank">
-                                            <RankBadge rank={i + 1} />
-                                        </td>
-                                        <td className="lb-cell lb-cell-user">
-                                            <span className="lb-username">{e.username}</span>
-                                            {isMe && <span className="lb-you-tag">YOU</span>}
-                                        </td>
-                                        <td className="lb-cell lb-cell-rating">
-                                            <span className="lb-rating-value">{e.rating}</span>
-                                        </td>
-                                        <td className="lb-cell lb-cell-matches">
-                                            {e.totalMatches}
-                                        </td>
-                                    </tr>
-                                );
-                            })}
-                            {leagueEntries.length === 0 && (
-                                <tr>
-                                    <td colSpan={4} className="lb-empty">No players in this league yet.</td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
-                </div>
-            )}
+                )}
 
-            {/* ── Practice Mode ELO leaderboard ── */}
-            {activeTab === TAB_PRACTICE && (
-                <div className="lb-table-wrapper">
-                    <p className="lb-practice-note">
-                        Ratings earned by responding to strategy hints in Practice Mode.
-                        Start at 1000 — gain +8 for correct decisions, lose 4 for wrong ones.
-                    </p>
-                    <table className="lb-table">
-                        <thead>
-                            <tr>
-                                <th className="lb-th lb-th-rank">#</th>
-                                <th className="lb-th lb-th-user">Player</th>
-                                <th className="lb-th lb-th-rating">ELO</th>
-                                <th className="lb-th lb-th-matches">Sessions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {practiceEntries.map((p, i) => {
-                                const isMe = user && p.username === user.username;
-                                return (
-                                    <tr
-                                        key={p.id}
-                                        className={`lb-row ${isMe ? 'lb-row-me' : ''} ${i < 3 ? `lb-top-${i + 1}` : ''}`}
-                                    >
-                                        <td className="lb-cell lb-cell-rank">
-                                            <RankBadge rank={i + 1} />
-                                        </td>
-                                        <td className="lb-cell lb-cell-user">
-                                            <span className="lb-username">{p.username}</span>
-                                            {isMe && <span className="lb-you-tag">YOU</span>}
-                                        </td>
-                                        <td className="lb-cell lb-cell-rating">
-                                            <span className="lb-rating-value">{p.rating}</span>
-                                        </td>
-                                        <td className="lb-cell lb-cell-matches">
-                                            {p.gamesPlayed}
-                                        </td>
+                {/* ── Leagues ── */}
+                {activeTab === TAB_LEAGUES && (
+                    <div>
+                        <div className="lb-tier-selector">
+                            {ALL_TIERS.map(tier => (
+                                <button
+                                    key={tier}
+                                    id={`lb-tier-${tier.toLowerCase()}`}
+                                    className={`lb-tier-btn${selectedTier === tier ? ' lb-tier-btn--active' : ''}`}
+                                    onClick={() => setSelectedTier(tier)}
+                                >
+                                    <TierBadge rating={TIER_RATING[tier]} />
+                                </button>
+                            ))}
+                        </div>
+                        <div className="lb-table-wrapper">
+                            <table className="lb-table">
+                                <thead>
+                                    <tr>
+                                        <th className="lb-th lb-th-rank">#</th>
+                                        <th className="lb-th lb-th-user">Trader</th>
+                                        <th className="lb-th lb-th-rating">Rating</th>
+                                        <th className="lb-th lb-th-matches">Matches</th>
                                     </tr>
-                                );
-                            })}
-                            {practiceEntries.length === 0 && (
-                                <tr>
-                                    <td colSpan={4} className="lb-empty">
-                                        No practice scores yet. Head to Practice Mode and make your first trade!
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
-                </div>
-            )}
+                                </thead>
+                                <LeaderTable
+                                    entries={leagueEntries}
+                                    colSpan={4}
+                                    user={user}
+                                    extraCol={false}
+                                />
+                            </table>
+                        </div>
+                    </div>
+                )}
+
+                {/* ── Practice ── */}
+                {activeTab === TAB_PRACTICE && (
+                    <div>
+                        <p className="lb-practice-note">
+                            Ratings earned by responding to strategy hints in Practice Mode.
+                            Start at 1000 — gain +8 for correct decisions, lose 4 for wrong ones.
+                        </p>
+                        <div className="lb-table-wrapper">
+                            <table className="lb-table">
+                                <thead>
+                                    <tr>
+                                        <th className="lb-th lb-th-rank">#</th>
+                                        <th className="lb-th lb-th-user">Player</th>
+                                        <th className="lb-th lb-th-rating">ELO</th>
+                                        <th className="lb-th lb-th-matches">Sessions</th>
+                                    </tr>
+                                </thead>
+                                <LeaderTable
+                                    entries={practiceEntries}
+                                    colSpan={4}
+                                    user={user}
+                                    extraCol={false}
+                                />
+                            </table>
+                        </div>
+                    </div>
+                )}
+            </div>
         </div>
     );
-};
-
-// ── Rank badge with medal for top 3 ──
-const RankBadge = ({ rank }) => {
-    if (rank === 1) return <span className="lb-medal lb-gold">🥇</span>;
-    if (rank === 2) return <span className="lb-medal lb-silver">🥈</span>;
-    if (rank === 3) return <span className="lb-medal lb-bronze">🥉</span>;
-    return <span className="lb-rank-num">{rank}</span>;
 };
 
 export default LeaderboardPage;

@@ -1,33 +1,21 @@
-/* src/components/TierBadge.css */
-
+/* TierBadge.css — matches dark gamified design system */
 .tier-badge {
   display: inline-block;
-  padding: 6px 12px;
-  font-size: 12px;
-  font-family: var(--font-mono);
-  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 4px;
+  font: 700 9px 'IBM Plex Mono', monospace;
   text-transform: uppercase;
-  letter-spacing: 0.8px;
-  line-height: 1;
-  border: 1px solid;
-  border-radius: 20px;
+  letter-spacing: 0.1em;
+  border: 1px solid currentColor;
   background: transparent;
-  white-space: nowrap;
-  vertical-align: middle;
+  opacity: 0.85;
+  transition: opacity 0.15s ease;
 }
-
-/* Elite tier glows — these are intentional league identity, NOT generic brand colors */
-.tier-badge--grandmaster {
-  box-shadow: 0 0 10px rgba(255, 0, 85, 0.5);
-  background: linear-gradient(90deg, rgba(255, 0, 85, 0.1), rgba(0, 0, 0, 0));
+.tier-badge--elite {
+  opacity: 1;
+  animation: tierGlow 2.5s ease-in-out infinite alternate;
 }
-
-.tier-badge--master {
-  box-shadow: 0 0 8px rgba(204, 0, 255, 0.4);
-  background: linear-gradient(90deg, rgba(204, 0, 255, 0.1), rgba(0, 0, 0, 0));
-}
-
-.tier-badge--diamond {
-  box-shadow: 0 0 8px rgba(0, 229, 255, 0.3);
-  background: linear-gradient(90deg, rgba(0, 229, 255, 0.05), rgba(0, 0, 0, 0));
+@keyframes tierGlow {
+  from { box-shadow: 0 0 6px currentColor; }
+  to   { box-shadow: 0 0 14px currentColor; }
 }
