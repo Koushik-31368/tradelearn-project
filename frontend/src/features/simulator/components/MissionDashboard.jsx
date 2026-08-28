@@ -84,12 +84,22 @@ const MissionDashboard = () => {
     const idx = idxRef.current;
     const price = mission?.dataset[idx]?.close || 0;
     const eq = balRef.current + (posRef.current.qty * price);
+    const pnlAmt = eq - (mission?.startingBalance || 500000);
+    const pnlPct = ((pnlAmt / (mission?.startingBalance || 500000)) * 100).toFixed(2);
     const result = mission.assess({
       finalBalance: eq,
       tradeCount: tradesRef.current.length,
       maxDrawdown: ddRef.current,
       forcedFail: forced,
     });
+    // Attach stats for the modal to display
+    result.stats = {
+      equity: eq,
+      pnlAmt,
+      pnlPct,
+      tradeCount: tradesRef.current.length,
+      maxDrawdown: ddRef.current,
+    };
     setAssessment(result);
 
     // Save to localStorage
@@ -285,7 +295,19 @@ const MissionDashboard = () => {
       </div>
 
       {assessment && (
-        <MissionDebriefModal assessment={assessment} onClose={() => { setAssessment(null); navigate('/missions'); }} />
+        <MissionDebriefModal
+          assessment={assessment}
+          onClose={() => {
+            setAssessment(null);
+            if (assessment.nextMission === 'completed') {
+              navigate('/missions');
+            } else if (assessment.status === 'PASS' && assessment.nextMission) {
+              navigate(`/mission-dashboard/${assessment.nextMission}`);
+            } else {
+              navigate('/missions');
+            }
+          }}
+        />
       )}
     </div>
   );

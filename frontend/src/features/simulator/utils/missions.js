@@ -251,7 +251,7 @@ export const MISSIONS = [
           wentWell: `You kept your capital mostly intact (${pnlPct}%).`,
           wentWrong: history.tradeCount > 3 ? 'You traded a bit too much for a choppy market.' : 'Minor losses from noise.',
           lesson: 'In a range-bound market, every trade is a coin flip minus fees. Less is more.',
-          nextMission: 'completed',
+          nextMission: 'mission_4',
         };
       }
       return {
@@ -266,3 +266,208 @@ export const MISSIONS = [
     },
   },
 ];
+
+/* ═══════════════════════════════════════════════════════
+   Mission 4 dataset: 2016 Demonetisation Shock
+   NIFTY fell ~14% in 3 weeks after Nov 8 announcement
+   Lesson: Trading around government/policy events — manage gap risk
+   ═══════════════════════════════════════════════════════ */
+const nifty2016demonetisation = [
+  mc('2016-10-03', 8700, 8780, 8670, 8750, 12000000),
+  mc('2016-10-10', 8750, 8810, 8710, 8770, 11000000),
+  mc('2016-10-17', 8770, 8820, 8730, 8800, 10500000),
+  mc('2016-10-24', 8800, 8860, 8760, 8840, 11000000),
+  mc('2016-10-31', 8840, 8900, 8780, 8820, 12500000),
+  mc('2016-11-07', 8820, 8860, 8780, 8850, 11000000), // eve of demonetisation
+  mc('2016-11-09', 8850, 8880, 8100, 8150, 38000000), // SHOCK DROP — gap down
+  mc('2016-11-14', 8150, 8200, 7900, 7940, 32000000), // continued sell-off
+  mc('2016-11-21', 7940, 8050, 7890, 8000, 28000000), // stabilising
+  mc('2016-11-28', 8000, 8100, 7950, 8070, 22000000),
+  mc('2016-12-05', 8070, 8150, 8010, 8080, 18000000),
+  mc('2016-12-12', 8080, 8200, 8050, 8160, 16000000), // dead cat
+  mc('2016-12-19', 8160, 8220, 8100, 8130, 14000000),
+  mc('2016-12-26', 8130, 8200, 8100, 8180, 13000000),
+  mc('2017-01-02', 8180, 8280, 8150, 8250, 15000000),
+  mc('2017-01-09', 8250, 8350, 8220, 8320, 14000000),
+  mc('2017-01-16', 8320, 8400, 8280, 8380, 13000000),
+  mc('2017-01-23', 8380, 8480, 8350, 8450, 14000000),
+  mc('2017-01-30', 8450, 8530, 8410, 8500, 13500000),
+  mc('2017-02-06', 8500, 8600, 8460, 8570, 13000000),
+  mc('2017-02-13', 8570, 8650, 8530, 8620, 12500000),
+  mc('2017-02-20', 8620, 8720, 8590, 8700, 12000000), // recovery approaching pre-demo
+  mc('2017-02-27', 8700, 8800, 8680, 8780, 12000000),
+  mc('2017-03-06', 8780, 8850, 8740, 8820, 11500000),
+  mc('2017-03-13', 8820, 8900, 8800, 8880, 11000000),
+  mc('2017-03-20', 8880, 8950, 8840, 8930, 10500000),
+  mc('2017-03-27', 8930, 9050, 8900, 9020, 13000000),
+  mc('2017-04-03', 9020, 9100, 8960, 9070, 12000000),
+  mc('2017-04-10', 9070, 9150, 9030, 9120, 11500000),
+  mc('2017-04-17', 9120, 9200, 9080, 9170, 11000000),
+];
+
+/* ═══════════════════════════════════════════════════════
+   Mission 5 dataset: 2021 NIFTY Bull Run
+   NIFTY ran from ~14000 to ~18600 — a 33% bull run
+   Lesson: Riding a trend — when to take profit
+   ═══════════════════════════════════════════════════════ */
+const nifty2021bull = [
+  mc('2021-01-11', 14150, 14350, 14100, 14300, 17000000),
+  mc('2021-01-18', 14300, 14500, 14250, 14430, 15000000),
+  mc('2021-01-25', 14430, 14600, 14380, 14550, 13000000),
+  mc('2021-02-01', 14550, 14800, 14500, 14750, 18000000),
+  mc('2021-02-08', 14750, 15000, 14700, 14940, 20000000),
+  mc('2021-02-15', 14940, 15200, 14900, 15150, 22000000),
+  mc('2021-02-22', 15150, 15400, 15100, 14750, 25000000), // small dip
+  mc('2021-03-01', 14750, 15100, 14650, 15000, 21000000),
+  mc('2021-03-08', 15000, 15200, 14950, 15100, 18000000),
+  mc('2021-03-15', 15100, 15350, 15050, 15250, 17000000),
+  mc('2021-03-22', 15250, 15500, 15200, 15450, 19000000),
+  mc('2021-03-29', 15450, 15700, 15400, 15650, 20000000),
+  mc('2021-04-05', 15650, 15850, 15600, 14900, 23000000), // 2nd wave COVID dip
+  mc('2021-04-12', 14900, 15100, 14800, 15050, 22000000),
+  mc('2021-04-19', 15050, 15200, 14950, 14850, 24000000),
+  mc('2021-04-26', 14850, 15000, 14700, 14950, 22000000),
+  mc('2021-05-03', 14950, 15200, 14900, 15150, 20000000),
+  mc('2021-05-10', 15150, 15400, 15100, 15350, 18000000),
+  mc('2021-05-17', 15350, 15600, 15300, 15550, 17000000),
+  mc('2021-05-24', 15550, 15800, 15500, 15750, 19000000),
+  mc('2021-05-31', 15750, 16000, 15700, 15900, 21000000),
+  mc('2021-06-07', 15900, 16200, 15850, 16100, 20000000),
+  mc('2021-06-14', 16100, 16400, 16050, 16350, 18000000),
+  mc('2021-06-21', 16350, 16600, 16300, 16550, 17000000),
+  mc('2021-06-28', 16550, 16800, 16500, 16750, 19000000),
+  mc('2021-07-05', 16750, 17000, 16700, 16950, 20000000),
+  mc('2021-07-12', 16950, 17200, 16900, 17100, 18000000),
+  mc('2021-07-19', 17100, 17400, 17050, 17350, 21000000),
+  mc('2021-08-02', 17350, 17600, 17300, 17500, 19000000),
+  mc('2021-08-09', 17500, 17750, 17450, 17700, 18000000), // all-time high push
+];
+
+/* ─── append new missions to the exported array ─── */
+MISSIONS.push(
+  {
+    id: 'mission_4',
+    title: 'Short the Shock',
+    subtitle: '2016 Demonetisation',
+    icon: '⚡',
+    difficulty: 'Hard',
+    lesson: 'Policy Event Trading',
+    description: 'November 8, 2016. PM Modi announces demonetisation — ₹500 and ₹1000 notes are invalid overnight. NIFTY gaps down 700 points the next morning. Can you profit from the chaos while managing the extreme gap risk?',
+    objective: 'Profit from the demonetisation shock. End with more than ₹5,10,000.',
+    dataset: nifty2016demonetisation,
+    ticker: 'NIFTY',
+    constraints: {
+      maxTrades: 6,
+      maxDrawdownPercent: 15.0,
+      timePerCandle: 2000,
+    },
+    startingBalance: 500000,
+    assess: (history) => {
+      const pnlPct = ((history.finalBalance - 500000) / 500000 * 100).toFixed(1);
+      if (history.forcedFail || history.maxDrawdown > 15.0) {
+        return {
+          status: 'FAIL',
+          grade: 'F',
+          title: 'Gap Risk Victim',
+          wentWell: 'You participated in one of India\'s most historic market events.',
+          wentWrong: `Your drawdown hit ${history.maxDrawdown.toFixed(1)}%. Policy shocks create brutal gaps — you must size positions small and use tight stops.`,
+          lesson: 'Before major policy events, reduce exposure. Gap downs can breach any stop loss.',
+          nextMission: 'mission_4',
+        };
+      }
+      if (history.finalBalance >= 515000) {
+        return {
+          status: 'PASS',
+          grade: 'A',
+          title: 'Policy Trader',
+          wentWell: `Exceptional! You profited ${pnlPct}% from the demonetisation shock. You read the macro signal and executed correctly.`,
+          wentWrong: 'Nothing — this was masterful event-driven trading.',
+          lesson: 'Government policy creates predictable directional moves. Learn to read the macro calendar.',
+          nextMission: 'mission_5',
+        };
+      }
+      if (history.finalBalance >= 502000) {
+        return {
+          status: 'PASS',
+          grade: 'B',
+          title: 'Careful Navigator',
+          wentWell: `You navigated the shock and came out ahead (${pnlPct}%). Good risk control under extreme uncertainty.`,
+          wentWrong: 'You were perhaps too cautious — there was more profit to capture on the short side.',
+          lesson: 'In a black swan event, the initial direction is almost always correct. Act decisively but with small size.',
+          nextMission: 'mission_5',
+        };
+      }
+      return {
+        status: 'FAIL',
+        grade: 'D',
+        title: 'Caught Off Guard',
+        wentWell: 'You managed to survive without catastrophic losses.',
+        wentWrong: `You ended at ${pnlPct}%. You either missed the short opportunity or bought the dip too early during continued selling.`,
+        lesson: 'After a policy shock, don\'t bottom-fish immediately. Let price stabilise before buying.',
+        nextMission: 'mission_4',
+      };
+    },
+  },
+  {
+    id: 'mission_5',
+    title: 'Ride the Bull',
+    subtitle: '2021 NIFTY Bull Run',
+    icon: '🚀',
+    difficulty: 'Medium',
+    lesson: 'Trend Following & Profit-Taking',
+    description: 'Post-COVID euphoria. Retail investors flood the market, FIIs pour in billions, and NIFTY begins a relentless march from 14,000 to 18,600. The challenge: ride the trend without getting shaken out by dips — and know when to take profit.',
+    objective: 'End the mission with more than ₹5,60,000. Don\'t sell too early.',
+    dataset: nifty2021bull,
+    ticker: 'NIFTY',
+    constraints: {
+      maxTrades: 8,
+      timePerCandle: 1800,
+    },
+    startingBalance: 500000,
+    assess: (history) => {
+      const pnlPct = ((history.finalBalance - 500000) / 500000 * 100).toFixed(1);
+      if (history.finalBalance >= 580000) {
+        return {
+          status: 'PASS',
+          grade: 'A',
+          title: 'Bull Rider 🐂',
+          wentWell: `Magnificent! You captured ${pnlPct}% of the bull run. You held through the COVID 2nd wave dip and kept buying strength.`,
+          wentWrong: 'Nothing — this was textbook trend following.',
+          lesson: 'In a bull market, the trend is your friend. Add to winners, cut losers fast, and let profits run.',
+          nextMission: 'completed',
+        };
+      }
+      if (history.finalBalance >= 560000) {
+        return {
+          status: 'PASS',
+          grade: 'B',
+          title: 'Trend Follower',
+          wentWell: `You captured ${pnlPct}% — a solid return riding one of India's greatest bull markets.`,
+          wentWrong: 'You may have taken profit too early or missed some of the later legs.',
+          lesson: 'Use trailing stop losses to stay in trending trades longer. Let the market tell you when to exit.',
+          nextMission: 'completed',
+        };
+      }
+      if (history.finalBalance >= 510000) {
+        return {
+          status: 'PASS',
+          grade: 'C',
+          title: 'Partial Ride',
+          wentWell: `You made money (${pnlPct}%) in a bull market — at least you were on the right side.`,
+          wentWrong: 'You undersized your position or sold too early. In a strong bull run, hesitation is expensive.',
+          lesson: 'When fundamentals AND technicals align upward, size up. Don\'t be afraid of heights in a bull market.',
+          nextMission: 'completed',
+        };
+      }
+      return {
+        status: 'FAIL',
+        grade: 'D',
+        title: 'Bull Market Underperformer',
+        wentWell: 'You survived without major losses.',
+        wentWrong: `Only ${pnlPct}% in a year where NIFTY rose 33%. You either panicked during dips or didn't participate enough.`,
+        lesson: 'The biggest mistake in a bull market is under-exposure. When the trend is clear, trust it.',
+        nextMission: 'mission_5',
+      };
+    },
+  }
+);

@@ -116,6 +116,38 @@
   font-style: italic;
 }
 
+/* Stats row */
+.msn-modal__stats-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.msn-modal__stat {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.msn-modal__stat-label {
+  font: 600 0.68rem var(--font-mono);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.msn-modal__stat-val {
+  font: 700 0.92rem var(--font-mono);
+  color: var(--text-light);
+}
+
+
+
 /* Button */
 .msn-modal__btn {
   width: 100%;
