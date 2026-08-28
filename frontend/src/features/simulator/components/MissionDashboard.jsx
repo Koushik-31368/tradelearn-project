@@ -83,6 +83,9 @@ const MissionDashboard = () => {
   const [qty, setQty]                     = useState(10);
   const [flashType, setFlashType]         = useState(null);
   const [equityFlash, setEquityFlash]     = useState(false);
+  const [candleTimer, setCandleTimer]     = useState(
+    (mission?.constraints.timePerCandle || 2000) / 1000
+  );
 
   const peakRef   = useRef(mission?.startingBalance || 500000);
   const balRef    = useRef(balance);
@@ -96,6 +99,20 @@ const MissionDashboard = () => {
   useEffect(() => { ddRef.current = maxDrawdown; }, [maxDrawdown]);
   useEffect(() => { idxRef.current = currentIndex; }, [currentIndex]);
   useEffect(() => { tradesRef.current = trades; }, [trades]);
+
+  // Reset candle timer on each new candle
+  useEffect(() => {
+    setCandleTimer((mission?.constraints.timePerCandle || 2000) / 1000);
+  }, [currentIndex, mission]);
+
+  // Countdown effect (100ms tick)
+  useEffect(() => {
+    if (!briefingDone || isFinished || isPaused) return;
+    const tick = setInterval(() => {
+      setCandleTimer(prev => +(Math.max(0, prev - 0.1)).toFixed(1));
+    }, 100);
+    return () => clearInterval(tick);
+  }, [briefingDone, isFinished, isPaused]);
 
   // Init
   useEffect(() => {
@@ -321,6 +338,7 @@ const MissionDashboard = () => {
             </div>
           </div>
 
+
           <div className="msn-kpi msn-kpi--progress">
             <span className="msn-kpi__label">Timeline</span>
             <div className="msn-timeline">
@@ -329,6 +347,16 @@ const MissionDashboard = () => {
               </div>
               <span className="msn-timeline__pct">{progress}%</span>
             </div>
+          </div>
+
+          <div className="msn-kpi msn-kpi--timer">
+            <span className="msn-kpi__label">Next Candle</span>
+            <span
+              className="msn-kpi__val msn-kpi__val--mono"
+              style={{ color: candleTimer <= 0.5 ? '#FFD400' : '#9A9AB0' }}
+            >
+              {isPaused ? '⏸' : `${candleTimer.toFixed(1)}s`}
+            </span>
           </div>
         </div>
 
