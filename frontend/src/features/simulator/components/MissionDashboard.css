@@ -26,17 +26,14 @@
   align-items: center;
   justify-content: center;
   background: #080810;
-  animation: briefFadeOut 0.4s ease 0.1s both;
+  opacity: 1;
+  transition: opacity 0.4s ease;
 }
 
-.msn-brief--hidden {
-  pointer-events: none;
+/* Applied when countdown reaches GO and we fade out */
+.msn-brief--fading {
   opacity: 0;
-}
-
-@keyframes briefFadeOut {
-  from { opacity: 1; }
-  to   { opacity: 0; pointer-events: none; }
+  pointer-events: none;
 }
 
 .msn-brief__scan {
@@ -236,9 +233,9 @@
 .msn-statsbar {
   display: flex;
   align-items: center;
-  padding: 0 20px;
-  height: 38px;
-  background: #0c0c18;
+  padding: 0 8px;
+  height: 52px;              /* taller so label + value are readable */
+  background: #0b0b17;
   border-bottom: 1px solid #1a1a2e;
   gap: 0;
   flex-shrink: 0;
@@ -248,25 +245,26 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: 0 16px;
-  gap: 1px;
+  padding: 0 14px;
+  gap: 3px;
 }
-.msn-kpi + .msn-kpi { border-left: 1px solid #1a1a2e; }
+.msn-kpi + .msn-kpi { border-left: 1px solid #1e1e2e; }
 
 .msn-kpi__label {
-  font: 600 8px 'IBM Plex Mono', monospace;
+  font: 600 9px 'IBM Plex Mono', monospace;
   color: #3a3a52;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.08em;
 }
 .msn-kpi__val {
-  font: 700 12px 'IBM Plex Mono', monospace;
+  font: 700 13px 'IBM Plex Mono', monospace;
   color: #9A9AB0;
   font-variant-numeric: tabular-nums;
   transition: color 0.3s ease;
+  white-space: nowrap;
 }
-.msn-kpi__val--up { color: #39FF88; }
-.msn-kpi__val--dn { color: #FF3B5C; }
+.msn-kpi__val--up   { color: #39FF88; }
+.msn-kpi__val--dn   { color: #FF3B5C; }
 .msn-kpi__val--warn { color: #FFD400; }
 .msn-kpi__val--flash {
   animation: kpiFlash 0.4s ease;
@@ -346,6 +344,7 @@
 .msn-body {
   display: grid;
   grid-template-columns: 1fr 300px;
+  grid-template-rows: 1fr;   /* ← critical: lets children fill the height */
   gap: 0;
   flex: 1;
   min-height: 0;
@@ -357,6 +356,8 @@
   display: flex;
   flex-direction: column;
   min-width: 0;
+  min-height: 0;             /* ← critical: prevents flex children collapsing */
+  overflow: hidden;
   border-right: 1px solid #1a1a2e;
   background: #080810;
 }

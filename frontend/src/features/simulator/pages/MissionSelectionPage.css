@@ -347,13 +347,15 @@
 
 /* Grade result strip */
 .msn-card__result {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 10px;
-  padding: 10px 14px;
-  background: rgba(57, 255, 136, 0.04);
-  border: 1px solid rgba(57, 255, 136, 0.12);
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid #1e1e30;
+  border-left: 3px solid currentColor;
   border-radius: 8px;
+  align-self: flex-start;
 }
 .msn-card__grade-letter {
   font: 900 1.6rem 'IBM Plex Mono', monospace;

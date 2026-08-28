@@ -7,32 +7,27 @@ import MissionDebriefModal from './MissionDebriefModal';
 import CandlestickChart from './CandlestickChart';
 import './MissionDashboard.css';
 
-/* ── Briefing Countdown Overlay ─────────────────────────── */
+/* ── Briefing Countdown Overlay ───────────────────────────────── */
 const BriefingOverlay = ({ mission, onDone }) => {
-  const [count, setCount] = useState(3);
-  const [gone, setGone] = useState(false);
+  const [count, setCount]     = useState(3);
+  const [fading, setFading]   = useState(false);
+  const [removed, setRemoved] = useState(false);
 
   useEffect(() => {
-    const steps = [
-      { delay: 0,    val: 3 },
-      { delay: 900,  val: 2 },
-      { delay: 1800, val: 1 },
-      { delay: 2700, val: 'GO' },
-      { delay: 3400, val: null },  // done
-    ];
-    const timers = steps.map(s =>
-      setTimeout(() => {
-        if (s.val === null) { setGone(true); setTimeout(onDone, 400); }
-        else setCount(s.val);
-      }, s.delay)
-    );
-    return () => timers.forEach(clearTimeout);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    const t1 = setTimeout(() => setCount(2), 1000);
+    const t2 = setTimeout(() => setCount(1), 2000);
+    const t3 = setTimeout(() => setCount('GO!'), 3000);
+    // Start fade + call onDone at the same time (chart renders behind overlay)
+    const t4 = setTimeout(() => { setFading(true); onDone(); }, 3500);
+    // Remove from DOM after fade completes
+    const t5 = setTimeout(() => setRemoved(true), 3950);
+    return () => [t1, t2, t3, t4, t5].forEach(clearTimeout);
+  }, [onDone]);
 
-  if (gone) return null;
+  if (removed) return null;
 
   return (
-    <div className="msn-brief">
+    <div className={`msn-brief${fading ? ' msn-brief--fading' : ''}`}>
       <div className="msn-brief__grid" />
       <div className="msn-brief__scan" />
       <div className="msn-brief__tag">▸ Mission Briefing</div>
@@ -40,7 +35,7 @@ const BriefingOverlay = ({ mission, onDone }) => {
       <div className="msn-brief__sub">{mission.subtitle}</div>
       <div
         key={count}
-        className={`msn-brief__count${count === 'GO' ? ' msn-brief__count--go' : ''}`}
+        className={`msn-brief__count${count === 'GO!' ? ' msn-brief__count--go' : ''}`}
       >
         {count}
       </div>
@@ -339,13 +334,13 @@ const MissionDashboard = () => {
 
         {/* ── Main Body ── */}
         <div className="msn-body">
-          {/* Chart */}
+          {/* Chart — always rendered, briefing overlay sits on top (fixed) */}
           <div className="msn-chartzone">
             <CandlestickChart
               candles={candles}
               smaData={smaData}
               symbol={mission.ticker}
-              isLoading={!briefingDone}
+              isLoading={false}
             />
           </div>
 
