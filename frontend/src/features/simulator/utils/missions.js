@@ -139,6 +139,12 @@ export const MISSIONS = [
       timePerCandle: 2000,
     },
     startingBalance: 500000,
+    situation: 'NIFTY is in a historic freefall. Panic selling is accelerating and every bounce is sold into. Cash is king right now.',
+    coachTips: [
+      '💡 Do NOT buy yet — the trend is sharply down. Every green candle is a trap.',
+      '🛡️ Your goal is survival, not profit. Stay in cash = 0% drawdown.',
+      '⚠️ If you buy, keep quantity tiny (1–5). A 20% drawdown ends your mission instantly.',
+    ],
     assess: (history) => {
       if (history.forcedFail || history.maxDrawdown > 20.0) {
         return {
@@ -179,6 +185,12 @@ export const MISSIONS = [
       timePerCandle: 2000,
     },
     startingBalance: 500000,
+    situation: 'COVID panic has crashed NIFTY 37% in 4 weeks. The worst may be over. A historic V-shaped recovery is loading — but most traders will panic sell at the exact bottom.',
+    coachTips: [
+      '📉 The scariest red candle is usually the bottom. That\'s the best time to BUY.',
+      '💪 Hold through the fear. The market always recovers — patience is the trade.',
+      '🎯 Buy in tranches: buy some now, buy more if it falls further.',
+    ],
     assess: (history) => {
       const pnlPct = ((history.finalBalance - 500000) / 500000 * 100).toFixed(1);
       if (history.finalBalance > 550000) {
@@ -230,6 +242,12 @@ export const MISSIONS = [
       timePerCandle: 1800,
     },
     startingBalance: 500000,
+    situation: 'NIFTY is stuck in a tight range — 8200 to 8550. Every breakout fails. Every dip recovers. This is the CHOP ZONE and it will bleed you dry if you trade every candle.',
+    coachTips: [
+      '🦥 The best move here is NO move. Doing nothing is a valid strategy.',
+      '⏰ Wait for the range to break clearly before entering any trade.',
+      '💰 Every trade costs you in the choppy market. Save your trades for a trend.',
+    ],
     assess: (history) => {
       const pnlPct = ((history.finalBalance - 500000) / 500000 * 100).toFixed(1);
       if (history.tradeCount <= 2 && history.finalBalance >= 498000) {
@@ -362,6 +380,12 @@ MISSIONS.push(
       timePerCandle: 2000,
     },
     startingBalance: 500000,
+    situation: 'Nov 8, 2016. PM Modi just announced demonetisation. ₹500 & ₹1000 notes are BANNED overnight. NIFTY gapped down 700 points at open. Panic is everywhere.',
+    coachTips: [
+      '🟥 The crash is happening NOW. Consider selling (going flat) to avoid the gap-down damage.',
+      '⏳ Wait for the sell-off to stabilise (5-8 candles) before thinking of buying.',
+      '⚠️ 15% drawdown = instant fail. Position size must be very small.',
+    ],
     assess: (history) => {
       const pnlPct = ((history.finalBalance - 500000) / 500000 * 100).toFixed(1);
       if (history.forcedFail || history.maxDrawdown > 15.0) {
@@ -424,6 +448,12 @@ MISSIONS.push(
       timePerCandle: 1800,
     },
     startingBalance: 500000,
+    situation: '2021: Post-COVID euphoria. NIFTY is on an unstoppable uptrend from 14,000. FIIs are buying everything. Every dip is being bought. This is a bull market — ride it.',
+    coachTips: [
+      '📈 Buy and HOLD. In a bull market, selling early is the biggest mistake.',
+      '📉 Dips are buying opportunities, not exit signals. The trend is your friend.',
+      '💰 Buy more on dips and hold until the trend clearly reverses.',
+    ],
     assess: (history) => {
       const pnlPct = ((history.finalBalance - 500000) / 500000 * 100).toFixed(1);
       if (history.finalBalance >= 580000) {

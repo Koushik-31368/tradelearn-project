@@ -355,6 +355,45 @@ const MissionDashboard = () => {
               <p className="msn-obj__text">{mission.objective}</p>
             </div>
 
+            {/* Situation Brief */}
+            {mission.situation && (
+              <div className="msn-section msn-situation">
+                <div className="msn-situation__header">
+                  <span className="msn-situation__icon">📡</span>
+                  <span className="msn-situation__title">Situation</span>
+                </div>
+                <p className="msn-situation__text">{mission.situation}</p>
+                {/* Live sentiment */}
+                {candles.length >= 2 && (() => {
+                  const last  = candles[candles.length - 1];
+                  const prev  = candles[candles.length - 2];
+                  const up    = last.close >= prev.close;
+                  const chg   = (((last.close - prev.close) / prev.close) * 100).toFixed(2);
+                  return (
+                    <div className={`msn-sentiment msn-sentiment--${up ? 'bull' : 'bear'}`}>
+                      <span>{up ? '▲' : '▼'} {up ? 'BULLISH' : 'BEARISH'}</span>
+                      <span>{up ? '+' : ''}{chg}% this candle</span>
+                    </div>
+                  );
+                })()}
+              </div>
+            )}
+
+            {/* Coach Tips */}
+            {mission.coachTips && (
+              <div className="msn-section msn-coach">
+                <div className="msn-coach__header">
+                  <span className="msn-coach__icon">🧠</span>
+                  <span className="msn-coach__title">Coach Tips</span>
+                </div>
+                <ul className="msn-coach__list">
+                  {mission.coachTips.map((tip, i) => (
+                    <li key={i} className="msn-coach__tip">{tip}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
             {/* Position */}
             <div className="msn-section msn-pos">
               <div className="msn-pos__header">Open Position</div>
