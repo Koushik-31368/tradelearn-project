@@ -1,4 +1,4 @@
-/* ═══════════════════════════════════════════════════════════════
+﻿/* ═══════════════════════════════════════════════════════════════
    LeaderboardPage.css  —  Dark Gamified Leaderboard
    Same DNA as MissionSelectionPage & MissionDashboard
 ═══════════════════════════════════════════════════════════════ */
@@ -6,7 +6,7 @@
 /* ── Page shell ── */
 .lb-page {
   min-height: calc(100vh - 60px);
-  background: #080810;
+  background: #0B1026;
   font-family: 'IBM Plex Mono', monospace;
   position: relative;
   overflow-x: hidden;
@@ -19,8 +19,8 @@
   position: fixed;
   inset: 0;
   background-image:
-    linear-gradient(rgba(123, 47, 247, 0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(123, 47, 247, 0.04) 1px, transparent 1px);
+    linear-gradient(rgba(255, 45, 120, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 45, 120, 0.04) 1px, transparent 1px);
   background-size: 80px 80px;
   pointer-events: none;
   z-index: 0;
@@ -39,7 +39,7 @@
   bottom: 0; left: 50%;
   transform: translateX(-50%);
   width: 500px; height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(123, 47, 247, 0.4), transparent);
+  background: linear-gradient(90deg, transparent, rgba(255, 45, 120, 0.4), transparent);
 }
 
 .lb-eyebrow {
@@ -47,11 +47,11 @@
   align-items: center;
   gap: 7px;
   padding: 4px 14px;
-  background: rgba(123, 47, 247, 0.1);
-  border: 1px solid rgba(123, 47, 247, 0.3);
+  background: rgba(255, 45, 120, 0.1);
+  border: 1px solid rgba(255, 45, 120, 0.3);
   border-radius: 20px;
   font: 700 10px 'IBM Plex Mono', monospace;
-  color: #9b6dff;
+  color: #20D9FF;
   letter-spacing: 0.15em;
   text-transform: uppercase;
   margin-bottom: 18px;
@@ -59,8 +59,8 @@
 .lb-eyebrow-dot {
   width: 5px; height: 5px;
   border-radius: 50%;
-  background: #7B2FF7;
-  box-shadow: 0 0 8px #7B2FF7;
+  background: #FF2D78;
+  box-shadow: 0 0 8px #FF2D78;
   animation: lbGlow 2s ease-in-out infinite;
 }
 @keyframes lbGlow { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
@@ -68,7 +68,7 @@
 .lb-title {
   font: 900 3rem 'Outfit', sans-serif;
   margin: 0 0 8px;
-  background: linear-gradient(135deg, #e8e8f0 0%, #7B2FF7 50%, #FFD400 100%);
+  background: linear-gradient(135deg, #F0F0F8 0%, #FF2D78 40%, #20D9FF 75%, #FFD400 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -94,8 +94,8 @@
   display: flex;
   gap: 6px;
   padding: 4px;
-  background: #0c0c18;
-  border: 1px solid #1a1a2e;
+  background: #0C1122;
+  border: 1px solid #162038;
   border-radius: 10px;
   margin-bottom: 28px;
 }
@@ -115,7 +115,7 @@
 .lb-tab:hover { color: #5c5c74; background: rgba(255,255,255,0.03); }
 .lb-tab--active {
   background: linear-gradient(135deg, rgba(123,47,247,0.2) 0%, rgba(123,47,247,0.1) 100%);
-  color: #9b6dff;
+  color: #20D9FF;
   border: 1px solid rgba(123,47,247,0.3);
 }
 
@@ -128,8 +128,8 @@
 }
 .lb-tier-btn {
   padding: 5px 14px;
-  background: #0c0c18;
-  border: 1px solid #1a1a2e;
+  background: #0C1122;
+  border: 1px solid #162038;
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.18s ease;
@@ -138,11 +138,11 @@
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
-.lb-tier-btn:hover { border-color: #2a2a3e; color: #5c5c74; }
+.lb-tier-btn:hover { border-color: #1E2A48; color: #5c5c74; }
 .lb-tier-btn--active {
   background: rgba(123,47,247,0.1);
   border-color: rgba(123,47,247,0.35);
-  color: #9b6dff;
+  color: #20D9FF;
 }
 
 /* ── Practice note ── */
@@ -152,7 +152,7 @@
   line-height: 1.7;
   padding: 12px 14px;
   background: rgba(255,255,255,0.02);
-  border: 1px solid #1a1a2e;
+  border: 1px solid #162038;
   border-left: 3px solid rgba(123,47,247,0.4);
   border-radius: 0 8px 8px 0;
   margin-bottom: 16px;
@@ -160,8 +160,8 @@
 
 /* ── Table wrapper ── */
 .lb-table-wrapper {
-  background: linear-gradient(135deg, #0e0e1e 0%, #0a0a18 100%);
-  border: 1px solid #1e1e30;
+  background: linear-gradient(135deg, #0D1228 0%, #0A0F20 100%);
+  border: 1px solid #1A2040;
   border-radius: 16px;
   overflow: hidden;
 }
@@ -178,8 +178,8 @@
   color: #3a3a52;
   text-transform: uppercase;
   letter-spacing: 0.12em;
-  background: #0c0c18;
-  border-bottom: 1px solid #1a1a2e;
+  background: #0C1122;
+  border-bottom: 1px solid #162038;
   text-align: left;
 }
 .lb-th-rank { width: 60px; text-align: center; }
@@ -188,7 +188,7 @@
 
 /* ── Rows ── */
 .lb-row {
-  border-bottom: 1px solid #141422;
+  border-bottom: 1px solid #121830;
   transition: background 0.15s ease;
 }
 .lb-row:last-child { border-bottom: none; }
@@ -204,10 +204,10 @@
 
 /* My row highlight */
 .lb-row-me {
-  background: rgba(123, 47, 247, 0.06) !important;
-  box-shadow: inset 3px 0 0 #7B2FF7;
+  background: rgba(255, 45, 120, 0.06) !important;
+  box-shadow: inset 3px 0 0 #FF2D78;
 }
-.lb-row-me:hover { background: rgba(123, 47, 247, 0.1) !important; }
+.lb-row-me:hover { background: rgba(255, 45, 120, 0.1) !important; }
 
 /* ── Cells ── */
 .lb-cell {
@@ -227,7 +227,7 @@
   justify-content: center;
   width: 28px; height: 28px;
   border-radius: 50%;
-  background: #0c0c18;
+  background: #0C1122;
   border: 1px solid #1e1e2e;
   font: 700 11px 'IBM Plex Mono', monospace;
   color: #3a3a52;
@@ -239,7 +239,7 @@
   color: #9A9AB0;
   letter-spacing: 0.01em;
 }
-.lb-row-me .lb-username { color: #c4a8ff; }
+.lb-row-me .lb-username { color: #6FF3FF; }
 .lb-top-1 .lb-username { color: #FFD400; }
 .lb-top-2 .lb-username { color: #b8b8c8; }
 .lb-top-3 .lb-username { color: #cd7f32; }
@@ -247,11 +247,11 @@
 .lb-you-tag {
   margin-left: 8px;
   padding: 2px 7px;
-  background: rgba(123, 47, 247, 0.2);
-  border: 1px solid rgba(123, 47, 247, 0.4);
+  background: rgba(255, 45, 120, 0.2);
+  border: 1px solid rgba(255, 45, 120, 0.4);
   border-radius: 4px;
   font: 700 8px 'IBM Plex Mono', monospace;
-  color: #9b6dff;
+  color: #20D9FF;
   letter-spacing: 0.1em;
   vertical-align: middle;
 }
@@ -269,7 +269,7 @@
   padding: 40px 20px;
   text-align: center;
   font: 400 12px 'IBM Plex Mono', monospace;
-  color: #2a2a3e;
+  color: #1E2A48;
 }
 
 /* ── Loading state ── */
@@ -285,8 +285,8 @@
 }
 .lb-spinner {
   width: 36px; height: 36px;
-  border: 2px solid #1a1a2e;
-  border-top-color: #7B2FF7;
+  border: 2px solid #162038;
+  border-top-color: #FF2D78;
   border-radius: 50%;
   animation: lbSpin 0.7s linear infinite;
 }

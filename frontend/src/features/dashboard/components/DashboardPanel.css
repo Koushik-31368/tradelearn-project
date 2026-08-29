@@ -1,11 +1,11 @@
-/* ═══════════════════════════════════════════════════════════════
+﻿/* ═══════════════════════════════════════════════════════════════
    DashboardPanel.css  —  Logged-In Home Dashboard
    Same dark gamified design as Mission / Leaderboard pages
 ═══════════════════════════════════════════════════════════════ */
 
 .dp-page {
   min-height: calc(100vh - 60px);
-  background: #080810;
+  background: #0B1026;
   font-family: 'IBM Plex Mono', monospace;
   position: relative;
   overflow-x: hidden;
@@ -18,8 +18,8 @@
   position: fixed;
   inset: 0;
   background-image:
-    linear-gradient(rgba(123, 47, 247, 0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(123, 47, 247, 0.04) 1px, transparent 1px);
+    linear-gradient(rgba(255, 45, 120, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 45, 120, 0.04) 1px, transparent 1px);
   background-size: 80px 80px;
   pointer-events: none;
   z-index: 0;
@@ -30,7 +30,7 @@
   position: relative;
   z-index: 1;
   padding: 40px 32px 32px;
-  border-bottom: 1px solid #1a1a2e;
+  border-bottom: 1px solid #162038;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -51,7 +51,7 @@
 .dp-hero__name {
   font: 900 2.2rem 'Outfit', sans-serif;
   margin: 0 0 4px;
-  background: linear-gradient(135deg, #e8e8f0 0%, #7B2FF7 60%, #FFD400 100%);
+  background: linear-gradient(135deg, #e8e8f0 0%, #FF2D78 60%, #FFD400 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -85,9 +85,9 @@
   color: #ff7a30;
 }
 .dp-badge--xp {
-  background: rgba(123, 47, 247, 0.1);
-  border: 1px solid rgba(123, 47, 247, 0.25);
-  color: #9b6dff;
+  background: rgba(255, 45, 120, 0.1);
+  border: 1px solid rgba(255, 45, 120, 0.25);
+  color: #20D9FF;
 }
 .dp-badge--tier {
   background: rgba(255, 212, 0, 0.1);
@@ -110,8 +110,8 @@
 
 /* ── Quick Action cards ── */
 .dp-action {
-  background: linear-gradient(135deg, #0e0e1e 0%, #0a0a18 100%);
-  border: 1px solid #1e1e30;
+  background: linear-gradient(135deg, #0D1228 0%, #0A0F20 100%);
+  border: 1px solid #1A2040;
   border-radius: 14px;
   padding: 24px;
   cursor: pointer;
@@ -129,19 +129,19 @@
   top: 0; left: 0; right: 0;
   height: 2px;
   border-radius: 14px 14px 0 0;
-  background: var(--dp-accent, #7B2FF7);
+  background: var(--dp-accent, #FF2D78);
   transform: scaleX(0);
   transform-origin: left;
   transition: transform 0.3s ease;
 }
 .dp-action:hover::before { transform: scaleX(1); }
 .dp-action:hover {
-  border-color: rgba(123, 47, 247, 0.3);
+  border-color: rgba(255, 45, 120, 0.3);
   transform: translateY(-3px);
   box-shadow: 0 12px 32px rgba(0,0,0,0.4);
 }
 
-.dp-action--missions { --dp-accent: #7B2FF7; }
+.dp-action--missions { --dp-accent: #FF2D78; }
 .dp-action--simulator { --dp-accent: #39FF88; }
 .dp-action--multi { --dp-accent: #FFD400; }
 
@@ -161,7 +161,7 @@
 }
 .dp-action__cta {
   font: 700 9px 'IBM Plex Mono', monospace;
-  color: var(--dp-accent, #7B2FF7);
+  color: var(--dp-accent, #FF2D78);
   text-transform: uppercase;
   letter-spacing: 0.12em;
   display: flex;
@@ -181,8 +181,8 @@
   gap: 12px;
 }
 .dp-stat-card {
-  background: linear-gradient(135deg, #0e0e1e 0%, #0a0a18 100%);
-  border: 1px solid #1e1e30;
+  background: linear-gradient(135deg, #0D1228 0%, #0A0F20 100%);
+  border: 1px solid #1A2040;
   border-radius: 12px;
   padding: 18px 20px;
 }
@@ -199,7 +199,7 @@
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.02em;
 }
-.dp-stat-card__val--purple { color: #9b6dff; }
+.dp-stat-card__val--purple { color: #20D9FF; }
 .dp-stat-card__val--green  { color: #39FF88; }
 .dp-stat-card__val--gold   { color: #FFD400; }
 
@@ -207,14 +207,14 @@
 .dp-league-bar {
   margin-top: 8px;
   height: 4px;
-  background: #1a1a2e;
+  background: #162038;
   border-radius: 2px;
   overflow: hidden;
 }
 .dp-league-bar__fill {
   height: 100%;
   border-radius: 2px;
-  background: linear-gradient(90deg, #7B2FF7, #FFD400);
+  background: linear-gradient(90deg, #FF2D78, #FFD400);
   transition: width 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 .dp-league-bar__next {
@@ -234,8 +234,8 @@
 
 /* Quest / challenge panels */
 .dp-quest-panel {
-  background: linear-gradient(135deg, #0e0e1e 0%, #0a0a18 100%);
-  border: 1px solid #1e1e30;
+  background: linear-gradient(135deg, #0D1228 0%, #0A0F20 100%);
+  border: 1px solid #1A2040;
   border-radius: 14px;
   padding: 20px;
   display: flex;
@@ -250,16 +250,16 @@
   text-transform: uppercase;
   letter-spacing: 0.12em;
   color: #3a3a52;
-  border-bottom: 1px solid #141422;
+  border-bottom: 1px solid #121830;
   padding-bottom: 10px;
 }
 .dp-quest-panel__header-icon { font-size: 13px; }
-.dp-quest-panel__header--daily  .dp-quest-panel__title { color: #9b6dff; }
+.dp-quest-panel__header--daily  .dp-quest-panel__title { color: #20D9FF; }
 .dp-quest-panel__header--weekly .dp-quest-panel__title { color: #FFD400; }
 
 .dp-quest-item {
   padding: 10px 12px;
-  border: 1px solid #141422;
+  border: 1px solid #121830;
   border-radius: 8px;
   background: rgba(255,255,255,0.01);
   transition: background 0.15s;
@@ -281,9 +281,9 @@
 
 .dp-quest-item__xp {
   font: 700 9px 'IBM Plex Mono', monospace;
-  color: #9b6dff;
-  background: rgba(123, 47, 247, 0.1);
-  border: 1px solid rgba(123, 47, 247, 0.2);
+  color: #20D9FF;
+  background: rgba(255, 45, 120, 0.1);
+  border: 1px solid rgba(255, 45, 120, 0.2);
   border-radius: 4px;
   padding: 2px 7px;
 }
@@ -297,28 +297,28 @@
 
 .dp-quest-progress {
   height: 3px;
-  background: #1a1a2e;
+  background: #162038;
   border-radius: 2px;
   overflow: hidden;
 }
 .dp-quest-progress__fill {
   height: 100%;
-  background: linear-gradient(90deg, #7B2FF7, #39FF88);
+  background: linear-gradient(90deg, #FF2D78, #39FF88);
   border-radius: 2px;
   transition: width 0.6s ease;
 }
 
 .dp-quest-empty {
   font: 400 11px 'IBM Plex Mono', monospace;
-  color: #2a2a3e;
+  color: #1E2A48;
   text-align: center;
   padding: 20px 0;
 }
 
 /* ── Quick links panel (right col) ── */
 .dp-links {
-  background: linear-gradient(135deg, #0e0e1e 0%, #0a0a18 100%);
-  border: 1px solid #1e1e30;
+  background: linear-gradient(135deg, #0D1228 0%, #0A0F20 100%);
+  border: 1px solid #1A2040;
   border-radius: 14px;
   padding: 20px;
   display: flex;
@@ -330,7 +330,7 @@
   text-transform: uppercase;
   letter-spacing: 0.12em;
   color: #3a3a52;
-  border-bottom: 1px solid #141422;
+  border-bottom: 1px solid #121830;
   padding-bottom: 10px;
   margin-bottom: 4px;
 }
@@ -339,7 +339,7 @@
   align-items: center;
   gap: 10px;
   padding: 10px 12px;
-  border: 1px solid #141422;
+  border: 1px solid #121830;
   border-radius: 8px;
   background: rgba(255,255,255,0.01);
   cursor: pointer;
@@ -347,8 +347,8 @@
   transition: all 0.15s ease;
 }
 .dp-link-row:hover {
-  background: rgba(123, 47, 247, 0.06);
-  border-color: rgba(123, 47, 247, 0.2);
+  background: rgba(255, 45, 120, 0.06);
+  border-color: rgba(255, 45, 120, 0.2);
 }
 .dp-link-row__icon { font-size: 1rem; }
 .dp-link-row__label {
@@ -356,10 +356,10 @@
   color: #5c5c74;
   flex: 1;
 }
-.dp-link-row:hover .dp-link-row__label { color: #9b6dff; }
+.dp-link-row:hover .dp-link-row__label { color: #20D9FF; }
 .dp-link-row__arrow {
   font-size: 10px;
-  color: #2a2a3e;
+  color: #1E2A48;
 }
 
 /* Loading / spinner */
@@ -374,8 +374,8 @@
 }
 .dp-spinner {
   width: 30px; height: 30px;
-  border: 2px solid #1a1a2e;
-  border-top-color: #7B2FF7;
+  border: 2px solid #162038;
+  border-top-color: #FF2D78;
   border-radius: 50%;
   animation: dpSpin 0.7s linear infinite;
 }

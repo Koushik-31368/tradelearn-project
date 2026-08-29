@@ -1,11 +1,11 @@
-/* ═══════════════════════════════════════════════════════════════
+﻿/* ═══════════════════════════════════════════════════════════════
    MissionSelectionPage.css  —  Gamified Flight School Lobby
 ═══════════════════════════════════════════════════════════════ */
 
 /* ── Page wrapper ── */
 .msn-page {
   min-height: calc(100vh - 60px);
-  background: #080810;
+  background: #0B1026;
   padding: 0 0 80px;
   font-family: 'IBM Plex Mono', monospace;
   position: relative;
@@ -18,8 +18,8 @@
   position: fixed;
   inset: 0;
   background-image:
-    linear-gradient(rgba(123, 47, 247, 0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(123, 47, 247, 0.04) 1px, transparent 1px);
+    linear-gradient(rgba(255, 45, 120, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 45, 120, 0.04) 1px, transparent 1px);
   background-size: 80px 80px;
   pointer-events: none;
   z-index: 0;
@@ -40,7 +40,7 @@
   bottom: 0; left: 50%;
   transform: translateX(-50%);
   width: 600px; height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(123, 47, 247, 0.4), transparent);
+  background: linear-gradient(90deg, transparent, rgba(255, 45, 120, 0.4), transparent);
 }
 
 .msn-hero__eyebrow {
@@ -48,11 +48,11 @@
   align-items: center;
   gap: 7px;
   padding: 4px 14px;
-  background: rgba(123, 47, 247, 0.1);
-  border: 1px solid rgba(123, 47, 247, 0.3);
+  background: rgba(255, 45, 120, 0.1);
+  border: 1px solid rgba(255, 45, 120, 0.3);
   border-radius: 20px;
   font: 700 10px 'IBM Plex Mono', monospace;
-  color: #9b6dff;
+  color: #20D9FF;
   letter-spacing: 0.15em;
   text-transform: uppercase;
   margin-bottom: 20px;
@@ -60,8 +60,8 @@
 .msn-hero__eyebrow-dot {
   width: 5px; height: 5px;
   border-radius: 50%;
-  background: #7B2FF7;
-  box-shadow: 0 0 8px #7B2FF7;
+  background: #FF2D78;
+  box-shadow: 0 0 8px #FF2D78;
   animation: heroGlow 2s ease-in-out infinite;
 }
 @keyframes heroGlow { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
@@ -69,7 +69,7 @@
 .msn-hero__title {
   font: 900 3.2rem 'Outfit', sans-serif;
   margin: 0 0 10px;
-  background: linear-gradient(135deg, #e8e8f0 0%, #7B2FF7 50%, #39FF88 100%);
+  background: linear-gradient(135deg, #e8e8f0 0%, #FF2D78 50%, #39FF88 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -91,7 +91,7 @@
   align-items: center;
   gap: 12px;
   background: rgba(12, 12, 22, 0.9);
-  border: 1px solid #2a2a3e;
+  border: 1px solid #1E2A48;
   border-radius: 12px;
   padding: 10px 20px;
 }
@@ -104,13 +104,13 @@
 }
 .msn-xp__bar {
   width: 160px; height: 6px;
-  background: #1a1a2e;
+  background: #162038;
   border-radius: 3px;
   overflow: hidden;
 }
 .msn-xp__fill {
   height: 100%;
-  background: linear-gradient(90deg, #7B2FF7, #39FF88);
+  background: linear-gradient(90deg, #FF2D78, #39FF88);
   border-radius: 3px;
   transition: width 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   position: relative;
@@ -147,11 +147,11 @@
   width: 2px;
   height: 36px;
   margin: 0 auto;
-  background: #1a1a2e;
+  background: #162038;
   position: relative;
 }
 .msn-connector--active {
-  background: linear-gradient(180deg, #7B2FF7 0%, rgba(57, 255, 136, 0.5) 100%);
+  background: linear-gradient(180deg, #FF2D78 0%, rgba(57, 255, 136, 0.5) 100%);
 }
 .msn-connector::after {
   content: '';
@@ -160,18 +160,18 @@
   transform: translate(-50%, -50%);
   width: 6px; height: 6px;
   border-radius: 50%;
-  background: #2a2a3e;
+  background: #1E2A48;
 }
 .msn-connector--active::after {
-  background: #7B2FF7;
-  box-shadow: 0 0 8px #7B2FF7;
+  background: #FF2D78;
+  box-shadow: 0 0 8px #FF2D78;
 }
 
 /* ── Card ── */
 .msn-card {
   position: relative;
-  background: linear-gradient(135deg, #0e0e1e 0%, #0a0a18 100%);
-  border: 1px solid #1e1e30;
+  background: linear-gradient(135deg, #0D1228 0%, #0A0F20 100%);
+  border: 1px solid #1A2040;
   border-radius: 16px;
   padding: 28px 24px 24px;   /* extra top padding makes room for badge */
   margin-top: 8px;           /* so badge isn't flush with connector */
@@ -183,14 +183,14 @@
   position: absolute;
   inset: 0;
   border-radius: 16px;
-  background: linear-gradient(135deg, rgba(123, 47, 247, 0.04) 0%, transparent 60%);
+  background: linear-gradient(135deg, rgba(255, 45, 120, 0.04) 0%, transparent 60%);
   pointer-events: none;
 }
 
 .msn-card:hover:not(.msn-card--locked) {
-  border-color: rgba(123, 47, 247, 0.4);
+  border-color: rgba(255, 45, 120, 0.4);
   transform: translateY(-3px);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(123, 47, 247, 0.15);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 45, 120, 0.15);
 }
 
 /* Current (first unlocked) card */
@@ -245,14 +245,14 @@
   left: 24px;
   width: 36px; height: 36px;
   display: flex; align-items: center; justify-content: center;
-  background: #0e0e1e;
-  border: 2px solid #2a2a3e;
+  background: #0D1228;
+  border: 2px solid #1E2A48;
   border-radius: 50%;
   font: 800 13px 'IBM Plex Mono', monospace;
   color: #3a3a52;
   z-index: 10;
   transition: all 0.2s ease;
-  box-shadow: 0 0 0 4px #080810; /* halo to separate from card border */
+  box-shadow: 0 0 0 4px #0B1026; /* halo to separate from card border */
 }
 .msn-card__num--done {
   background: #39FF88;
@@ -321,7 +321,7 @@
 }
 .msn-card__subtitle {
   font: 600 11px 'IBM Plex Mono', monospace;
-  color: #7B2FF7;
+  color: #FF2D78;
   margin: 0;
 }
 .msn-card__desc {
@@ -340,7 +340,7 @@
 .msn-card__tag {
   font: 500 10px 'IBM Plex Mono', monospace;
   color: #3a3a52;
-  background: #0c0c18;
+  background: #0C1122;
   border: 1px solid #1e1e2e;
   border-radius: 4px;
   padding: 3px 8px;
@@ -354,7 +354,7 @@
   gap: 10px;
   padding: 8px 12px;
   background: rgba(255, 255, 255, 0.03);
-  border: 1px solid #1e1e30;
+  border: 1px solid #1A2040;
   border-left: 3px solid currentColor;
   border-radius: 8px;
   align-self: flex-start;
@@ -381,13 +381,13 @@
   padding: 10px 22px;
   font: 700 11px 'IBM Plex Mono', monospace;
   letter-spacing: 0.08em;
-  background: linear-gradient(135deg, #7B2FF7 0%, #5a1fd4 100%);
+  background: linear-gradient(135deg, #FF2D78 0%, #5a1fd4 100%);
   border: none;
   border-radius: 8px;
   color: #fff;
   cursor: pointer;
   transition: all 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
-  box-shadow: 0 4px 16px rgba(123, 47, 247, 0.3);
+  box-shadow: 0 4px 16px rgba(255, 45, 120, 0.3);
 }
 .msn-card__btn:hover:not(:disabled) {
   transform: translateY(-2px) scale(1.03);
@@ -397,7 +397,7 @@
 
 .msn-card__btn--replay {
   background: transparent;
-  border: 1px solid #2a2a3e;
+  border: 1px solid #1E2A48;
   color: #5c5c74;
   box-shadow: none;
 }
@@ -410,7 +410,7 @@
 .msn-card__btn:disabled {
   background: #111120;
   border: 1px solid #1e1e2e;
-  color: #2a2a3e;
+  color: #1E2A48;
   cursor: not-allowed;
   box-shadow: none;
 }
@@ -421,7 +421,7 @@
   margin: 32px auto 0;
   max-width: 400px;
   padding: 24px;
-  background: linear-gradient(135deg, rgba(57, 255, 136, 0.06) 0%, rgba(123, 47, 247, 0.06) 100%);
+  background: linear-gradient(135deg, rgba(57, 255, 136, 0.06) 0%, rgba(255, 45, 120, 0.06) 100%);
   border: 1px solid rgba(57, 255, 136, 0.2);
   border-radius: 16px;
 }

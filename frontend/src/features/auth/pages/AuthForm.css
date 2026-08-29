@@ -1,4 +1,4 @@
-/* ═══════════════════════════════════════════════════════════════
+﻿/* ═══════════════════════════════════════════════════════════════
    AuthForm.css  —  Dark Gamified Auth Pages
    Login / Register / Forgot Password — same vibe as missions
 ═══════════════════════════════════════════════════════════════ */
@@ -8,7 +8,7 @@
   min-height: 100vh;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  background: #080810;
+  background: #0B1026;
   font-family: 'IBM Plex Mono', monospace;
   position: relative;
 }
@@ -19,8 +19,8 @@
   position: fixed;
   inset: 0;
   background-image:
-    linear-gradient(rgba(123, 47, 247, 0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(123, 47, 247, 0.04) 1px, transparent 1px);
+    linear-gradient(rgba(255, 45, 120, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 45, 120, 0.04) 1px, transparent 1px);
   background-size: 80px 80px;
   pointer-events: none;
   z-index: 0;
@@ -30,8 +30,8 @@
 .auth-brand {
   position: relative;
   z-index: 1;
-  background: linear-gradient(160deg, #0d0d1f 0%, #080810 60%, #0a0820 100%);
-  border-right: 1px solid #1e1e30;
+  background: linear-gradient(160deg, #0d0d1f 0%, #0B1026 60%, #0a0820 100%);
+  border-right: 1px solid #1A2040;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -45,7 +45,7 @@
   position: absolute;
   width: 500px; height: 500px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(123, 47, 247, 0.15) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(255, 45, 120, 0.15) 0%, transparent 70%);
   top: -100px; left: -100px;
   pointer-events: none;
 }
@@ -60,7 +60,7 @@
   letter-spacing: 0.02em;
   margin-bottom: 60px;
 }
-.auth-brand-logo span { color: #7B2FF7; }
+.auth-brand-logo span { color: #FF2D78; }
 
 /* Big tagline */
 .auth-brand-tagline {
@@ -73,7 +73,7 @@
 }
 .auth-brand-tagline em {
   font-style: normal;
-  background: linear-gradient(135deg, #7B2FF7, #FFD400);
+  background: linear-gradient(135deg, #FF2D78, #FFD400);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -99,7 +99,7 @@
   gap: 10px;
   padding: 10px 14px;
   background: rgba(255,255,255,0.02);
-  border: 1px solid #1a1a2e;
+  border: 1px solid #162038;
   border-radius: 8px;
   font: 500 11px 'IBM Plex Mono', monospace;
   color: #5c5c74;
@@ -137,7 +137,7 @@
 }
 .auth-price-line {
   height: 1px;
-  background: linear-gradient(90deg, rgba(123, 47, 247, 0.4), transparent);
+  background: linear-gradient(90deg, rgba(255, 45, 120, 0.4), transparent);
   margin-top: 4px;
 }
 
@@ -193,15 +193,15 @@
 .auth-field {
   display: flex;
   align-items: center;
-  background: #0c0c18;
-  border: 1px solid #1e1e30;
+  background: #0C1122;
+  border: 1px solid #1A2040;
   border-radius: 8px;
   transition: border-color 0.2s ease;
   overflow: hidden;
 }
 .auth-field:focus-within {
-  border-color: rgba(123, 47, 247, 0.6);
-  box-shadow: 0 0 0 3px rgba(123, 47, 247, 0.08);
+  border-color: rgba(32, 217, 255, 0.6);
+  box-shadow: 0 0 0 3px rgba(255, 45, 120, 0.08);
 }
 
 .field-icon {
@@ -221,7 +221,7 @@
   font: 400 14px 'IBM Plex Mono', monospace;
   color: #e8e8f0;
 }
-.auth-field input::placeholder { color: #2a2a3e; }
+.auth-field input::placeholder { color: #1E2A48; }
 
 /* Forgot password link row */
 .auth-forgot {
@@ -238,14 +238,14 @@
   transition: color 0.15s;
 }
 .auth-forgot a:hover,
-.auth-forgot-link:hover { color: #9b6dff; }
+.auth-forgot-link:hover { color: #20D9FF; }
 
 /* Submit button */
 .auth-btn {
   height: 50px;
   width: 100%;
   margin-top: 8px;
-  background: linear-gradient(135deg, #7B2FF7 0%, #5A1DB8 100%);
+  background: linear-gradient(135deg, #FF2D78 0%, #E91E8C 60%, #20D9FF 100%);
   color: #fff;
   font: 800 13px 'IBM Plex Mono', monospace;
   letter-spacing: 0.12em;
@@ -288,12 +288,12 @@
   color: #3a3a52;
 }
 .auth-footer a {
-  color: #9b6dff;
+  color: #20D9FF;
   text-decoration: none;
   font-weight: 700;
   transition: color 0.15s;
 }
-.auth-footer a:hover { color: #c4a8ff; }
+.auth-footer a:hover { color: #6FF3FF; }
 
 /* Spinner */
 .auth-spinner {
@@ -320,7 +320,7 @@
   margin-bottom: 32px;
   transition: color 0.15s;
 }
-.auth-back:hover { color: #9b6dff; }
+.auth-back:hover { color: #20D9FF; }
 
 /* Checkbox agree */
 .auth-agree {
@@ -335,11 +335,11 @@
 .auth-agree input[type="checkbox"] {
   width: 16px; height: 16px;
   margin-top: 1px;
-  accent-color: #7B2FF7;
+  accent-color: #FF2D78;
   flex-shrink: 0;
 }
-.auth-agree a { color: #9b6dff; text-decoration: none; }
-.auth-agree a:hover { color: #c4a8ff; }
+.auth-agree a { color: #20D9FF; text-decoration: none; }
+.auth-agree a:hover { color: #6FF3FF; }
 
 /* ── Responsive ── */
 @media (max-width: 820px) {

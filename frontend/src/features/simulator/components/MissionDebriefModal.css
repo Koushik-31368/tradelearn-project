@@ -1,4 +1,4 @@
-/* ═══════════════════════════════════════════════════════════════
+﻿/* ═══════════════════════════════════════════════════════════════
    MissionDebriefModal.css  —  Gamified Debrief Screen
 ═══════════════════════════════════════════════════════════════ */
 
@@ -41,7 +41,7 @@
 /* ── Modal card ── */
 .msn-debrief {
   position: relative;
-  background: linear-gradient(160deg, #0e0e1e 0%, #080810 100%);
+  background: linear-gradient(160deg, #0D1228 0%, #0B1026 100%);
   border-radius: 20px;
   width: 100%;
   max-width: 520px;
@@ -138,8 +138,8 @@
   animation: verdictIn 0.4s ease 0.5s both;
 }
 .msn-debrief__stat {
-  background: #0c0c18;
-  border: 1px solid #1a1a2e;
+  background: #0C1122;
+  border: 1px solid #162038;
   border-radius: 10px;
   padding: 12px 14px;
   display: flex;
@@ -187,7 +187,7 @@
 }
 .msn-debrief__section-title--good   { color: #39FF88; }
 .msn-debrief__section-title--bad    { color: #FF3B5C; }
-.msn-debrief__section-title--lesson { color: #9b6dff; }
+.msn-debrief__section-title--lesson { color: #20D9FF; }
 
 .msn-debrief__section-text {
   font: 400 12px 'IBM Plex Mono', monospace;
@@ -244,6 +244,6 @@
 /* Divider */
 .msn-debrief__divider {
   width: 60px; height: 1px;
-  background: #1a1a2e;
+  background: #162038;
   margin: 0 auto 20px;
 }

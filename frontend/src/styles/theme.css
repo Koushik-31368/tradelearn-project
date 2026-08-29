@@ -1,33 +1,35 @@
 @import url('https://fonts.googleapis.com/css2?family=Archivo+Black&family=DM+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
 
 :root {
-  /* Spider-Verse glitch palette */
-  --bg: #0B0B12;
-  --bg-1: #14141F;
-  --bg-2: #1C1C2B;
-  --bg-panel: #14141F;
-  --bg-panel-2: #1C1C2B;
-  --bg-panel-3: #2A2A3D;
-  --bg-input: #0B0B12;
-  --text: #F5F5FA;
-  --text-light: #F5F5FA;
+  /* ══ Spider-Man: Across the Spider-Verse Palette ══ */
+  --bg: #0B1026;
+  --bg-1: #0F1530;
+  --bg-2: #141C38;
+  --bg-panel: #0F1530;
+  --bg-panel-2: #141C38;
+  --bg-panel-3: #1A2448;
+  --bg-input: #0B1026;
+  --text: #F0F0F8;
+  --text-light: #F0F0F8;
   --text-muted: #9A9AB0;
   --text-dim: #5C5C74;
   --text-faint: #5C5C74;
-  --cobalt: #7B2FF7;
-  --cobalt-bright: #00E5FF;
+  /* Spider-Verse hot pink (Gwen + Miles) */
+  --cobalt: #FF2D78;
+  --cobalt-bright: #FF6FA3;
+  /* Electric cyan (2099 / web effects) */
   --gold: #FFD400;
   --green: #39FF88;
   --green-bright: #39FF88;
-  --danger: #FF3B5C;
-  --coral: #FF3B5C;
-  --info: #00E5FF;
+  --danger: #FF5A36;
+  --coral: #FF5A36;
+  --info: #20D9FF;
   --warning: #FFD400;
-  --purple: #7B2FF7;
-  --border: #2A2A3D;
-  --border-2: #2A2A3D;
-  --border-3: #2A2A3D;
-  --border-green: rgba(255,46,166,.45);
+  --purple: #FF2D78;
+  --border: #1A2040;
+  --border-2: #1A2040;
+  --border-3: #1A2040;
+  --border-green: rgba(255, 45, 120, 0.45);
   --font-display: 'Archivo Black', Impact, sans-serif;
   --font-body: 'DM Sans', Arial, sans-serif;
   --font-mono: 'IBM Plex Mono', monospace;
@@ -37,40 +39,49 @@
   --r-xl: 10px;
   --shadow: 5px 5px 0 rgba(0,0,0,.28);
   --shadow-lg: 9px 9px 0 rgba(0,0,0,.3);
+  --shadow-xl: 0 24px 64px rgba(0,0,0,0.6);
   --ease: cubic-bezier(.2,.8,.2,1);
   --transition-fast: 150ms var(--ease);
   --transition-mid:  250ms var(--ease);
   --transition-slow: 450ms var(--ease);
-  --green-dim: #c91f62;
-  --green-dark: #8f1649;
-  --green-glow: rgba(255,45,120,.15);
-  --green-surface: rgba(255,45,120,.09);
-  --green-border: rgba(255,45,120,.35);
+  /* Gwen's pink glow */
+  --green-dim: #C4005A;
+  --green-dark: #8F0040;
+  --green-glow: rgba(255, 45, 120, 0.18);
+  --green-surface: rgba(255, 45, 120, 0.09);
+  --green-border: rgba(255, 45, 120, 0.35);
   --primary: var(--cobalt);
-  --primary-700: #17136f;
-  --primary-surface: rgba(32,217,255,.12);
-  --primary-border: rgba(32,217,255,.45);
+  --primary-700: #8F0040;
+  --primary-surface: rgba(32, 217, 255, 0.12);
+  --primary-border: rgba(32, 217, 255, 0.45);
   --primary-green: var(--green);
   --dark-bg: var(--bg-panel);
   --panel: var(--bg-panel);
   --panel-2: var(--bg-panel-2);
   --muted: var(--text-muted);
-  --text-dark: #0B0B12;
-  --chalk: #F5F5FA;
+  --text-dark: #0B1026;
+  --chalk: #F0F0F8;
   --field-green: #39FF88;
-  --bg-void: #0B0B12;
-  --bg-surface: #14141F;
-  --bg-surface-raised: #1C1C2B;
-  --accent-primary: #FF2EA6;
-  --accent-primary-glow: #FF6FC4;
-  --accent-secondary: #00E5FF;
+  --bg-void: #0B1026;
+  --bg-surface: #0F1530;
+  --bg-surface-raised: #141C38;
+  /* Spider-Verse named tokens */
+  --sv-pink: #FF2D78;
+  --sv-cyan: #20D9FF;
+  --sv-ink: #0B1026;
+  --sv-paper: #F0F0F8;
+  --sv-blue: #2924A8;
+  --sv-red: #FF5A36;
+  --accent-primary: #FF2D78;
+  --accent-primary-glow: #FF6FA3;
+  --accent-secondary: #20D9FF;
   --accent-secondary-glow: #6FF3FF;
-  --warn-purple: #7B2FF7;
+  --warn-purple: #FF2D78;
   --warn-yellow: #FFD400;
-  --text-primary: #F5F5FA;
+  --text-primary: #F0F0F8;
   --text-secondary: #9A9AB0;
-  --border-default: #2A2A3D;
-  --border-glow: #FF2EA6;
+  --border-default: #1A2040;
+  --border-glow: #FF2D78;
   --border-emphasis: var(--border-2);
   --border-muted: var(--border);
   --radius: var(--r);
@@ -85,9 +96,10 @@
 html, body, #root { min-height: 100%; overflow-x: hidden; }
 html { scroll-behavior: smooth; background: var(--bg); }
 body { margin: 0; background: var(--bg); color: var(--text); font: 400 15px/1.6 var(--font-body); -webkit-font-smoothing: antialiased; }
-body::before { content: ''; position: fixed; inset: 0; pointer-events: none; opacity: .2; background-image: radial-gradient(rgba(32,217,255,.18) 1px, transparent 1px), linear-gradient(135deg, rgba(255,45,120,.06), transparent 42%); background-size: 18px 18px, 100% 100%; mask-image: linear-gradient(to bottom, black, transparent 78%); }
-::selection { background: var(--gold); color: var(--text-dark); }
-:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
+/* Spider-Verse halftone + scan-line overlay */
+body::before { content: ''; position: fixed; inset: 0; pointer-events: none; opacity: .22; background-image: radial-gradient(rgba(255,45,120,.2) 1px, transparent 1px), radial-gradient(rgba(32,217,255,.12) 1px, transparent 1px); background-size: 18px 18px, 36px 36px; background-position: 0 0, 9px 9px; mask-image: linear-gradient(to bottom, black, transparent 85%); z-index: 0; }
+::selection { background: var(--sv-pink); color: #fff; }
+:focus-visible { outline: 3px solid var(--sv-cyan); outline-offset: 3px; }
 h1,h2,h3,h4,h5,h6 { margin: 0 0 16px; color: var(--text-light); font-family: var(--font-display); font-weight: 400; letter-spacing: -.04em; line-height: 1.02; text-transform: uppercase; }
 h1 { font-size: clamp(2.8rem, 7vw, 6.8rem); } h2 { font-size: clamp(1.8rem, 4vw, 3.5rem); } h3 { font-size: 1.15rem; }
 p { margin: 0 0 16px; color: var(--text-muted); line-height: 1.7; }
@@ -124,8 +136,8 @@ a { color: var(--gold); text-decoration: none; transition: color .2s var(--ease)
   z-index: 9999;
   height: 3px;
   width: 0%;
-  background: linear-gradient(90deg, var(--cobalt), var(--accent-primary), var(--gold));
-  box-shadow: 0 0 8px color-mix(in srgb, var(--accent-primary) 60%, transparent);
+  background: linear-gradient(90deg, var(--sv-pink), var(--sv-cyan), var(--gold));
+  box-shadow: 0 0 12px rgba(255, 45, 120, 0.6);
   pointer-events: none;
   transition: width var(--transition-fast);
 }
