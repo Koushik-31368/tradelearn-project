@@ -41,7 +41,7 @@
 /* ── Modal card ── */
 .msn-debrief {
   position: relative;
-  background: linear-gradient(160deg, #0D1228 0%, #0B1026 100%);
+  background: linear-gradient(160deg, #101830 0%, #0B1026 100%);
   border-radius: 20px;
   width: 100%;
   max-width: 520px;
@@ -123,7 +123,7 @@
 }
 .msn-debrief__title-text {
   font: 600 14px 'IBM Plex Mono', monospace;
-  color: #5c5c74;
+  color: #8890B8;
   max-width: 180px;
   text-align: left;
   line-height: 1.4;
@@ -138,8 +138,8 @@
   animation: verdictIn 0.4s ease 0.5s both;
 }
 .msn-debrief__stat {
-  background: #0C1122;
-  border: 1px solid #162038;
+  background: #101830;
+  border: 1px solid #1A2444;
   border-radius: 10px;
   padding: 12px 14px;
   display: flex;
@@ -148,7 +148,7 @@
 }
 .msn-debrief__stat-label {
   font: 600 9px 'IBM Plex Mono', monospace;
-  color: #3a3a52;
+  color: #9AA4C8;
   text-transform: uppercase;
   letter-spacing: 0.1em;
 }
@@ -191,7 +191,7 @@
 
 .msn-debrief__section-text {
   font: 400 12px 'IBM Plex Mono', monospace;
-  color: #5c5c74;
+  color: #8890B8;
   margin: 0;
   line-height: 1.65;
 }
@@ -244,6 +244,6 @@
 /* Divider */
 .msn-debrief__divider {
   width: 60px; height: 1px;
-  background: #162038;
+  background: #1A2444;
   margin: 0 auto 20px;
 }

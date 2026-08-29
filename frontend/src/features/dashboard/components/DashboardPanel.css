@@ -30,7 +30,7 @@
   position: relative;
   z-index: 1;
   padding: 40px 32px 32px;
-  border-bottom: 1px solid #162038;
+  border-bottom: 1px solid #1A2444;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -42,7 +42,7 @@
 
 .dp-hero__greet {
   font: 700 10px 'IBM Plex Mono', monospace;
-  color: #3a3a52;
+  color: #9AA4C8;
   text-transform: uppercase;
   letter-spacing: 0.15em;
   margin-bottom: 6px;
@@ -60,7 +60,7 @@
 
 .dp-hero__sub {
   font: 400 12px 'IBM Plex Mono', monospace;
-  color: #3a3a52;
+  color: #9AA4C8;
 }
 
 /* Streak + XP pill row */
@@ -110,8 +110,8 @@
 
 /* ── Quick Action cards ── */
 .dp-action {
-  background: linear-gradient(135deg, #0D1228 0%, #0A0F20 100%);
-  border: 1px solid #1A2040;
+  background: linear-gradient(135deg, #101830 0%, #0E1530 100%);
+  border: 1px solid #1E2848;
   border-radius: 14px;
   padding: 24px;
   cursor: pointer;
@@ -154,7 +154,7 @@
 }
 .dp-action__desc {
   font: 400 11px 'IBM Plex Mono', monospace;
-  color: #3a3a52;
+  color: #9AA4C8;
   line-height: 1.65;
   margin: 0;
   flex: 1;
@@ -181,14 +181,14 @@
   gap: 12px;
 }
 .dp-stat-card {
-  background: linear-gradient(135deg, #0D1228 0%, #0A0F20 100%);
-  border: 1px solid #1A2040;
+  background: linear-gradient(135deg, #101830 0%, #0E1530 100%);
+  border: 1px solid #1E2848;
   border-radius: 12px;
   padding: 18px 20px;
 }
 .dp-stat-card__label {
   font: 600 9px 'IBM Plex Mono', monospace;
-  color: #3a3a52;
+  color: #9AA4C8;
   text-transform: uppercase;
   letter-spacing: 0.12em;
   margin-bottom: 6px;
@@ -207,7 +207,7 @@
 .dp-league-bar {
   margin-top: 8px;
   height: 4px;
-  background: #162038;
+  background: #1A2444;
   border-radius: 2px;
   overflow: hidden;
 }
@@ -234,8 +234,8 @@
 
 /* Quest / challenge panels */
 .dp-quest-panel {
-  background: linear-gradient(135deg, #0D1228 0%, #0A0F20 100%);
-  border: 1px solid #1A2040;
+  background: linear-gradient(135deg, #101830 0%, #0E1530 100%);
+  border: 1px solid #1E2848;
   border-radius: 14px;
   padding: 20px;
   display: flex;
@@ -249,8 +249,8 @@
   font: 700 9px 'IBM Plex Mono', monospace;
   text-transform: uppercase;
   letter-spacing: 0.12em;
-  color: #3a3a52;
-  border-bottom: 1px solid #121830;
+  color: #9AA4C8;
+  border-bottom: 1px solid #151E3A;
   padding-bottom: 10px;
 }
 .dp-quest-panel__header-icon { font-size: 13px; }
@@ -259,7 +259,7 @@
 
 .dp-quest-item {
   padding: 10px 12px;
-  border: 1px solid #121830;
+  border: 1px solid #151E3A;
   border-radius: 8px;
   background: rgba(255,255,255,0.01);
   transition: background 0.15s;
@@ -290,14 +290,14 @@
 
 .dp-quest-item__desc {
   font: 400 10px 'IBM Plex Mono', monospace;
-  color: #3a3a52;
+  color: #9AA4C8;
   line-height: 1.5;
   margin-bottom: 6px;
 }
 
 .dp-quest-progress {
   height: 3px;
-  background: #162038;
+  background: #1A2444;
   border-radius: 2px;
   overflow: hidden;
 }
@@ -317,8 +317,8 @@
 
 /* ── Quick links panel (right col) ── */
 .dp-links {
-  background: linear-gradient(135deg, #0D1228 0%, #0A0F20 100%);
-  border: 1px solid #1A2040;
+  background: linear-gradient(135deg, #101830 0%, #0E1530 100%);
+  border: 1px solid #1E2848;
   border-radius: 14px;
   padding: 20px;
   display: flex;
@@ -329,8 +329,8 @@
   font: 700 9px 'IBM Plex Mono', monospace;
   text-transform: uppercase;
   letter-spacing: 0.12em;
-  color: #3a3a52;
-  border-bottom: 1px solid #121830;
+  color: #9AA4C8;
+  border-bottom: 1px solid #151E3A;
   padding-bottom: 10px;
   margin-bottom: 4px;
 }
@@ -339,7 +339,7 @@
   align-items: center;
   gap: 10px;
   padding: 10px 12px;
-  border: 1px solid #121830;
+  border: 1px solid #151E3A;
   border-radius: 8px;
   background: rgba(255,255,255,0.01);
   cursor: pointer;
@@ -353,7 +353,7 @@
 .dp-link-row__icon { font-size: 1rem; }
 .dp-link-row__label {
   font: 600 11px 'IBM Plex Mono', monospace;
-  color: #5c5c74;
+  color: #8890B8;
   flex: 1;
 }
 .dp-link-row:hover .dp-link-row__label { color: #20D9FF; }
@@ -370,11 +370,11 @@
   min-height: 60vh;
   gap: 14px;
   font: 400 12px 'IBM Plex Mono', monospace;
-  color: #3a3a52;
+  color: #9AA4C8;
 }
 .dp-spinner {
   width: 30px; height: 30px;
-  border: 2px solid #162038;
+  border: 2px solid #1A2444;
   border-top-color: #FF2D78;
   border-radius: 50%;
   animation: dpSpin 0.7s linear infinite;

@@ -31,7 +31,7 @@
   position: relative;
   z-index: 1;
   background: linear-gradient(160deg, #0d0d1f 0%, #0B1026 60%, #0a0820 100%);
-  border-right: 1px solid #1A2040;
+  border-right: 1px solid #1E2848;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -81,7 +81,7 @@
 
 .auth-brand-sub {
   font: 400 11px 'IBM Plex Mono', monospace;
-  color: #3a3a52;
+  color: #9AA4C8;
   line-height: 1.7;
   max-width: 320px;
   margin-bottom: 40px;
@@ -99,10 +99,10 @@
   gap: 10px;
   padding: 10px 14px;
   background: rgba(255,255,255,0.02);
-  border: 1px solid #162038;
+  border: 1px solid #1A2444;
   border-radius: 8px;
   font: 500 11px 'IBM Plex Mono', monospace;
-  color: #5c5c74;
+  color: #8890B8;
 }
 .auth-brand-feat__icon { font-size: 14px; }
 
@@ -178,7 +178,7 @@
 
 .auth-subtitle {
   font: 400 11px 'IBM Plex Mono', monospace;
-  color: #3a3a52;
+  color: #9AA4C8;
   margin: 0 0 36px;
 }
 
@@ -193,8 +193,8 @@
 .auth-field {
   display: flex;
   align-items: center;
-  background: #0C1122;
-  border: 1px solid #1A2040;
+  background: #101830;
+  border: 1px solid #1E2848;
   border-radius: 8px;
   transition: border-color 0.2s ease;
   overflow: hidden;
@@ -207,7 +207,7 @@
 .field-icon {
   padding: 0 14px;
   font-size: 14px;
-  color: #3a3a52;
+  color: #9AA4C8;
   flex-shrink: 0;
 }
 
@@ -232,7 +232,7 @@
 .auth-forgot a,
 .auth-forgot-link {
   font: 500 10px 'IBM Plex Mono', monospace;
-  color: #3a3a52;
+  color: #9AA4C8;
   text-decoration: none;
   letter-spacing: 0.04em;
   transition: color 0.15s;
@@ -285,7 +285,7 @@
   margin-top: 24px;
   text-align: center;
   font: 400 11px 'IBM Plex Mono', monospace;
-  color: #3a3a52;
+  color: #9AA4C8;
 }
 .auth-footer a {
   color: #20D9FF;
@@ -313,7 +313,7 @@
   align-items: center;
   gap: 6px;
   font: 600 10px 'IBM Plex Mono', monospace;
-  color: #3a3a52;
+  color: #9AA4C8;
   text-decoration: none;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -328,7 +328,7 @@
   align-items: flex-start;
   gap: 10px;
   font: 400 10px 'IBM Plex Mono', monospace;
-  color: #3a3a52;
+  color: #9AA4C8;
   cursor: pointer;
   line-height: 1.6;
 }
