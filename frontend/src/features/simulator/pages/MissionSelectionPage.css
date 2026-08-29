@@ -1,4 +1,4 @@
-﻿/* ═══════════════════════════════════════════════════════════════
+/* ═══════════════════════════════════════════════════════════════
    MissionSelectionPage.css  —  Gamified Flight School Lobby
 ═══════════════════════════════════════════════════════════════ */
 
@@ -308,7 +308,7 @@
 
 .msn-card__lesson {
   font: 500 10px 'IBM Plex Mono', monospace;
-  color: #9AA4C8;
+  color: #20D9FF;
 }
 
 .msn-card__icon { font-size: 1.8rem; flex-shrink: 0; }
@@ -326,7 +326,7 @@
 }
 .msn-card__desc {
   font: 400 12px 'IBM Plex Mono', monospace;
-  color: #4a4a64;
+  color: #B8C0D8;
   line-height: 1.65;
   margin: 0;
 }
@@ -339,9 +339,9 @@
 }
 .msn-card__tag {
   font: 500 10px 'IBM Plex Mono', monospace;
-  color: #9AA4C8;
+  color: #B8C0D8;
   background: #101830;
-  border: 1px solid #1e1e2e;
+  border: 1px solid #1E2848;
   border-radius: 4px;
   padding: 3px 8px;
 }
@@ -372,7 +372,7 @@
 }
 .msn-card__result-title {
   font: 600 11px 'IBM Plex Mono', monospace;
-  color: #9A9AB0;
+  color: #C0C8E0;
 }
 
 /* Action button */
@@ -409,8 +409,8 @@
 
 .msn-card__btn:disabled {
   background: #111120;
-  border: 1px solid #1e1e2e;
-  color: #1E2A48;
+  border: 1px solid #1E2848;
+  color: #4A5A80;
   cursor: not-allowed;
   box-shadow: none;
 }
