@@ -760,18 +760,18 @@
 .hp-hero--split { min-height: 700px; display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(340px, .95fr); align-items: stretch; justify-content: stretch; padding: 0; text-align: left; background-size: cover; background-position: center; }
 .hp-hero--split .hp-hero-overlay { background: rgba(21,23,25,.42); }
 .hp-hero-panel { position: relative; z-index: 2; min-width: 0; display: flex; flex-direction: column; justify-content: center; padding: 120px clamp(24px, 5.5vw, 80px) 80px; }
-/* Left hero panel: deep Spider-Verse navy-blue (not full pink) */
-.hp-hero-panel--copy { background: #0C1640; clip-path: polygon(0 0, 92% 0, 100% 50%, 92% 100%, 0 100%); color: var(--text-light); border-right: 3px solid var(--sv-pink); }
+/* Left hero panel: pink-to-dark gradient — Spider-Verse Gwen dimension */
+.hp-hero-panel--copy { background: linear-gradient(160deg, #FF2D78 0%, #9C0050 45%, #1A0830 100%); clip-path: polygon(0 0, 92% 0, 100% 50%, 92% 100%, 0 100%); color: var(--text-light); }
 .hp-hero-panel--copy::after { content: ''; position: absolute; inset: 0 8% 0 0; background: repeating-linear-gradient(135deg, transparent 0 42px, rgba(255,255,255,.04) 43px 44px); pointer-events: none; }
 .hp-hero-panel--copy > * { position: relative; z-index: 1; }
 .hp-hero-panel--market { align-items: center; padding-left: clamp(24px, 5vw, 80px); }
-/* Eyebrow inside left panel: hot pink */
-.hp-hero-panel--copy .hp-eyebrow { color: var(--sv-pink); }
+/* Eyebrow inside left panel: cyan so it pops on pink bg */
+.hp-hero-panel--copy .hp-eyebrow { color: var(--sv-cyan); }
 .hp-hero-panel--copy .hp-hero-title { max-width: 680px; margin-top: 20px; color: var(--text-light); font-size: clamp(2.4rem, 5.5vw, 4.8rem); line-height: 1; }
 .hp-hero-title em { color: var(--gold); font-style: normal; }
 .hp-hero-kicker { margin-top: 20px; font: 700 11px var(--font-mono); letter-spacing: .12em; color: rgba(255,255,255,.72); }
-/* Stamp: pink border/color */
-.hp-hero-stamp { width: fit-content; margin-top: 64px; padding: 10px 14px; border: 2px solid var(--sv-pink); color: var(--sv-pink); font: 700 10px/1.5 var(--font-mono); letter-spacing: .1em; transform: rotate(-3deg); }
+/* Stamp: cyan border on pink panel so it's visible */
+.hp-hero-stamp { width: fit-content; margin-top: 64px; padding: 10px 14px; border: 2px solid var(--sv-cyan); color: var(--sv-cyan); font: 700 10px/1.5 var(--font-mono); letter-spacing: .1em; transform: rotate(-3deg); }
 .hp-hero-stamp strong { color: var(--text-light); }
 /* Market widget: shadow = cyan (Spider-Man 2099 blue) */
 .hp-market-widget { width: min(100%, 390px); padding: 18px; border: 3px solid var(--text-dark); background: var(--chalk); color: var(--text-dark); box-shadow: 10px 10px 0 var(--sv-cyan); transform: rotate(2deg); }
@@ -804,8 +804,8 @@
 .hp-step-desc, .hp-feature-desc, .hp-stat-label { color: rgba(21,23,25,.72); }
 .hp-step-num { color: rgba(21,23,25,.28); -webkit-text-stroke: 1px rgba(21,23,25,.45); }
 .hp-stat-value { color: var(--text-dark); font-family: var(--font-display); font-size: clamp(2.2rem, 4vw, 3.8rem); }
-/* Final CTA banner: deep navy Spider-Verse instead of coral */
-.hp-final { background: #0C1640; color: var(--text-light); border-top: 4px solid var(--sv-pink); }
+/* Final CTA: pink bg with cyan accent text */
+.hp-final { background: var(--sv-pink); color: var(--text-light); }
 .hp-final-title { color: var(--text-light); }
 .hp-final-title em { color: var(--sv-cyan); }
 @media (max-width: 760px) { .hp-hero--split { min-height: auto; grid-template-columns: minmax(0, 1fr); } .hp-hero-panel { min-height: 560px; padding: 116px 24px 72px; } .hp-hero-panel--copy { clip-path: polygon(0 0, 100% 0, 100% 94%, 50% 100%, 0 94%); } .hp-hero-panel--market { min-height: 470px; padding: 70px 24px 100px; } .hp-hero-stamp { margin-top: 38px; } .hp-step:nth-child(n), .hp-feature:nth-child(n), .hp-stat:nth-child(n) { transform: none; } }
