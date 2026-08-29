@@ -760,30 +760,16 @@
 .hp-hero--split { min-height: 700px; display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(340px, .95fr); align-items: stretch; justify-content: stretch; padding: 0; text-align: left; background-size: cover; background-position: center; }
 .hp-hero--split .hp-hero-overlay { background: rgba(21,23,25,.42); }
 .hp-hero-panel { position: relative; z-index: 2; min-width: 0; display: flex; flex-direction: column; justify-content: center; padding: 120px clamp(24px, 5.5vw, 80px) 80px; }
-/* Left hero panel: pink-to-dark gradient — Spider-Verse Gwen dimension */
-.hp-hero-panel--copy { background: linear-gradient(160deg, #FF2D78 0%, #9C0050 45%, #1A0830 100%); clip-path: polygon(0 0, 92% 0, 100% 50%, 92% 100%, 0 100%); color: var(--text-light); }
+/* Left hero panel: pink→cyan gradient — matches Sign In button */
+.hp-hero-panel--copy { background: linear-gradient(135deg, #FF2D78 0%, #C0006A 50%, #20D9FF 100%); clip-path: polygon(0 0, 92% 0, 100% 50%, 92% 100%, 0 100%); color: var(--text-light); }
 .hp-hero-panel--copy::after { content: ''; position: absolute; inset: 0 8% 0 0; background: repeating-linear-gradient(135deg, transparent 0 42px, rgba(255,255,255,.04) 43px 44px); pointer-events: none; }
 .hp-hero-panel--copy > * { position: relative; z-index: 1; }
-/* Right hero panel: dark navy + cyan grid — same as login page */
+/* Right hero panel: transparent — bg image shows through */
 .hp-hero-panel--market {
   align-items: center;
   padding-left: clamp(24px, 5vw, 80px);
-  background: #0B1026;
   position: relative;
 }
-/* Cyan grid overlay — identical to login page body::before */
-.hp-hero-panel--market::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background-image:
-    linear-gradient(rgba(32, 217, 255, 0.08) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(32, 217, 255, 0.08) 1px, transparent 1px);
-  background-size: 48px 48px;
-  pointer-events: none;
-  z-index: 0;
-}
-/* Push market widget above the grid */
 .hp-hero-panel--market > * { position: relative; z-index: 1; }
 
 /* Eyebrow inside left panel: cyan so it pops on pink bg */
