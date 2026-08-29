@@ -764,7 +764,28 @@
 .hp-hero-panel--copy { background: linear-gradient(160deg, #FF2D78 0%, #9C0050 45%, #1A0830 100%); clip-path: polygon(0 0, 92% 0, 100% 50%, 92% 100%, 0 100%); color: var(--text-light); }
 .hp-hero-panel--copy::after { content: ''; position: absolute; inset: 0 8% 0 0; background: repeating-linear-gradient(135deg, transparent 0 42px, rgba(255,255,255,.04) 43px 44px); pointer-events: none; }
 .hp-hero-panel--copy > * { position: relative; z-index: 1; }
-.hp-hero-panel--market { align-items: center; padding-left: clamp(24px, 5vw, 80px); }
+/* Right hero panel: dark navy + cyan grid — same as login page */
+.hp-hero-panel--market {
+  align-items: center;
+  padding-left: clamp(24px, 5vw, 80px);
+  background: #0B1026;
+  position: relative;
+}
+/* Cyan grid overlay — identical to login page body::before */
+.hp-hero-panel--market::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(32, 217, 255, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(32, 217, 255, 0.08) 1px, transparent 1px);
+  background-size: 48px 48px;
+  pointer-events: none;
+  z-index: 0;
+}
+/* Push market widget above the grid */
+.hp-hero-panel--market > * { position: relative; z-index: 1; }
+
 /* Eyebrow inside left panel: cyan so it pops on pink bg */
 .hp-hero-panel--copy .hp-eyebrow { color: var(--sv-cyan); }
 .hp-hero-panel--copy .hp-hero-title { max-width: 680px; margin-top: 20px; color: var(--text-light); font-size: clamp(2.4rem, 5.5vw, 4.8rem); line-height: 1; }
