@@ -37,9 +37,16 @@ public class SimulatorService {
         }
         String tradeType = tradeRequest.getTradeType().toUpperCase();
 
-        double tradeValue = tradeRequest.getPrice() * tradeRequest.getQuantity();
-        String stockSymbol = tradeRequest.getStockSymbol();
+        // Quantity must be a positive integer — zero/negative bypasses the cash
+        // check (tradeValue becomes ≤ 0) and zero causes division-by-zero NaN
+        // persisted to the DB in the average-price calculation.
         int quantity = tradeRequest.getQuantity();
+        if (quantity <= 0) {
+            throw new Exception("Quantity must be a positive integer.");
+        }
+
+        double tradeValue = tradeRequest.getPrice() * quantity;
+        String stockSymbol = tradeRequest.getStockSymbol();
         Optional<Holding> existingHoldingOpt = portfolio.getHoldings().stream()
                 .filter(h -> h.getStockSymbol().equals(stockSymbol))
                 .findFirst();
