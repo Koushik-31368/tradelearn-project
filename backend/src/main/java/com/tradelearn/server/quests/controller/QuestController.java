@@ -27,7 +27,9 @@ public class QuestController {
     @GetMapping("/daily")
     public ResponseEntity<List<QuestDTO>> getDailyQuests(@AuthenticationPrincipal UserDetails userPrincipal) {
         if (userPrincipal == null) return ResponseEntity.status(401).build();
-        User user = userRepository.findByEmail(userPrincipal.getUsername()).orElseThrow();
+        // JwtAuthenticationFilter sets the full User entity as principal —
+        // cast directly rather than doing a redundant DB lookup by email.
+        User user = (User) userPrincipal;
         List<QuestDTO> quests = questService.getTodayQuests(user.getId());
         return ResponseEntity.ok(quests);
     }
@@ -35,7 +37,7 @@ public class QuestController {
     @GetMapping("/weekly")
     public ResponseEntity<List<ChallengeDTO>> getWeeklyChallenges(@AuthenticationPrincipal UserDetails userPrincipal) {
         if (userPrincipal == null) return ResponseEntity.status(401).build();
-        User user = userRepository.findByEmail(userPrincipal.getUsername()).orElseThrow();
+        User user = (User) userPrincipal;
         List<ChallengeDTO> challenges = questService.getThisWeekChallenges(user.getId());
         return ResponseEntity.ok(challenges);
     }
