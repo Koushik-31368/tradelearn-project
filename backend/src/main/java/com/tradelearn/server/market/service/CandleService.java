@@ -136,7 +136,8 @@ public class CandleService {
         }
 
         // ── PATH 2: Classpath JSON fallback (demo / local dev) ────────────────────
-        log.debug("[CandleService] No replay session for game {} — using classpath JSON fallback", gameId);
+        log.warn("[CandleService] No replay session for game {} — falling back to classpath JSON. "
+                + "Run ingest_market_data.py to populate stock_candles_daily with real NSE data.", gameId);
         return loadCandlesFromJson(gameId, game);
     }
 
