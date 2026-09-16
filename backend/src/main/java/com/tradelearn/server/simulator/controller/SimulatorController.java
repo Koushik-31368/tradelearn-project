@@ -4,8 +4,10 @@ import com.tradelearn.server.dto.TradeRequest;
 import com.tradelearn.server.simulator.model.Portfolio;
 import com.tradelearn.server.simulator.repository.PortfolioRepository;
 import com.tradelearn.server.simulator.service.SimulatorService;
+import com.tradelearn.server.user.model.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -22,8 +24,13 @@ public class SimulatorController {
     private PortfolioRepository portfolioRepository;
 
     @PostMapping("/trade")
-    public ResponseEntity<?> executeTrade(@RequestBody TradeRequest tradeRequest) {
+    public ResponseEntity<?> executeTrade(
+            @RequestBody TradeRequest tradeRequest,
+            @AuthenticationPrincipal User principal) {
         try {
+            // Override userId with the authenticated principal — prevents spoofing
+            // another user's portfolio by sending a different userId in the body.
+            tradeRequest.setUserId(principal.getId());
             Portfolio updatedPortfolio = simulatorService.executeTrade(tradeRequest);
             return ResponseEntity.ok(updatedPortfolio);
         } catch (Exception e) {
@@ -32,8 +39,10 @@ public class SimulatorController {
     }
 
     @GetMapping("/portfolio")
-    public ResponseEntity<?> getPortfolio(@RequestParam Long userId) {
-        Optional<Portfolio> portfolioOpt = portfolioRepository.findByUser_Id(userId);
+    public ResponseEntity<?> getPortfolio(@AuthenticationPrincipal User principal) {
+        // userId comes from the JWT, not from a query param — prevents peeking at
+        // other users' portfolios.
+        Optional<Portfolio> portfolioOpt = portfolioRepository.findByUser_Id(principal.getId());
         if (portfolioOpt.isEmpty()) {
             return ResponseEntity.status(404).body(Map.of("message", "Portfolio not found"));
         }
