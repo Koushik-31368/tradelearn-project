@@ -1,4 +1,4 @@
-﻿/* ═══════════════════════════════════════════════════════════════
+/* ═══════════════════════════════════════════════════════════════
    AuthForm.css  —  Dark Gamified Auth Pages
    Login / Register / Forgot Password — same vibe as missions
 ═══════════════════════════════════════════════════════════════ */
@@ -279,6 +279,15 @@
 }
 .auth-msg.error   { background: rgba(255,59,92,0.08); border: 1px solid rgba(255,59,92,0.25); color: #FF3B5C; }
 .auth-msg.success { background: rgba(57,255,136,0.06); border: 1px solid rgba(57,255,136,0.2); color: #39FF88; }
+.auth-cold-start-hint {
+  background: rgba(255,180,0,0.07);
+  border: 1px solid rgba(255,180,0,0.25);
+  color: #FFB400;
+  font-size: 11px;
+  line-height: 1.6;
+  animation: fadeIn 0.4s ease;
+}
+
 
 /* Footer links */
 .auth-footer {

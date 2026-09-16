@@ -13,6 +13,7 @@ const LoginPage = () => {
   const [message,   setMessage]   = useState('');
   const [isError,   setIsError]   = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [slowHint,  setSlowHint]  = useState(false);
   const navigate = useNavigate();
   const { login } = useAuth();
 
@@ -21,6 +22,13 @@ const LoginPage = () => {
     setMessage('');
     setIsError(false);
     setIsLoading(true);
+    setSlowHint(false);
+
+    // After 3 s with no response, show a cold-start hint.
+    // Render free tier spins down after 15 min inactivity — first request
+    // takes 30–50 s. Without this hint the spinner looks permanently frozen.
+    const hintTimer = setTimeout(() => setSlowHint(true), 3000);
+
     try {
       const res = await apiClient.post('/api/auth/login', { email, password });
       login(res.data);
@@ -31,6 +39,8 @@ const LoginPage = () => {
       const d = err?.response?.data;
       setMessage(typeof d === 'string' ? d : d?.error || d?.message || 'Login failed');
     } finally {
+      clearTimeout(hintTimer);
+      setSlowHint(false);
       setIsLoading(false);
     }
   };
@@ -123,6 +133,13 @@ const LoginPage = () => {
 
           {message && (
             <p className={`auth-msg ${isError ? 'error' : 'success'}`}>{message}</p>
+          )}
+
+          {isLoading && slowHint && (
+            <p className="auth-msg auth-cold-start-hint">
+              ☕ Waking up the server… this takes ~30s on first visit.
+              <br /><span style={{fontSize:'0.75em',opacity:0.7}}>Render free tier spins down after inactivity.</span>
+            </p>
           )}
 
           <p className="auth-footer">
