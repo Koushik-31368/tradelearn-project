@@ -224,7 +224,13 @@ public class TickReplayEngine {
         LocalDate minDate = candleRepo.findMinDateForTicker(yfinanceTicker);
         LocalDate maxDate = candleRepo.findMaxDateForTicker(yfinanceTicker);
 
-        if (minDate == null || maxDate == null) return List.of();
+        if (minDate == null || maxDate == null) {
+            log.warn("[TickReplay] loadRandomSlice: no candle data in stock_candles_daily for ticker '{}'. "
+                    + "Run scripts/ingest_market_data.py to populate the DB. "
+                    + "Returning empty — startSession will throw IllegalStateException.",
+                    yfinanceTicker);
+            return List.of();
+        }
 
         // Pick a random start within the available window
         int calendarBuffer = requestedCount + (requestedCount / 2) + 14;
@@ -273,6 +279,10 @@ public class TickReplayEngine {
                 return candles;
             }
         }
+        log.warn("[TickReplay] loadRandomSlice: all 5 random window attempts returned too few candles "
+                + "for ticker '{}' (requested={}, calendarBuffer={}). "
+                + "DB may have sparse data — check stock_candles_daily row count for this ticker.",
+                yfinanceTicker, requestedCount, calendarBuffer);
         return List.of();
     }
 
