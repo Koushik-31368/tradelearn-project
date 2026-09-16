@@ -1,0 +1,56 @@
+name: Monthly NSE Market Data Ingestion
+
+# ─── Triggers ───────────────────────────────────────────────────────────────
+# 1. Scheduled: 1st of every month at 09:00 UTC (2:30 AM IST next day)
+#    This refreshes historical candle data without hitting yfinance rate limits.
+# 2. Manual: workflow_dispatch lets you trigger a one-off run from the
+#    Actions tab at any time (e.g. after initial deploy or after rotation).
+on:
+  schedule:
+    - cron: "0 21 1 * *"   # 1st of month, 9 PM UTC = 2:30 AM IST
+  workflow_dispatch:
+    inputs:
+      days:
+        description: "Days of history to ingest (default: 730 = 2 years)"
+        required: false
+        default: "730"
+
+jobs:
+  ingest:
+    name: Ingest NSE Candle Data → Neon
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+          cache-dependency-path: scripts/requirements.txt
+
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+        working-directory: scripts
+
+      - name: Run market data ingestion
+        working-directory: scripts
+        env:
+          # Set NEON_DATABASE_URL in GitHub -> Settings -> Secrets and variables
+          # -> Actions -> New repository secret
+          NEON_DATABASE_URL: ${{ secrets.NEON_DATABASE_URL }}
+        run: |
+          DAYS=${{ github.event.inputs.days || '730' }}
+          echo "=== Starting ingestion: $DAYS days of history ==="
+          python ingest_market_data.py --days $DAYS 2>&1 | tee ingestion.log
+          echo "=== Ingestion finished ==="
+
+      - name: Upload ingestion log as artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ingestion-log-${{ github.run_number }}
+          path: scripts/ingestion.log
+          retention-days: 30
