@@ -187,15 +187,34 @@ public class CandleService {
     private List<Candle> loadCandlesFromJson(long gameId, Game game) {
         String symbol = game.getStockSymbol().toUpperCase().trim();
         String path = "candles/" + symbol + ".json";
+        boolean usingSymbolFile = true;
 
         InputStream is = getClass().getClassLoader().getResourceAsStream(path);
         if (is == null) {
+            // Symbol-specific file not found — drop to generic sample fallback.
+            // This means either ingestion never ran or this symbol has no bundled JSON.
+            usingSymbolFile = false;
+            log.warn("[CandleService] No classpath JSON for symbol '{}' (game {}) — "
+                    + "no file at '{}'. Falling back to sample.json. "
+                    + "Run ingest_market_data.py to fix this.",
+                    symbol, gameId, path);
             path = "candles/sample.json";
             is = getClass().getClassLoader().getResourceAsStream(path);
         }
         if (is == null) {
             throw new IllegalStateException("No candle data found for symbol: " + symbol
                     + ". Either run the ingestion script or provide candles/" + symbol + ".json");
+        }
+
+        // ── WORST CASE: serving generic sample.json to a real game ─────────────
+        // This candle set is NOT real NSE data for the game's symbol.
+        // It is a placeholder that makes prices completely fictional.
+        // Fix: run scripts/ingest_market_data.py against the Neon DB.
+        if (!usingSymbolFile) {
+            log.error("[CandleService] SERVING SAMPLE.JSON TO GAME {} (symbol={}) — "
+                    + "prices are NOT real NSE data. "
+                    + "Run ingest_market_data.py against the Neon DB immediately.",
+                    gameId, symbol);
         }
 
         try {
