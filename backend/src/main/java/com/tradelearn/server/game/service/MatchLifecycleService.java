@@ -83,7 +83,7 @@ public class MatchLifecycleService {
      * Must be a subset of the NSE watchlist that has been ingested into
      * {@code stock_candles_daily} by the Python ingestion script.
      */
-    static final String[] RANKED_SYMBOLS = {
+    public static final String[] RANKED_SYMBOLS = {
         "RELIANCE", "TCS", "INFY", "HDFCBANK", "ICICIBANK",
         "WIPRO", "SBIN", "ADANIENT", "BAJFINANCE", "HINDUNILVR"
     };
