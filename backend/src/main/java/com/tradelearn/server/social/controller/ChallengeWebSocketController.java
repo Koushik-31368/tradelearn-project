@@ -1,11 +1,10 @@
 package com.tradelearn.server.social.controller;
 
 import com.tradelearn.server.game.model.Game;
-import com.tradelearn.server.game.model.GameStatus;
+import com.tradelearn.server.game.service.MatchLifecycleService;
 import com.tradelearn.server.social.model.GameChallenge;
 import com.tradelearn.server.user.model.User;
 import com.tradelearn.server.social.repository.GameChallengeRepository;
-import com.tradelearn.server.game.repository.GameRepository;
 import com.tradelearn.server.user.repository.UserRepository;
 import com.tradelearn.server.quests.service.QuestService;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -23,18 +22,18 @@ public class ChallengeWebSocketController {
     private final SimpMessagingTemplate messagingTemplate;
     private final UserRepository userRepository;
     private final GameChallengeRepository challengeRepository;
-    private final GameRepository gameRepository;
+    private final MatchLifecycleService matchLifecycleService;
     private final QuestService questService;
 
     public ChallengeWebSocketController(SimpMessagingTemplate messagingTemplate,
                                         UserRepository userRepository,
                                         GameChallengeRepository challengeRepository,
-                                        GameRepository gameRepository,
+                                        MatchLifecycleService matchLifecycleService,
                                         @org.springframework.context.annotation.Lazy QuestService questService) {
         this.messagingTemplate = messagingTemplate;
         this.userRepository = userRepository;
         this.challengeRepository = challengeRepository;
-        this.gameRepository = gameRepository;
+        this.matchLifecycleService = matchLifecycleService;
         this.questService = questService;
     }
 
@@ -100,17 +99,15 @@ public class ChallengeWebSocketController {
         challenge.setStatus("ACCEPTED");
         challengeRepository.save(challenge);
 
-        // Create a Game Room immediately
-        Game game = new Game();
-        game.setCreator(challenge.getChallenger());
-        game.setOpponent(challenge.getChallenged());
-        game.setStatus(GameStatus.ACTIVE);
-        // Simplified config for direct challenges
-        game.setStockSymbol("AAPL");
-        game.setStartingBalance(100000.0);
-        game.setCreatorFinalBalance(100000.0);
-        game.setOpponentFinalBalance(100000.0);
-        gameRepository.save(game);
+        // Delegate to MatchLifecycleService so the friend-challenge match is created
+        // identically to a ranked auto-match: random NSE symbol from RANKED_SYMBOLS,
+        // ₹10,00,000 starting balance, replay session wiring, and afterCommit side-effects
+        // (Redis room, candle loading, scheduler, position initialisation, epoch gate).
+        // creatorFinalBalance / opponentFinalBalance are intentionally NOT set here —
+        // they are written only when the match ends with a final scoring result.
+        Game game = matchLifecycleService.createAutoMatch(
+                challenge.getChallenger().getId(),
+                challenge.getChallenged().getId());
 
         // Notify BOTH players to join the room
         Map<String, Object> joinPayload = Map.of(
