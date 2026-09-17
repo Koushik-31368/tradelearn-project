@@ -9,8 +9,8 @@ const FriendsPanel = ({ onChallenge }) => {
   const [message, setMessage] = useState(null);
 
   // Two-step lookup state
-  const [searchResult, setSearchResult] = useState(null); // { username, rating } | null
-  const [searchError, setSearchError] = useState(null);   // string | null
+  const [searchResult, setSearchResult] = useState(null);
+  const [searchError, setSearchError] = useState(null);
   const [isSearching, setIsSearching] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
 
@@ -48,7 +48,6 @@ const FriendsPanel = ({ onChallenge }) => {
         { headers: authHeaders() }
       );
 
-      // Safely parse JSON only if there's a body to parse
       let data = null;
       const contentType = res.headers.get('content-type') || '';
       if (contentType.includes('application/json')) {
@@ -108,13 +107,26 @@ const FriendsPanel = ({ onChallenge }) => {
     }
   };
 
+  const handleCancelRequest = async (requestId) => {
+    try {
+      await fetch(backendUrl(`/api/social/friends/reject/${requestId}`), {
+        method: 'POST',
+        headers: authHeaders()
+      });
+      fetchFriends();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   const clearSearch = () => {
     setSearchResult(null);
     setSearchError(null);
     setNewFriendName('');
   };
 
-  const pendingRequests = friends.filter(f => f.status === 'PENDING' && !f.isSender);
+  const pendingReceived = friends.filter(f => f.status === 'PENDING' && !f.isSender);
+  const pendingSent     = friends.filter(f => f.status === 'PENDING' && f.isSender);
   const acceptedFriends = friends.filter(f => f.status === 'ACCEPTED');
 
   return (
@@ -180,12 +192,39 @@ const FriendsPanel = ({ onChallenge }) => {
         <div className={`fp-msg fp-msg-${message.type}`}>{message.text}</div>
       )}
 
-      {/* ── Pending requests ── */}
-      {pendingRequests.length > 0 && (
+      {/* ── Sent requests (outgoing — waiting for response) ── */}
+      {pendingSent.length > 0 && (
         <div className="fp-section">
-          <h4 className="fp-section-title">Pending Requests</h4>
+          <h4 className="fp-section-title">Sent Requests</h4>
           <div className="fp-list">
-            {pendingRequests.map(req => (
+            {pendingSent.map(req => (
+              <div key={req.requestId} className="fp-item">
+                <div className="fp-info">
+                  <span className="fp-sent-dot" />
+                  <span className="fp-name">{req.username}</span>
+                </div>
+                <div className="fp-item-actions">
+                  <span className="fp-pending-label">Pending</span>
+                  <button
+                    className="fp-btn-cancel"
+                    onClick={() => handleCancelRequest(req.requestId)}
+                    title="Cancel request"
+                  >
+                    ✕
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── Incoming friend requests ── */}
+      {pendingReceived.length > 0 && (
+        <div className="fp-section">
+          <h4 className="fp-section-title">Friend Requests</h4>
+          <div className="fp-list">
+            {pendingReceived.map(req => (
               <div key={req.requestId} className="fp-item">
                 <span className="fp-name">{req.username}</span>
                 <button className="fp-btn fp-btn-accept" onClick={() => handleAccept(req.requestId)}>

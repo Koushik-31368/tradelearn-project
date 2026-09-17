@@ -1,3 +1,7 @@
+/* ═══════════════════════════════════════
+   FRIENDS PANEL
+   ═══════════════════════════════════════ */
+
 .friends-panel {
   background: var(--bg-panel);
   border: 1px solid var(--border);
@@ -14,6 +18,7 @@
   color: var(--text-light);
 }
 
+/* ── Search form ── */
 .fp-add-form {
   display: flex;
   gap: 8px;
@@ -58,6 +63,7 @@
   background: var(--primary-700);
 }
 
+/* ── Status messages ── */
 .fp-msg {
   font-size: 0.8rem;
   margin-bottom: 16px;
@@ -65,10 +71,11 @@
   border-radius: var(--radius-sm);
 }
 
+/* SUCCESS — green, not red */
 .fp-msg-success {
-  background: var(--primary-surface);
-  color: var(--primary);
-  border: 1px solid var(--primary-border);
+  background: rgba(56, 211, 159, 0.1);
+  color: #38d39f;
+  border: 1px solid rgba(56, 211, 159, 0.3);
 }
 
 .fp-msg-error {
@@ -77,88 +84,7 @@
   border: 1px solid rgba(248, 81, 73, 0.15);
 }
 
-.fp-section {
-  margin-top: 20px;
-}
-
-.fp-section-title {
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  font-weight: 600;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  margin: 0 0 10px 0;
-}
-
-.fp-list {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.fp-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 12px;
-  background: var(--bg-panel-2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  transition: border-color 0.15s ease;
-}
-
-.fp-item:hover {
-  border-color: var(--border-emphasis);
-}
-
-.fp-info {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.fp-name {
-  font-weight: 600;
-  font-size: 0.9rem;
-  color: var(--text-light);
-}
-
-.fp-badge {
-  transform: scale(0.8);
-  margin-left: -6px;
-}
-
-.fp-btn-accept {
-  background: var(--primary);
-  color: #fff;
-  font-size: 0.78rem;
-  padding: 5px 10px;
-}
-
-.fp-btn-accept:hover {
-  background: var(--primary-700);
-}
-
-.fp-btn-challenge {
-  background: var(--bg-panel-3);
-  border: 1px solid var(--border);
-  color: var(--text);
-  font-size: 0.78rem;
-  padding: 5px 10px;
-}
-
-.fp-btn-challenge:hover {
-  border-color: var(--primary);
-  color: var(--primary);
-}
-
-.fp-empty {
-  font-size: 0.82rem;
-  color: var(--text-faint);
-}
-
-/* ── Two-step search result card ─────────────────────────────────────── */
+/* ── Two-step search result card ── */
 .fp-search-result {
   display: flex;
   align-items: center;
@@ -187,9 +113,7 @@
   color: var(--danger);
 }
 
-.fp-notfound-icon {
-  font-size: 1rem;
-}
+.fp-notfound-icon { font-size: 1rem; }
 
 .fp-notfound-text {
   flex: 1;
@@ -203,9 +127,7 @@
   flex: 1;
 }
 
-.fp-found-avatar {
-  font-size: 1.3rem;
-}
+.fp-found-avatar { font-size: 1.3rem; }
 
 .fp-found-name {
   font-weight: 700;
@@ -238,14 +160,8 @@
   transition: background 0.15s ease;
 }
 
-.fp-btn-send-request:hover:not(:disabled) {
-  background: #2fbf8e;
-}
-
-.fp-btn-send-request:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
+.fp-btn-send-request:hover:not(:disabled) { background: #2fbf8e; }
+.fp-btn-send-request:disabled { opacity: 0.6; cursor: not-allowed; }
 
 .fp-btn-clear {
   background: none;
@@ -258,7 +174,125 @@
   transition: color 0.15s ease;
   line-height: 1;
 }
+.fp-btn-clear:hover { color: var(--text-light); }
 
-.fp-btn-clear:hover {
+/* ── Sections ── */
+.fp-section { margin-top: 20px; }
+
+.fp-section-title {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 0 0 10px 0;
+}
+
+.fp-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.fp-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  background: var(--bg-panel-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  transition: border-color 0.15s ease;
+}
+
+.fp-item:hover { border-color: var(--border-emphasis); }
+
+.fp-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.fp-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.fp-name {
+  font-weight: 600;
+  font-size: 0.9rem;
   color: var(--text-light);
+}
+
+.fp-badge {
+  transform: scale(0.8);
+  margin-left: -6px;
+}
+
+/* Sent request dot — amber pulsing */
+.fp-sent-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #f0a500;
+  flex-shrink: 0;
+  animation: fp-pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes fp-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.5; transform: scale(0.75); }
+}
+
+.fp-pending-label {
+  font-size: 0.72rem;
+  color: #f0a500;
+  font-family: var(--font-mono);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+/* Cancel button */
+.fp-btn-cancel {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 0.72rem;
+  padding: 3px 7px;
+  border-radius: var(--radius-sm);
+  transition: all 0.15s ease;
+  line-height: 1;
+}
+.fp-btn-cancel:hover {
+  border-color: var(--danger);
+  color: var(--danger);
+  background: rgba(248, 81, 73, 0.06);
+}
+
+.fp-btn-accept {
+  background: var(--primary);
+  color: #fff;
+  font-size: 0.78rem;
+  padding: 5px 10px;
+}
+.fp-btn-accept:hover { background: var(--primary-700); }
+
+.fp-btn-challenge {
+  background: var(--bg-panel-3);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: 0.78rem;
+  padding: 5px 10px;
+}
+.fp-btn-challenge:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.fp-empty {
+  font-size: 0.82rem;
+  color: var(--text-faint);
 }
