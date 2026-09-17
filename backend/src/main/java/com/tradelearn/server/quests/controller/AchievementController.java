@@ -3,7 +3,6 @@ package com.tradelearn.server.quests.controller;
 import com.tradelearn.server.dto.AchievementDTO;
 import com.tradelearn.server.user.model.User;
 import com.tradelearn.server.quests.model.UserAchievement;
-import com.tradelearn.server.user.repository.UserRepository;
 import com.tradelearn.server.quests.service.AchievementService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -17,16 +16,15 @@ import java.util.stream.Collectors;
 public class AchievementController {
 
     private final AchievementService achievementService;
-    private final UserRepository userRepository;
 
-    public AchievementController(AchievementService achievementService, UserRepository userRepository) {
+    public AchievementController(AchievementService achievementService) {
         this.achievementService = achievementService;
-        this.userRepository = userRepository;
     }
 
     private User getAuthenticatedUser() {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        return userRepository.findByUsername(username).orElse(null);
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (principal instanceof User) return (User) principal;
+        return null;
     }
 
     @GetMapping("/user")
