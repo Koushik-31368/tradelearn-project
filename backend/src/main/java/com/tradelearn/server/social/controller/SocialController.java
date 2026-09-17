@@ -33,7 +33,7 @@ public class SocialController {
     @GetMapping("/users/search/{username}")
     public ResponseEntity<?> searchUser(@PathVariable String username) {
         User currentUser = getAuthenticatedUser();
-        if (currentUser == null) return ResponseEntity.status(401).build();
+        if (currentUser == null) return ResponseEntity.status(401).body(Map.of("error", "Unauthorized"));
 
         return userRepository.findByUsername(username)
             .<ResponseEntity<?>>map(found -> {

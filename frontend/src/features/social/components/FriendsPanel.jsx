@@ -47,18 +47,24 @@ const FriendsPanel = ({ onChallenge }) => {
         backendUrl(`/api/social/users/search/${encodeURIComponent(trimmed)}`),
         { headers: authHeaders() }
       );
-      const data = await res.json();
 
-      if (res.ok) {
-        // Check if already in friends list
-        const alreadyFriend = friends.some(
-          f => f.username === data.username
-        );
+      // Safely parse JSON only if there's a body to parse
+      let data = null;
+      const contentType = res.headers.get('content-type') || '';
+      if (contentType.includes('application/json')) {
+        data = await res.json();
+      }
+
+      if (res.ok && data) {
+        const alreadyFriend = friends.some(f => f.username === data.username);
         setSearchResult({ ...data, alreadyFriend });
+      } else if (res.status === 401) {
+        setSearchError('Session expired — please log in again.');
       } else {
         setSearchError(data?.error || 'User not found');
       }
-    } catch {
+    } catch (err) {
+      console.error('Search error:', err);
       setSearchError('Network error. Please try again.');
     } finally {
       setIsSearching(false);
