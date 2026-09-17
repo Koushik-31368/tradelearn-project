@@ -22,7 +22,7 @@ public class SocialService {
     public void addFriend(User user, String friendUsername) throws Exception {
         if (user.getUsername().equals(friendUsername)) throw new Exception("Cannot add yourself");
         
-        User friend = userRepository.findByUsername(friendUsername)
+        User friend = userRepository.findByUsernameIgnoreCase(friendUsername)
             .orElseThrow(() -> new Exception("User not found"));
 
         if (friendshipRepository.existsByUserIdAndFriendId(user.getId(), friend.getId()) ||

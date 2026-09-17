@@ -35,7 +35,7 @@ public class SocialController {
         User currentUser = getAuthenticatedUser();
         if (currentUser == null) return ResponseEntity.status(401).build();
 
-        return userRepository.findByUsername(username)
+        return userRepository.findByUsernameIgnoreCase(username)
             .<ResponseEntity<?>>map(found -> {
                 if (found.getId().equals(currentUser.getId())) {
                     return ResponseEntity.badRequest().body(Map.of("error", "That's you!"));
