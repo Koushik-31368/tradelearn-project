@@ -354,13 +354,30 @@ public class MatchLifecycleService {
                 afterCommitWithRetry("joinMatch", gameId, creatorId, opponentId, () -> {
                     roomManager.joinRoom(gameId, opponentId);
                     candleService.loadCandles(gameId);
-                    matchSchedulerService.startProgression(gameId);
                     positionStore.initializePosition(gameId, creatorId, startingBalance);
                     positionStore.initializePosition(gameId, opponentId, startingBalance);
                     epochGate.initGame(gameId); // ← fairness gate: enable epoch-isolation
 
                     GameLogger.logGameStarted(log, gameId, creatorId, opponentId);
 
+                    // ── Send "started" BEFORE the first candle broadcast ──────────
+                    // The frontend subscribes to /topic/game/{id}/candle inside
+                    // onConnect (before any phase transition), so the subscription
+                    // is already live. However, the chart component only *mounts*
+                    // after the UI transitions from WAITING → ACTIVE, which happens
+                    // when the "started" event is received.
+                    //
+                    // Old order: broadcastCurrentCandle() → "started"
+                    //   Candle 0 arrived while the creator's game-page still showed
+                    //   the WAITING screen. StockChart hadn't mounted yet, so the
+                    //   candle was stored in candleHistory but the chart div didn't
+                    //   exist — chart never rendered until the next tick (5s later).
+                    //
+                    // New order: "started" → scheduleAtFixedRate(broadcastCurrentCandle, 200ms)
+                    //   "started" transitions the UI to ACTIVE, chart mounts, THEN
+                    //   candle 0 arrives 200ms later into an already-mounted chart.
+                    //   The 200ms is non-blocking (taskScheduler.schedule, not sleep).
+                    // ─────────────────────────────────────────────────────────────
                     broadcaster.sendToGame(gameId, "started",
                             Map.of(
                                     "gameId", gameId,
@@ -369,6 +386,11 @@ public class MatchLifecycleService {
                                     "opponentUsername", opponentUsername
                             )
                     );
+
+                    // Non-blocking 200ms delay before first candle broadcast.
+                    // Gives both clients time to receive "started", re-render the
+                    // active game UI, and mount the StockChart before candle 0 arrives.
+                    matchSchedulerService.startProgressionDelayed(gameId, 200);
 
                     GameLogger.logDiagnosticSnapshot(log, "Join Complete (afterCommit)", Map.of(
                         "gameId", gameId,
@@ -379,6 +401,7 @@ public class MatchLifecycleService {
                         "schedulerStarted", true
                     ));
                 });
+
             }
         });
 

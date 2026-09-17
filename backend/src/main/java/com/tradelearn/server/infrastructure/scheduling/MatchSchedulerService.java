@@ -164,6 +164,26 @@ public class MatchSchedulerService {
     }
 
     /**
+     * Non-blocking variant of {@link #startProgression(long)} that defers the
+     * start by {@code delayMs} milliseconds using the shared {@link TaskScheduler}.
+     *
+     * <p>Use this instead of {@code Thread.sleep()} when you need to send a
+     * WebSocket event (e.g. "started") <em>before</em> the first candle broadcast,
+     * giving the frontend time to mount the chart without blocking the calling
+     * thread (which may be a transaction afterCommit callback or a pooled thread).
+     *
+     * @param gameId  the match to start
+     * @param delayMs milliseconds to wait before calling {@link #startProgression}
+     */
+    public void startProgressionDelayed(long gameId, long delayMs) {
+        taskScheduler.schedule(
+                () -> startProgression(gameId),
+                java.time.Instant.now().plusMillis(delayMs)
+        );
+        log.debug("[Scheduler] Progression for game {} scheduled in {}ms", gameId, delayMs);
+    }
+
+    /**
      * Broadcast the current candle (index 0 at match start) so both
      * players see data immediately without waiting for the first tick.
      */

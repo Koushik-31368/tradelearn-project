@@ -169,19 +169,25 @@ const GamePage = () => {
 
     // ─────────────────────────────────────────────
     // Polling fallback while waiting for opponent.
-    // If the WS "started" event is never received
-    // (e.g. brief disconnect), poll every 3 s so
-    // the creator transitions automatically instead
-    // of needing a manual refresh.
+    // If the WS "started" event is slow or dropped
+    // (e.g. SockJS long-poll fallback, brief gap),
+    // poll every 800ms so the creator detects
+    // status=ACTIVE quickly without waiting for a
+    // full 3-second tick cycle.
+    //
+    // 800ms is chosen to bound worst-case recovery
+    // to ≤800ms regardless of WS timing, without
+    // hammering the server (still ≥1 req/s per client).
     // ─────────────────────────────────────────────
     useEffect(() => {
         if (gamePhase !== GamePhase.WAITING) return;
         const pollId = setInterval(() => {
             isPollingRef.current = true;
             fetchGameData().finally(() => { isPollingRef.current = false; });
-        }, 3000);
+        }, 800);
         return () => clearInterval(pollId);
     }, [gamePhase, fetchGameData]);
+
 
     // ─────────────────────────────────────────────
     // Handle disconnect — redirect after 3 s
