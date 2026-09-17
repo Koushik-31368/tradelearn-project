@@ -1,6 +1,11 @@
 // src/components/StockChart.jsx
 import React, { useEffect, useRef } from 'react';
-import { createChart } from 'lightweight-charts';
+// v5 API: createChart + named series type imported explicitly.
+// In v4 (and earlier) the call was chart.addCandlestickSeries(options).
+// In v5 that method was removed — the unified API is:
+//   chart.addSeries(SeriesType, options)
+// where SeriesType is a named export from the library.
+import { createChart, CandlestickSeries } from 'lightweight-charts';
 
 /**
  * Candlestick chart driven entirely by server candle data.
@@ -9,6 +14,16 @@ import { createChart } from 'lightweight-charts';
  *   data  – array of { time, open, high, low, close }
  *           `time` must be a date-string ("2024-01-15") or UNIX timestamp.
  *           New candles are appended in real-time via `.update()`.
+ *
+ * lightweight-charts v5 migration note
+ * ─────────────────────────────────────
+ * The chart component only mounts when candleHistory has data (GamePage
+ * renders `{chartData.length > 0 && <StockChart />}`), so its chunk is
+ * lazy-loaded. Under v4 the chunk loaded fine but was never exercised
+ * until both players joined — at which point `addCandlestickSeries` threw
+ * `TypeError: e.addCandlestickSeries is not a function` because the method
+ * no longer exists in v5. The ErrorBoundary caught it and surfaced the real
+ * error instead of a blank page.
  */
 const StockChart = ({ data }) => {
   const containerRef = useRef(null);
@@ -36,7 +51,8 @@ const StockChart = ({ data }) => {
       rightPriceScale: { borderColor: '#374151' },
     });
 
-    const series = chart.addCandlestickSeries({
+    // v5: chart.addSeries(SeriesType, options) — replaces v4's addCandlestickSeries()
+    const series = chart.addSeries(CandlestickSeries, {
       upColor:         '#10B981',
       downColor:       '#EF4444',
       borderDownColor: '#EF4444',
