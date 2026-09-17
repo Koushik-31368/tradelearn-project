@@ -36,7 +36,7 @@ export class GameErrorBoundary extends React.Component {
     if (!this.state.hasError) return this.props.children;
 
     const { error, info } = this.state;
-    const { gameId, onNavigateBack } = this.props;
+    const { onNavigateBack } = this.props;
 
     return (
       <div style={{
