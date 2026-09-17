@@ -6,6 +6,7 @@ import { backendUrl, authHeaders } from '../../../api/api';
 import StockChart from '../components/StockChart';
 import LiveScoreboard from '../components/LiveScoreboard';
 import useGameSocket, { GamePhase, SocketState } from '../../../hooks/useGameSocket';
+import GameErrorBoundary from '../components/GameErrorBoundary';
 
 // ── Trade Controls sub-component ──
 // Extracted from GamePage to improve readability and testability.
@@ -95,9 +96,16 @@ const GamePage = () => {
     // ─────────────────────────────────────────────
     // Fetch match + initial candle from REST
     // ─────────────────────────────────────────────
+    // isPolling ref: true when called from the 3s interval — errors there
+    // should be silent retries, NOT navigate away (the game may be mid-transition).
+    const isPollingRef = useRef(false);
+
     const fetchGameData = useCallback(async () => {
-        setIsLoading(true);
-        setError(null);
+        // Only show loading spinner on the first (non-poll) fetch
+        if (!isPollingRef.current) {
+            setIsLoading(true);
+            setError(null);
+        }
         try {
             const res = await fetch(backendUrl(`/api/match/${gameId}`));
             if (!res.ok) throw new Error(await res.text() || 'Failed to load match');
@@ -133,10 +141,18 @@ const GamePage = () => {
             }
         } catch (err) {
             console.error('Fetch game error:', err);
-            setError(`Load failed: ${err.message}`);
-            setTimeout(() => navigate('/multiplayer'), 3000);
+            if (isPollingRef.current) {
+                // During polling, silently retry — don't navigate away.
+                // The game may be in a WAITING→ACTIVE transition and the
+                // fetch caught a transient error at exactly the wrong moment.
+                console.warn('[GamePage] Poll fetch error (will retry):', err.message);
+            } else {
+                // Only navigate away on the initial load failure
+                setError(`Load failed: ${err.message}`);
+                setTimeout(() => navigate('/multiplayer'), 3000);
+            }
         } finally {
-            setIsLoading(false);
+            if (!isPollingRef.current) setIsLoading(false);
         }
     }, [gameId, navigate, syncPhaseFromRest, seedCandle]);
 
@@ -161,7 +177,8 @@ const GamePage = () => {
     useEffect(() => {
         if (gamePhase !== GamePhase.WAITING) return;
         const pollId = setInterval(() => {
-            fetchGameData();
+            isPollingRef.current = true;
+            fetchGameData().finally(() => { isPollingRef.current = false; });
         }, 3000);
         return () => clearInterval(pollId);
     }, [gamePhase, fetchGameData]);
@@ -419,4 +436,15 @@ const GamePage = () => {
     );
 };
 
-export default GamePage;
+// Wrap with ErrorBoundary so any render crash shows a readable error
+// card instead of a blank page, and surfaces the real stack trace.
+const GamePageWithBoundary = () => {
+    const navigate = useNavigate();
+    return (
+        <GameErrorBoundary onNavigateBack={() => navigate('/multiplayer')}>
+            <GamePage />
+        </GameErrorBoundary>
+    );
+};
+
+export default GamePageWithBoundary;

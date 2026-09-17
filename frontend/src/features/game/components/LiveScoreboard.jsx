@@ -124,13 +124,33 @@ const LiveScoreboard = ({
     );
 };
 
-/** Cash + long value − short value at current mark price */
+/** Cash + long value − short value at current mark price.
+ *  Hardened against unexpected WS payload shapes:
+ *  - pos null / undefined → return 0
+ *  - longShares/shortShares not a plain object → treat as empty
+ *  - individual qty values that are non-numeric → skip
+ */
 function computeEquity(pos, price) {
-    if (!pos) return 0;
-    let eq = pos.cash || 0;
-    for (const qty of Object.values(pos.longShares || pos.shares || {})) eq += qty * price;
-    for (const qty of Object.values(pos.shortShares || {})) eq -= qty * price;
-    return eq;
+    if (!pos || typeof pos !== 'object') return 0;
+
+    let eq = typeof pos.cash === 'number' ? pos.cash : 0;
+
+    const safeValues = (obj) => {
+        if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return [];
+        return Object.values(obj);
+    };
+
+    const longMap  = pos.longShares  ?? pos.shares ?? {};
+    const shortMap = pos.shortShares ?? {};
+
+    for (const qty of safeValues(longMap)) {
+        if (typeof qty === 'number' && isFinite(qty)) eq += qty * price;
+    }
+    for (const qty of safeValues(shortMap)) {
+        if (typeof qty === 'number' && isFinite(qty)) eq -= qty * price;
+    }
+
+    return isFinite(eq) ? eq : 0;
 }
 
 export default LiveScoreboard;
