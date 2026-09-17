@@ -157,3 +157,108 @@
   font-size: 0.82rem;
   color: var(--text-faint);
 }
+
+/* ── Two-step search result card ─────────────────────────────────────── */
+.fp-search-result {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  margin-bottom: 12px;
+  font-size: 0.85rem;
+  animation: fp-slide-in 0.18s ease;
+}
+
+@keyframes fp-slide-in {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.fp-search-found {
+  background: rgba(56, 211, 159, 0.07);
+  border: 1px solid rgba(56, 211, 159, 0.25);
+}
+
+.fp-search-notfound {
+  background: rgba(248, 81, 73, 0.06);
+  border: 1px solid rgba(248, 81, 73, 0.15);
+  color: var(--danger);
+}
+
+.fp-notfound-icon {
+  font-size: 1rem;
+}
+
+.fp-notfound-text {
+  flex: 1;
+  font-size: 0.82rem;
+}
+
+.fp-found-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+}
+
+.fp-found-avatar {
+  font-size: 1.3rem;
+}
+
+.fp-found-name {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--text-light);
+  display: block;
+}
+
+.fp-found-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.fp-already-friend {
+  font-size: 0.78rem;
+  color: #38d39f;
+  font-weight: 600;
+}
+
+.fp-btn-send-request {
+  background: #38d39f;
+  color: #0d1117;
+  font-size: 0.78rem;
+  padding: 6px 12px;
+  font-weight: 700;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.fp-btn-send-request:hover:not(:disabled) {
+  background: #2fbf8e;
+}
+
+.fp-btn-send-request:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.fp-btn-clear {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 0.85rem;
+  padding: 4px 6px;
+  border-radius: var(--radius-sm);
+  transition: color 0.15s ease;
+  line-height: 1;
+}
+
+.fp-btn-clear:hover {
+  color: var(--text-light);
+}

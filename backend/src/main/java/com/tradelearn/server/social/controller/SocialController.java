@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -27,6 +28,24 @@ public class SocialController {
     private User getAuthenticatedUser() {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         return userRepository.findByUsername(username).orElse(null);
+    }
+
+    @GetMapping("/users/search/{username}")
+    public ResponseEntity<?> searchUser(@PathVariable String username) {
+        User currentUser = getAuthenticatedUser();
+        if (currentUser == null) return ResponseEntity.status(401).build();
+
+        return userRepository.findByUsername(username)
+            .<ResponseEntity<?>>map(found -> {
+                if (found.getId().equals(currentUser.getId())) {
+                    return ResponseEntity.badRequest().body(Map.of("error", "That's you!"));
+                }
+                return ResponseEntity.ok(Map.of(
+                    "username", found.getUsername(),
+                    "rating", found.getRating()
+                ));
+            })
+            .orElseGet(() -> ResponseEntity.status(404).body(Map.of("error", "User not found")));
     }
 
     @PostMapping("/friends/add/{username}")

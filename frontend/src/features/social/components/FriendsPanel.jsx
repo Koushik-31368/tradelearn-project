@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { backendUrl, authHeaders } from '../../../api/api';
 import TierBadge from '../../leaderboard/components/TierBadge';
 import './FriendsPanel.css';
@@ -8,39 +8,86 @@ const FriendsPanel = ({ onChallenge }) => {
   const [newFriendName, setNewFriendName] = useState('');
   const [message, setMessage] = useState(null);
 
-  const fetchFriends = async () => {
+  // Two-step lookup state
+  const [searchResult, setSearchResult] = useState(null); // { username, rating } | null
+  const [searchError, setSearchError] = useState(null);   // string | null
+  const [isSearching, setIsSearching] = useState(false);
+  const [isAdding, setIsAdding] = useState(false);
+
+  const fetchFriends = useCallback(async () => {
     try {
       const res = await fetch(backendUrl('/api/social/friends'), { headers: authHeaders() });
       if (res.ok) setFriends(await res.json());
     } catch (err) {
       console.error(err);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchFriends();
-  }, []);
+  }, [fetchFriends]);
 
-  const handleAddFriend = async (e) => {
+  const showMessage = (type, text) => {
+    setMessage({ type, text });
+    setTimeout(() => setMessage(null), 3500);
+  };
+
+  // ── Step 1: Search username ──────────────────────────────────────────────────
+  const handleSearch = async (e) => {
     e.preventDefault();
-    if (!newFriendName.trim()) return;
+    const trimmed = newFriendName.trim();
+    if (!trimmed) return;
+
+    setSearchResult(null);
+    setSearchError(null);
+    setIsSearching(true);
+
     try {
-      const res = await fetch(backendUrl(`/api/social/friends/add/${newFriendName}`), {
-        method: 'POST',
-        headers: authHeaders()
-      });
+      const res = await fetch(
+        backendUrl(`/api/social/users/search/${encodeURIComponent(trimmed)}`),
+        { headers: authHeaders() }
+      );
+      const data = await res.json();
+
       if (res.ok) {
-        setMessage({ type: 'success', text: 'Friend request sent!' });
+        // Check if already in friends list
+        const alreadyFriend = friends.some(
+          f => f.username === data.username
+        );
+        setSearchResult({ ...data, alreadyFriend });
+      } else {
+        setSearchError(data?.error || 'User not found');
+      }
+    } catch {
+      setSearchError('Network error. Please try again.');
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  // ── Step 2: Send friend request ──────────────────────────────────────────────
+  const handleAddFriend = async () => {
+    if (!searchResult) return;
+    setIsAdding(true);
+    try {
+      const res = await fetch(
+        backendUrl(`/api/social/friends/add/${encodeURIComponent(searchResult.username)}`),
+        { method: 'POST', headers: authHeaders() }
+      );
+      if (res.ok) {
+        showMessage('success', `Friend request sent to ${searchResult.username}!`);
+        setSearchResult(null);
         setNewFriendName('');
         fetchFriends();
       } else {
         const errText = await res.text();
-        setMessage({ type: 'error', text: errText || 'Failed to add friend' });
+        showMessage('error', errText || 'Failed to send request');
       }
-    } catch (err) {
-      setMessage({ type: 'error', text: 'Network error' });
+    } catch {
+      showMessage('error', 'Network error');
+    } finally {
+      setIsAdding(false);
     }
-    setTimeout(() => setMessage(null), 3000);
   };
 
   const handleAccept = async (requestId) => {
@@ -55,25 +102,79 @@ const FriendsPanel = ({ onChallenge }) => {
     }
   };
 
+  const clearSearch = () => {
+    setSearchResult(null);
+    setSearchError(null);
+    setNewFriendName('');
+  };
+
   const pendingRequests = friends.filter(f => f.status === 'PENDING' && !f.isSender);
   const acceptedFriends = friends.filter(f => f.status === 'ACCEPTED');
 
   return (
     <div className="friends-panel">
       <h3 className="fp-title">Friends List</h3>
-      
-      <form className="fp-add-form" onSubmit={handleAddFriend}>
-        <input 
-          type="text" 
-          placeholder="Add friend by username..." 
+
+      {/* ── Search form ── */}
+      <form className="fp-add-form" onSubmit={handleSearch}>
+        <input
+          type="text"
+          placeholder="Search by username..."
           value={newFriendName}
-          onChange={(e) => setNewFriendName(e.target.value)}
+          onChange={(e) => {
+            setNewFriendName(e.target.value);
+            setSearchResult(null);
+            setSearchError(null);
+          }}
           className="fp-input"
         />
-        <button type="submit" className="fp-btn fp-btn-add">+</button>
+        <button type="submit" className="fp-btn fp-btn-add" disabled={isSearching}>
+          {isSearching ? '…' : '🔍'}
+        </button>
       </form>
-      {message && <div className={`fp-msg fp-msg-${message.type}`}>{message.text}</div>}
 
+      {/* ── Search result: user NOT found ── */}
+      {searchError && (
+        <div className="fp-search-result fp-search-notfound">
+          <span className="fp-notfound-icon">⚠️</span>
+          <span className="fp-notfound-text">{searchError}</span>
+          <button className="fp-btn-clear" onClick={clearSearch}>✕</button>
+        </div>
+      )}
+
+      {/* ── Search result: user FOUND ── */}
+      {searchResult && (
+        <div className="fp-search-result fp-search-found">
+          <div className="fp-found-info">
+            <span className="fp-found-avatar">👤</span>
+            <div>
+              <span className="fp-found-name">{searchResult.username}</span>
+              <TierBadge rating={searchResult.rating} className="fp-badge" />
+            </div>
+          </div>
+          <div className="fp-found-actions">
+            {searchResult.alreadyFriend ? (
+              <span className="fp-already-friend">✓ Already friends</span>
+            ) : (
+              <button
+                className="fp-btn fp-btn-send-request"
+                onClick={handleAddFriend}
+                disabled={isAdding}
+              >
+                {isAdding ? 'Sending…' : '+ Add Friend'}
+              </button>
+            )}
+            <button className="fp-btn-clear" onClick={clearSearch}>✕</button>
+          </div>
+        </div>
+      )}
+
+      {/* ── Status message (success / error) ── */}
+      {message && (
+        <div className={`fp-msg fp-msg-${message.type}`}>{message.text}</div>
+      )}
+
+      {/* ── Pending requests ── */}
       {pendingRequests.length > 0 && (
         <div className="fp-section">
           <h4 className="fp-section-title">Pending Requests</h4>
@@ -81,13 +182,16 @@ const FriendsPanel = ({ onChallenge }) => {
             {pendingRequests.map(req => (
               <div key={req.requestId} className="fp-item">
                 <span className="fp-name">{req.username}</span>
-                <button className="fp-btn fp-btn-accept" onClick={() => handleAccept(req.requestId)}>Accept</button>
+                <button className="fp-btn fp-btn-accept" onClick={() => handleAccept(req.requestId)}>
+                  Accept
+                </button>
               </div>
             ))}
           </div>
         </div>
       )}
 
+      {/* ── Accepted friends ── */}
       <div className="fp-section">
         <h4 className="fp-section-title">Your Friends</h4>
         {acceptedFriends.length === 0 ? (
