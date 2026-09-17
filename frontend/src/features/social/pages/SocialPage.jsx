@@ -84,6 +84,7 @@ const SocialPage = () => {
   /* ── data ── */
   const [friends, setFriends]       = useState([]);
   const [loading, setLoading]       = useState(true);
+  const [fetchError, setFetchError] = useState(null);
   const [activeTab, setActiveTab]   = useState('requests'); // 'requests' | 'friends'
 
   /* ── search ── */
@@ -101,9 +102,16 @@ const SocialPage = () => {
   const fetchFriends = useCallback(async () => {
     try {
       const res = await fetch(backendUrl('/api/social/friends'), { headers: authHeaders() });
-      if (res.ok) setFriends(await res.json());
+      if (res.ok) {
+        setFriends(await res.json());
+        setFetchError(null);
+      } else {
+        console.error('[Social] /api/social/friends returned', res.status);
+        setFetchError(`Server error (${res.status}) — could not load your friends list. Please try refreshing.`);
+      }
     } catch (err) {
       console.error('[Social] fetch error', err);
+      setFetchError('Network error — could not reach the server. Please check your connection.');
     } finally {
       setLoading(false);
     }
@@ -346,6 +354,20 @@ const SocialPage = () => {
         </button>
       </div>
 
+      {/* ── Fetch error banner ── */}
+      {fetchError && (
+        <div className="sp-flash sp-flash--error" style={{ marginBottom: '1rem' }}>
+          ⚠️ {fetchError}
+          <button
+            className="sp-btn-ghost"
+            style={{ marginLeft: '0.75rem' }}
+            onClick={() => { setLoading(true); fetchFriends(); }}
+          >
+            Retry
+          </button>
+        </div>
+      )}
+
       {/* ── Tab content ── */}
       <div className="sp-tab-content">
 
@@ -354,7 +376,7 @@ const SocialPage = () => {
           <div className="sp-tab-pane">
             {loading ? (
               <>{[1,2].map(i => <SkeletonCard key={i} />)}</>
-            ) : totalRequests === 0 ? (
+            ) : fetchError ? null /* banner above already explains it */ : totalRequests === 0 ? (
               <div className="sp-empty">
                 <span className="sp-empty__icon">📭</span>
                 <span className="sp-empty__text">No pending requests</span>
@@ -411,7 +433,7 @@ const SocialPage = () => {
               <div className="sp-friends-grid">
                 {[1,2,3,4].map(i => <SkeletonCard key={i} />)}
               </div>
-            ) : accepted.length === 0 ? (
+            ) : fetchError ? null /* banner above already explains it */ : accepted.length === 0 ? (
               <div className="sp-empty">
                 <span className="sp-empty__icon">🤝</span>
                 <span className="sp-empty__text">No friends yet</span>

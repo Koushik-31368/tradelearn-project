@@ -7,6 +7,7 @@ const FriendsPanel = ({ onChallenge }) => {
   const [friends, setFriends] = useState([]);
   const [newFriendName, setNewFriendName] = useState('');
   const [message, setMessage] = useState(null);
+  const [fetchError, setFetchError] = useState(null);
 
   // Two-step lookup state
   const [searchResult, setSearchResult] = useState(null);
@@ -17,9 +18,16 @@ const FriendsPanel = ({ onChallenge }) => {
   const fetchFriends = useCallback(async () => {
     try {
       const res = await fetch(backendUrl('/api/social/friends'), { headers: authHeaders() });
-      if (res.ok) setFriends(await res.json());
+      if (res.ok) {
+        setFriends(await res.json());
+        setFetchError(null);
+      } else {
+        console.error('[FriendsPanel] /api/social/friends returned', res.status);
+        setFetchError(`Server error (${res.status}) — could not load friends list.`);
+      }
     } catch (err) {
-      console.error(err);
+      console.error('[FriendsPanel] fetch error', err);
+      setFetchError('Network error — could not reach the server.');
     }
   }, []);
 
@@ -192,6 +200,14 @@ const FriendsPanel = ({ onChallenge }) => {
         <div className={`fp-msg fp-msg-${message.type}`}>{message.text}</div>
       )}
 
+      {/* ── Fetch error (server/network failure loading friends) ── */}
+      {fetchError && (
+        <div className="fp-msg fp-msg-error">
+          ⚠️ {fetchError}
+          <button style={{ marginLeft: '0.5rem', cursor: 'pointer' }} onClick={fetchFriends}>Retry</button>
+        </div>
+      )}
+
       {/* ── Sent requests (outgoing — waiting for response) ── */}
       {pendingSent.length > 0 && (
         <div className="fp-section">
@@ -239,7 +255,9 @@ const FriendsPanel = ({ onChallenge }) => {
       {/* ── Accepted friends ── */}
       <div className="fp-section">
         <h4 className="fp-section-title">Your Friends</h4>
-        {acceptedFriends.length === 0 ? (
+        {fetchError ? (
+          null /* error banner above already explains it */
+        ) : acceptedFriends.length === 0 ? (
           <p className="fp-empty">No friends yet.</p>
         ) : (
           <div className="fp-list">

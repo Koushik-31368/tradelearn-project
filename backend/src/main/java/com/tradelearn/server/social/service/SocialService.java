@@ -21,7 +21,7 @@ public class SocialService {
 
     public void addFriend(User user, String friendUsername) throws Exception {
         if (user.getUsername().equals(friendUsername)) throw new Exception("Cannot add yourself");
-        
+
         User friend = userRepository.findByUsername(friendUsername)
             .orElseThrow(() -> new Exception("User not found"));
 
@@ -36,7 +36,8 @@ public class SocialService {
 
     @SuppressWarnings("null")
     public void acceptRequest(User user, Long requestId) throws Exception {
-        Friendship friendship = friendshipRepository.findById(requestId)
+        // JOIN FETCH so .getFriend().getId() doesn't hit a closed-session proxy
+        Friendship friendship = friendshipRepository.findByIdWithUsers(requestId)
             .orElseThrow(() -> new Exception("Request not found"));
 
         if (!friendship.getFriend().getId().equals(user.getId())) {
@@ -49,7 +50,8 @@ public class SocialService {
 
     @SuppressWarnings("null")
     public void rejectRequest(User user, Long requestId) throws Exception {
-        Friendship friendship = friendshipRepository.findById(requestId)
+        // JOIN FETCH so both sides are available outside the session
+        Friendship friendship = friendshipRepository.findByIdWithUsers(requestId)
             .orElseThrow(() -> new Exception("Request not found"));
 
         if (!friendship.getFriend().getId().equals(user.getId()) && !friendship.getUser().getId().equals(user.getId())) {
