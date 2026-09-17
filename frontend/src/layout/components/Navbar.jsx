@@ -19,7 +19,7 @@ function usePendingRequestCount(isAuthenticated) {
       const res = await fetch(backendUrl('/api/social/friends'), { headers: authHeaders() });
       if (res.ok) {
         const list = await res.json();
-        setCount(list.filter(f => f.status === 'PENDING' && !f.isSender).length);
+        setCount(list.filter(f => f.status === 'PENDING' && !f.sender).length);
       }
     } catch { /* silent — badge just won't update */ }
   }, [isAuthenticated]);

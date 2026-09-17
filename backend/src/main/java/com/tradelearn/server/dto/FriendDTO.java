@@ -6,5 +6,7 @@ public record FriendDTO(
     String username,
     int rating,
     String status,
-    boolean isSender
+    boolean sender   // NOTE: named 'sender' not 'isSender' — Jackson strips the 'is' prefix
+                     // from boolean record accessors (isSender() -> "sender" in JSON).
+                     // Frontend reads f.sender to determine direction.
 ) {}

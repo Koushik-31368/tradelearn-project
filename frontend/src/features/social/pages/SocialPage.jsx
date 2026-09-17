@@ -112,8 +112,8 @@ const SocialPage = () => {
   useEffect(() => { fetchFriends(); }, [fetchFriends]);
 
   /* ── derived lists ── */
-  const pendingReceived = friends.filter(f => f.status === 'PENDING' && !f.isSender);
-  const pendingSent     = friends.filter(f => f.status === 'PENDING' &&  f.isSender);
+  const pendingReceived = friends.filter(f => f.status === 'PENDING' && !f.sender);
+  const pendingSent     = friends.filter(f => f.status === 'PENDING' &&  f.sender);
   const accepted        = friends.filter(f => f.status === 'ACCEPTED');
   const totalRequests   = pendingReceived.length + pendingSent.length;
 

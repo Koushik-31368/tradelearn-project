@@ -125,8 +125,8 @@ const FriendsPanel = ({ onChallenge }) => {
     setNewFriendName('');
   };
 
-  const pendingReceived = friends.filter(f => f.status === 'PENDING' && !f.isSender);
-  const pendingSent     = friends.filter(f => f.status === 'PENDING' && f.isSender);
+  const pendingReceived = friends.filter(f => f.status === 'PENDING' && !f.sender);
+  const pendingSent     = friends.filter(f => f.status === 'PENDING' &&  f.sender);
   const acceptedFriends = friends.filter(f => f.status === 'ACCEPTED');
 
   return (
