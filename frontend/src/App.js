@@ -28,6 +28,7 @@ const PrivacyPage       = lazy(() => import('./features/legal/pages/PrivacyPage'
 const RiskDisclosurePage= lazy(() => import('./features/legal/pages/RiskDisclosurePage'));
 const LearnPage         = lazy(() => import('./features/learn/pages/LearnPage'));
 const NotFoundPage      = lazy(() => import('./features/errors/pages/NotFoundPage'));
+const SocialPage        = lazy(() => import('./features/social/pages/SocialPage'));
 
 // ── Minimal loading spinner shown while a lazy page chunk downloads ──
 function PageLoader() {
@@ -91,6 +92,7 @@ function AppContent() {
           <Route path="/terms" element={<TermsPage />} />
           <Route path="/privacy" element={<PrivacyPage />} />
           <Route path="/risk-disclosure" element={<RiskDisclosurePage />} />
+          <Route path="/social" element={<SocialPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
         </main>

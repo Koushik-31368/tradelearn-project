@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../auth/AuthContext';
 import { backendUrl, authHeaders } from '../../../api/client';
 import TierBadge from '../../leaderboard/components/TierBadge';
-import FriendsPanel from '../../social/components/FriendsPanel';
 import './ProfilePage.css';
 
 const ProfilePage = () => {
@@ -136,10 +135,16 @@ const ProfilePage = () => {
                 )}
             </section>
 
-            {/* ── Friends ── */}
+            {/* ── Friends shortcut ── */}
             <section className="pf-friends">
-                <h2 className="pf-section-title">Friends</h2>
-                <FriendsPanel />
+                <div className="pf-friends-link" onClick={() => navigate('/social')}>
+                    <span className="pf-friends-link__icon">👥</span>
+                    <div>
+                        <div className="pf-friends-link__title">Friends &amp; Social</div>
+                        <div className="pf-friends-link__sub">View friend requests, your friends list, and challenge rivals</div>
+                    </div>
+                    <span className="pf-friends-link__arrow">›</span>
+                </div>
             </section>
 
             {/* ── Recent matches ── */}

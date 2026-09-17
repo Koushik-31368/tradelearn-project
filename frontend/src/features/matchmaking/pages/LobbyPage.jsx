@@ -8,7 +8,7 @@ import Modal from '../../../layout/components/Modal';
 import CreateGameForm from '../components/CreateGameForm';
 import { useAuth } from '../../auth/AuthContext';
 import TierBadge from '../../leaderboard/components/TierBadge';
-import FriendsPanel from '../../social/components/FriendsPanel';
+import { NavLink } from 'react-router-dom';
 import { backendUrl, wsBase, getToken, authHeaders } from '../../../api/api';
 
 const LobbyPage = () => {
@@ -315,14 +315,32 @@ const LobbyPage = () => {
         </div>
       </div>
 
-      {/* ── Friends & Challenges ── */}
+      {/* ── Friends shortcut ── */}
       {user && (
-        <div style={{ marginBottom: '40px', maxWidth: '600px', width: '100%', alignSelf: 'center' }}>
-          <FriendsPanel onChallenge={(friendUsername) => {
-            if (window.sendChallenge) {
-              window.sendChallenge(friendUsername);
-            }
-          }} />
+        <div style={{ marginBottom: '32px', maxWidth: '600px', width: '100%', alignSelf: 'center' }}>
+          <NavLink
+            to="/social"
+            style={{
+              display: 'flex', alignItems: 'center', gap: '12px',
+              padding: '14px 20px',
+              background: 'rgba(255,45,120,0.07)',
+              border: '1px solid rgba(255,45,120,0.25)',
+              borderRadius: '10px',
+              color: 'var(--text-light)',
+              textDecoration: 'none',
+              fontFamily: 'var(--font-body)',
+              transition: 'background 0.15s ease, border-color 0.15s ease',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,45,120,0.13)'; e.currentTarget.style.borderColor = 'rgba(255,45,120,0.5)'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,45,120,0.07)'; e.currentTarget.style.borderColor = 'rgba(255,45,120,0.25)'; }}
+          >
+            <span style={{ fontSize: '1.4rem' }}>👥</span>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--cobalt, #FF2D78)' }}>Challenge a Friend</div>
+              <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Go to Social → select a friend → ⚔️ Challenge</div>
+            </div>
+            <span style={{ color: 'var(--text-muted)', fontSize: '1.1rem' }}>›</span>
+          </NavLink>
         </div>
       )}
 
