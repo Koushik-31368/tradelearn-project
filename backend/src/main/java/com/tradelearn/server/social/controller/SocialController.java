@@ -26,8 +26,9 @@ public class SocialController {
     }
 
     private User getAuthenticatedUser() {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        return userRepository.findByUsername(username).orElse(null);
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (principal instanceof User) return (User) principal;
+        return null;
     }
 
     @GetMapping("/users/search/{username}")
